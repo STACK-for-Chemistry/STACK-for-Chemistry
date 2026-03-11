@@ -1,0 +1,93 @@
+/* Explanation of variables and functions used
+   - sa_list: list of strong acids (strings) from chem_strong_acid_array()
+   - strong_acid: selected strong acid (string)
+   - conj_base: conjugate base of strong_acid from chem_acidbase_conjugate_base()
+   - pka_strong_acid: pKa number (or null) via chem_acidbase_pKa(strong_acid)
+   - ka_strong_acid: Ka via chem_acidbase_Ka(strong_acid)
+
+   - wa_list: list of weak acids from chem_weak_acid_array()
+   - weak_acid: selected weak acid
+   - pka_weak_acid, ka_weak_acid: pKa and Ka for weak_acid
+
+   - sb_list: list of strong bases from chem_strong_base_array()
+   - strong_base: selected strong base
+   - conj_acid: conjugate acid of strong_base from chem_acidbase_conjugate_acid()
+   - pkb_strong_base, kb_strong_base: pKb and Kb for strong_base
+
+   - wb_list / weak_base / pkb_weak_base / kb_weak_base: analogous for weak bases
+
+   - arr_all: all database entries via chem_acid_array()
+   - random_sub: a random substance string from arr_all
+   - random_sub_display: chem_display(random_sub)
+
+   Display variables used by STACK placeholders:
+   - strong_acid_display, weak_acid_display, strong_base_display, weak_base_display
+   - conj_base_display, conj_acid_display
+
+   Functions exercised from acidbase.mac and pse.mac:
+   - chem_strong_acid_array(), chem_weak_acid_array(), chem_strong_base_array(), chem_weak_base_array()
+   - chem_acidbase_conjugate_base(), chem_acidbase_conjugate_acid()
+   - chem_acidbase_pKa(), chem_acidbase_Ka(), chem_acidbase_pKb(), chem_acidbase_Kb()
+   - chem_molar_mass() (from pse.mac)
+   - chem_display(), chem_acid_array()
+
+   The code below computes the variables and prepares two question text strings (German and English).
+*/
+
+/* Question code for testing acidbase.mac functionality */
+
+/* Load periodic table module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+
+/* Load acid-base chemistry module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* Allow units */
+stack_unit_si_declare(true);
+
+/* Print fractions as decimals */
+stackfltfmt:"~f";
+
+/* Pick random entries */
+sa_list: chem_strong_acid_array();
+strong_acid: rand(sa_list);
+conj_base: chem_acidbase_conjugate_base(strong_acid);
+pka_strong_acid: chem_acidbase_pKa(strong_acid);
+ka_strong_acid: chem_acidbase_Ka(strong_acid);
+
+/* Weak acids */
+wa_list: chem_weak_acid_array();
+weak_acid: rand(wa_list);
+pka_weak_acid: chem_acidbase_pKa(weak_acid);
+ka_weak_acid: chem_acidbase_Ka(weak_acid);
+
+/* Strong bases */
+sb_list: chem_strong_base_array();
+strong_base: rand(sb_list);
+conj_acid: chem_acidbase_conjugate_acid(strong_base);
+pkb_strong_base: chem_acidbase_pKb(strong_base);
+kb_strong_base: chem_acidbase_Kb(strong_base);
+
+/* Weak bases */
+wb_list: chem_weak_base_array();
+weak_base: rand(wb_list);
+pkb_weak_base: chem_acidbase_pKb(weak_base);
+kb_weak_base: chem_acidbase_Kb(weak_base);
+
+/* Random substance */
+arr_all: chem_acid_array();
+random_sub: rand(arr_all);
+random_sub_display: chem_display(random_sub);
+
+/* Conjugate display variables */
+conj_base_display: chem_display(conj_base);
+conj_acid_display: chem_display(conj_acid);
+
+/* Convenience display variables */
+strong_acid_display: chem_display(strong_acid);
+weak_acid_display: chem_display(weak_acid);
+strong_base_display: chem_display(strong_base);
+weak_base_display: chem_display(weak_base);
+
+/* Test answer placeholder */
+ta1: 10;

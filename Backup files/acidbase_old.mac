@@ -1,0 +1,434 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Acid-Base Chemistry functions for STACK                     */
+/*                                                              */
+/*  V1.0 June 2025                                              */
+/*                                                              */
+/*  NOTE: Formula parsing functions are temporarily disabled    */
+/*  due to STACK restrictions on string parsing functions.      */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Database                                          */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Formula", [pKa, pKb]]
+chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, next_char, clean_formula, num_val],
+    /* Remove charge indicators (+, -, ^, {, }) from formula */
+    clean_formula: ssubst("", "}", ssubst("", "{", ssubst("", "^", ssubst("", "-", ssubst("", "+", formula))))),
+    chars: charlist(clean_formula),
+    n: length(chars),
+    i: 1,
+    result: [],
+    
+    while i <= n do (
+        /* Check if current character is uppercase (start of element) */
+        if cgreaterp(chars[i], "@") and clessp(chars[i], "[") then (
+            current_element: chars[i],
+            i: i + 1,
+            
+            /* Check for lowercase letter (second character of element symbol) */
+            if i <= n and cgreaterp(chars[i], "`") and clessp(chars[i], "{") then (
+                current_element: sconcat(current_element, chars[i]),
+                i: i + 1
+            ),
+            
+            /* Now check for number (count of atoms) */
+            current_count: "",
+            while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                current_count: sconcat(current_count, chars[i]),
+                i: i + 1
+            ),
+            
+            /* If no number found, count is 1 */
+            if sequal(current_count, "") then (
+                num_val: 1
+            ) else (
+                /* Convert string to number using ev */
+                num_val: ev(read(current_count), simp)
+            ),
+            
+            /* Add to result */
+            result: append(result, [[current_element, num_val]])
+        ) else (
+            i: i + 1
+        )
+    ),
+    
+    return(result)
+)$
+*/
+
+/* TEMPORARILY DISABLED: Depends on chem_parse_formula()
+/* This function calculates the molar mass of a molecule from its formula string.
+   Example: chem_molar_mass("H2SO4") returns the molar mass in g/mol */
+/*
+chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
+    parsed: chem_parse_formula(formula),
+    total_mass: 0,
+    
+    for pair in parsed do (
+        elem_data: chem_data(first(pair), "AtomicMass"),
+        if is(elem_data = false) then (
+            /* Return false if element not found instead of error */
+            return(false)
+        ),
+        total_mass: total_mass + elem_data * second(pair)
+    ),
+    
+    return(total_mass)
+)$
+*/
+
+/* TEMPORARILY DISABLED: Depends on chem_molar_mass()
+/* This function calculates the molar mass with units */
+/*
+chem_molar_mass_units(formula) := stackunits(chem_molar_mass(formula), g/mol)$
+*/
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Database                                          */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Formula", [pKa, pKb]]
+   null indicates the value is not applicable or not available */
+%_ACIDBASE_DATA: [
+    ["H+", [0, 14]],
+    ["H2O", [14, 0]],
+    ["HCl", [-7.0, 21]],
+    ["H2SO4", [-2.0, 16]],
+    ["HSO4-", [1.92, 12.08]],
+    ["HNO3", [-1, 15]],
+    ["H3PO4", [1.96, 12.04]],
+    ["H2PO4-", [7.21, 6.79]],
+    ["HPO4^{2-}", [12.32, 1.68]],
+    ["HF", [3.45, 10.55]],
+    ["CH3COOH", [4.74, 9.26]],
+    ["H2CO3", [6.46, 7.54]],
+    ["HCO3-", [10.40, 3.6]],
+    ["H2S", [7.00, 7.00]],
+    ["NH4+", [9.21, 4.79]],
+    ["OH-", [24, -10]],
+    ["NH3", [33, -19]]
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Data Retrieval Functions                          */
+/*                                                              */
+/****************************************************************/
+
+/* Returns all data for a given substance */
+chem_acidbase_data_all(substance) := block([data],
+    data: assoc(substance, %_ACIDBASE_DATA),
+    if is(data = false) then
+        return(false)
+    else
+        return([["pKa", first(data)], ["pKb", second(data)]])
+)$
+
+/* Returns a specific property (pKa or pKb) for a substance */
+chem_acidbase_data(substance, property) := assoc(property, chem_acidbase_data_all(substance))$
+
+/* Calculates Ka from pKa for a given substance */
+chem_acidbase_Ka(substance) := block([pKa_val],
+    pKa_val: chem_acidbase_data(substance, "pKa"),
+    if is(pKa_val = false) or is(pKa_val = null) then
+        return(null)
+    else
+        return(10^(-pKa_val))
+)$
+
+/* Calculates Kb from pKb for a given substance */
+chem_acidbase_Kb(substance) := block([pKb_val],
+    pKb_val: chem_acidbase_data(substance, "pKb"),
+    if is(pKb_val = false) or is(pKb_val = null) then
+        return(null)
+    else
+        return(10^(-pKb_val))
+)$
+
+/* TEMPORARILY DISABLED: Uses forbidden function read()
+/* Helper function to parse and extract charge from formula */
+/*
+chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, charge_num],
+    chars: charlist(formula),
+    n: length(chars),
+    charge: 0,
+    
+    /* Look for charge notation at the end */
+    if n > 0 then (
+        /* Check for + or - at the end */
+        if sequal(chars[n], "+") then (
+            charge: 1,
+            /* Check if there's a number before + */
+            if n > 1 and cgreaterp(chars[n-1], "/") and clessp(chars[n-1], ":") then (
+                charge_str: "",
+                i: n - 1,
+                while i > 0 and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                    charge_str: sconcat(chars[i], charge_str),
+                    i: i - 1
+                ),
+                charge: ev(read(charge_str), simp)
+            )
+        ) else if sequal(chars[n], "-") then (
+            charge: -1,
+            /* Check if there's a number before - */
+            if n > 1 and cgreaterp(chars[n-1], "/") and clessp(chars[n-1], ":") then (
+                charge_str: "",
+                i: n - 1,
+                while i > 0 and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                    charge_str: sconcat(chars[i], charge_str),
+                    i: i - 1
+                ),
+                charge: -ev(read(charge_str), simp)
+            )
+        ) else if n > 2 and sequal(chars[n-1], "^") and sequal(chars[n-2], "{") then (
+            /* Handle format like ^{2-} or ^{3+} */
+            i: n,
+            while i > 0 and not sequal(chars[i], "{") do i: i - 1,
+            if i > 0 then (
+                charge_str: "",
+                i: i + 1,
+                while i <= n and not sequal(chars[i], "}") do (
+                    charge_str: sconcat(charge_str, chars[i]),
+                    i: i + 1
+                ),
+                if slength(charge_str) > 0 then (
+                    if sequal(substring(charge_str, slength(charge_str)), "+") then (
+                        if slength(charge_str) = 1 then charge: 1
+                        else (
+                            charge_num: substring(charge_str, 1, slength(charge_str)),
+                            charge: ev(read(charge_num), simp)
+                        )
+                    ) else if sequal(substring(charge_str, slength(charge_str)), "-") then (
+                        if slength(charge_str) = 1 then charge: -1
+                        else (
+                            charge_num: substring(charge_str, 1, slength(charge_str)),
+                            charge: -ev(read(charge_num), simp)
+                        )
+                    )
+                )
+            )
+        )
+    ),
+    
+    return(charge)
+)$
+*/
+
+/* TEMPORARILY DISABLED: Depends on other disabled functions
+/* Helper function to remove charge notation from formula */
+/*
+chem_remove_charge(formula) := block([chars, i, n, result, in_brace],
+    chars: charlist(formula),
+    n: length(chars),
+    result: "",
+    in_brace: false,
+    
+    i: 1,
+    while i <= n do (
+        if sequal(chars[i], "{") then in_brace: true
+        else if sequal(chars[i], "}") then (
+            in_brace: false,
+            i: i + 1,
+            /* Skip the next character after closing brace (it's part of charge notation) */
+            if i <= n then i: i + 1,
+            i: i - 1
+        ) else if in_brace or sequal(chars[i], "^") then (
+            /* Skip characters inside braces and ^ */
+        ) else if (sequal(chars[i], "+") or sequal(chars[i], "-")) and i = n then (
+            /* Skip charge at the end */
+        ) else if (sequal(chars[i], "+") or sequal(chars[i], "-")) and i < n and 
+                  cgreaterp(chars[i-1], "/") and clessp(chars[i-1], ":") then (
+            /* Skip charge with number before it */
+        ) else (
+            result: sconcat(result, chars[i])
+        ),
+        i: i + 1
+    ),
+    
+    /* Remove trailing numbers that were part of charge */
+    while slength(result) > 0 and 
+          cgreaterp(substring(result, slength(result)), "/") and 
+          clessp(substring(result, slength(result)), ":") do (
+        result: substring(result, 1, slength(result))
+    ),
+    
+    return(result)
+)$
+*/
+
+/* TEMPORARILY DISABLED: Depends on chem_parse_formula()
+/* Helper function to count H atoms in formula */
+/*
+chem_count_H(formula) := block([parsed, h_count],
+    parsed: chem_parse_formula(formula),
+    h_count: 0,
+    for pair in parsed do (
+        if sequal(first(pair), "H") then h_count: second(pair)
+    ),
+    return(h_count)
+)$
+*/
+
+/* Helper function to format charge notation */
+chem_format_charge(charge) := block([],
+    if charge = 0 then return(""),
+    if charge = 1 then return("+"),
+    if charge = -1 then return("-"),
+    if charge > 1 then return(sconcat("^{", charge, "+")),
+    if charge < -1 then return(sconcat("^{", -charge, "-}"))
+)$
+
+/* TEMPORARILY DISABLED: Depends on other disabled functions
+/* Returns the conjugate base after deprotonation (mhchem LaTeX format) */
+/*
+chem_acidbase_conjugate_base(substance) := block([base_formula, charge, h_count, new_h_count, new_charge, parsed, result],
+    /* Get current charge */
+    charge: chem_parse_charge(substance),
+    
+    /* Remove charge notation and get H count */
+    base_formula: chem_remove_charge(substance),
+    h_count: chem_count_H(substance),
+    
+    /* Calculate new values after losing H+ */
+    new_h_count: h_count - 1,
+    new_charge: charge - 1,
+    
+    /* Reconstruct formula */
+    parsed: chem_parse_formula(substance),
+    result: "",
+    
+    for pair in parsed do (
+        if sequal(first(pair), "H") then (
+            if new_h_count > 0 then (
+                result: sconcat(result, "H"),
+                if new_h_count > 1 then result: sconcat(result, new_h_count)
+            )
+        ) else (
+            result: sconcat(result, first(pair)),
+            if second(pair) > 1 then result: sconcat(result, second(pair))
+        )
+    ),
+    
+    /* Add charge notation */
+    result: sconcat(result, chem_format_charge(new_charge)),
+    
+    return(result)
+)$
+*/
+
+/* TEMPORARILY DISABLED: Depends on other disabled functions
+/* Returns the conjugate acid after protonation (mhchem LaTeX format) */
+/*
+chem_acidbase_conjugate_acid(substance) := block([acid_formula, charge, h_count, new_h_count, new_charge, parsed, result],
+    /* Get current charge */
+    charge: chem_parse_charge(substance),
+    
+    /* Remove charge notation and get H count */
+    acid_formula: chem_remove_charge(substance),
+    h_count: chem_count_H(substance),
+    
+    /* Calculate new values after gaining H+ */
+    new_h_count: h_count + 1,
+    new_charge: charge + 1,
+    
+    /* Reconstruct formula */
+    parsed: chem_parse_formula(substance),
+    result: "",
+    has_h: false,
+    
+    /* Check if H already exists */
+    for pair in parsed do (
+        if sequal(first(pair), "H") then has_h: true
+    ),
+    
+    /* Add H at the beginning */
+    if new_h_count > 0 then (
+        result: "H",
+        if new_h_count > 1 then result: sconcat(result, new_h_count)
+    ),
+    
+    /* Add other elements */
+    for pair in parsed do (
+        if not sequal(first(pair), "H") then (
+            result: sconcat(result, first(pair)),
+            if second(pair) > 1 then result: sconcat(result, second(pair))
+        )
+    ),
+    
+    /* Add charge notation */
+    result: sconcat(result, chem_format_charge(new_charge)),
+    
+    return(result)
+)$
+*/
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Navigation Functions                              */
+/*                                                              */
+/****************************************************************/
+
+/* Returns an array of all acids (substances with pKa values) */
+chem_acid_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], not is(first(second(x)) = null))),
+    map(first, filtered)
+)$
+
+/* Returns an array of all bases (substances with pKb values) */
+chem_base_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], not is(second(second(x)) = null))),
+    map(first, filtered)
+)$
+
+/* Returns an array of all substances in the database */
+chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
+
+/* Returns an array of weak acids (pKa > 0) */
+chem_weak_acid_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(first(second(x)) = null) and first(second(x)) > 0)),
+    map(first, filtered)
+)$
+
+/* Returns an array of weak bases (pKb > 0 and < 14) */
+chem_weak_base_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(second(second(x)) = null) and second(second(x)) > 0 and second(second(x)) < 14)),
+    map(first, filtered)
+)$
+
+/* Returns an array of strong acids (pKa < 0) */
+chem_strong_acid_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(first(second(x)) = null) and first(second(x)) < 0)),
+    map(first, filtered)
+)$
+
+/* Returns an array of strong bases (pKb = 0 or pKb < 0) */
+chem_strong_base_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(second(second(x)) = null) and second(second(x)) <= 0)),
+    map(first, filtered)
+)$

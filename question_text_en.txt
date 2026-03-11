@@ -1,0 +1,21 @@
+\(\require{mhchem}\)
+
+Strong acids and bases:
+
+This is a strong acid: \({@strong_acid_display@}\) with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@ka_strong_acid@}. Its conjugate base is \({@conj_base_display@}\).
+
+This is a strong base: \({@strong_base_display@}\) with a pKb of {@pkb_strong_base@}. That corresponds to a Kb of {@kb_strong_base@}. Its conjugate acid is \({@conj_acid_display@}\).
+
+Weak acids and bases:
+
+This is a weak acid: \({@weak_acid_display@}\) with a pKa of {@pka_weak_acid@}. That corresponds to a Ka of {@ka_weak_acid@}.
+
+This is a weak base: \({@weak_base_display@}\) with a pKb of {@pkb_weak_base@}. That corresponds to a Kb of {@kb_weak_base@}.
+
+Molar mass:
+
+\({@strong_acid_display@}\) has a molar mass of {@chem_molar_mass(strong_acid)@}.
+
+Your answer:
+
+[[input:ans1]] [[validation:ans1]]

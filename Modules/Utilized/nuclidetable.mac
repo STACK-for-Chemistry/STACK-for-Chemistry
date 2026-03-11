@@ -1,0 +1,57 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Nuclide Table for STACK                                     */
+/*                                                              */
+/*  V1.0 January 2025                                           */
+/*                                                              */
+/*  Contains nuclear data from NNDC NuDat database              */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Nuclide Database                                            */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Nuclide_ID", [Z, N, Name, LevelEnergies, Halflives, HalflifeUnits, 
+                                       DecayModes, BranchingRatios]]
+   
+   Field descriptions:
+   - Nuclide_ID: String identifier (e.g., "185Tl")
+   - Z: Atomic number (protons)
+   - N: Neutron number
+   - Name: Element symbol + mass number (e.g., "185Tl")
+   - LevelEnergies: Array of excited state energies in MeV [0, 0.455, ...] (0 for ground state)
+   - Halflives: Array of half-life values [19.5, 1.8, ...]
+   - HalflifeUnits: Array of units ["s", "s", ...] (s, ms, us, ns, ps, fs, m, h, d, y, keV, MeV, eV)
+   - DecayModes: Nested array [[mode1, mode2], [mode1]] for each level
+   - BranchingRatios: Nested array [[ratio1, ratio2], [ratio1]] matching DecayModes (percentages)
+   
+   Note: null indicates missing or not applicable data
+   Multiple excited states are combined in arrays for the same isotope
+   Example: ["185Tl", [81, 104, "185Tl", [0, 0.455], [19.5, 1.8], ["s", "s"], 
+                       [["EC+B+"], ["IT"]], [[100], [100]]]]
+*/
+
+%_NUCLIDE_DATA: [
+    /* Neutron (Z=0) */
+    ["n", [0, 1, [0], [608.9], ["s"], [["Bminus"]], [[100]]]],
+
+    /* H (Z=1) */
+    ["3H", [1, 2, [0], [12.3221], ["y"], [["Bminus"]], [[100]]]],
+    ]$

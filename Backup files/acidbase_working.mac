@@ -1,0 +1,137 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Acid-Base Chemistry functions for STACK                     */
+/*                                                              */
+/*  V1.0 June 2025                                              */
+/*                                                              */
+/*  NOTE: Molecule parsing and conjugate acid/base functions   */
+/*  are currently disabled due to STACK restrictions on         */
+/*  string-to-number conversion functions.                      */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Database                                          */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Formula", [pKa, pKb]]
+   null indicates the value is not applicable or not available */
+%_ACIDBASE_DATA: [
+    ["H+", [0, 14]],
+    ["H2O", [14, 0]],
+    ["HCl", [-7.0, 21]],
+    ["H2SO4", [-2.0, 16]],
+    ["HSO4-", [1.92, 12.08]],
+    ["HNO3", [-1, 15]],
+    ["H3PO4", [1.96, 12.04]],
+    ["H2PO4-", [7.21, 6.79]],
+    ["HPO4^{2-}", [12.32, 1.68]],
+    ["HF", [3.45, 10.55]],
+    ["CH3COOH", [4.74, 9.26]],
+    ["H2CO3", [6.46, 7.54]],
+    ["HCO3-", [10.40, 3.6]],
+    ["H2S", [7.00, 7.00]],
+    ["NH4+", [9.21, 4.79]],
+    ["OH-", [24, -10]]
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Data Retrieval Functions                          */
+/*                                                              */
+/****************************************************************/
+
+/* Returns all data for a given substance */
+chem_acidbase_data_all(substance) := block([data],
+    data: assoc(substance, %_ACIDBASE_DATA),
+    if is(data = false) then
+        return(false)
+    else
+        return([["pKa", first(data)], ["pKb", second(data)]])
+)$
+
+/* Returns a specific property (pKa or pKb) for a substance */
+chem_acidbase_data(substance, property) := assoc(property, chem_acidbase_data_all(substance))$
+
+/* Calculates Ka from pKa for a given substance */
+chem_acidbase_Ka(substance) := block([pKa_val],
+    pKa_val: chem_acidbase_data(substance, "pKa"),
+    if is(pKa_val = false) or is(pKa_val = null) then
+        return(null)
+    else
+        return(10^(-pKa_val))
+)$
+
+/* Calculates Kb from pKb for a given substance */
+chem_acidbase_Kb(substance) := block([pKb_val],
+    pKb_val: chem_acidbase_data(substance, "pKb"),
+    if is(pKb_val = false) or is(pKb_val = null) then
+        return(null)
+    else
+        return(10^(-pKb_val))
+)$
+
+/* Helper function to format charge notation NEEDS TO BE TESTED*/
+chem_format_charge(charge) := block([],
+    if charge = 0 then return(""),
+    if charge = 1 then return("+"),
+    if charge = -1 then return("-"),
+    if charge > 1 then return(sconcat("^{", charge, "+")),
+    if charge < -1 then return(sconcat("^{", -charge, "-}"))
+)$
+
+/* Returns a chemical formula wrapped in \ce{...} for proper LaTeX rendering with mhchem */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
+
+/****************************************************************/
+/*                                                              */
+/*  Acid-Base Navigation Functions                              */
+/*                                                              */
+/****************************************************************/
+
+/* Returns an array of all substances in the database */
+chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
+
+/* Returns an array of weak acids (pKa > 0) */
+chem_weak_acid_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(first(second(x)) = null) and first(second(x)) > 0)),
+    map(first, filtered)
+)$
+
+/* Returns an array of weak bases (pKb > 0 and < 14) */
+chem_weak_base_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(second(second(x)) = null) and second(second(x)) > 0 and second(second(x)) < 14)),
+    map(first, filtered)
+)$
+
+/* Returns an array of strong acids (pKa = 0 or pKa < 0) */
+chem_strong_acid_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(first(second(x)) = null) and first(second(x)) < 0)),
+    map(first, filtered)
+)$
+
+/* Returns an array of strong bases (pKb = 0 or pKb < 0) */
+chem_strong_base_array() := block([filtered],
+    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
+        not is(second(second(x)) = null) and second(second(x)) <= 0)),
+    map(first, filtered)
+)$
