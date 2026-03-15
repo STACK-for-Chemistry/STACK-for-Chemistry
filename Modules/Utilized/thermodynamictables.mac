@@ -665,21 +665,6 @@ chem_thermo_get_tags_state(substance, state) := block([matches, data],
         return(sixth(second(first(matches))))
 )$
 
-/* Returns all unique tags in the database */
-chem_thermo_all_tags() := block([all_tags],
-    all_tags: flatten(map(lambda([x], sixth(second(x))), %_THERMO_DATA)),
-    return(unique(all_tags))
-)$
-
-/* Returns a random substance with a specific tag */
-chem_thermo_random_by_tag(tag) := block([matches],
-    matches: chem_thermo_substances_by_tag(tag),
-    if emptyp(matches) then
-        return(false)
-    else
-        return(matches[1 + random(length(matches))])
-)$
-
 /* Returns a random substance with ALL specified tags */
 chem_thermo_random_by_tags_all(tag_list) := block([matches],
     matches: chem_thermo_substances_by_tags_all(tag_list),
@@ -699,7 +684,3 @@ chem_thermo_data_by_tag_state(tag, state) :=
     map(lambda([x], [first(x), zip_with("[", %_THERMO_FIELDS, second(x))]), 
         sublist(chem_thermo_filter_by_tag(tag), 
             lambda([x], sequal(fifth(second(x)), state))))$
-
-/* Count substances with a specific tag */
-chem_thermo_count_by_tag(tag) := 
-    length(chem_thermo_filter_by_tag(tag))$

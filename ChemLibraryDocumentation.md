@@ -30,6 +30,8 @@
    - [Function Reference Table (Solubility)](#function-reference-table-solubility)
 6. [Thermodynamic Tables Module](#thermodynamic-tables-module)
    - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
+   - [Tag-Based Filtering Functions](#tag-based-filtering-functions)
+   - [Thermodynamic Navigation Functions](#thermodynamic-navigation-functions)
    - [Thermodynamic Calculation Functions](#thermodynamic-calculation-functions)
    - [Available Substances](#available-substances)
 7. [Chemical Reactions Module](#chemical-reactions-module)
@@ -1153,8 +1155,6 @@ pKa_list: plot_data[5];
 
 ---
 
-### JSXGraph Plot Generation Functions
-
 #### `chem_jsxgraph_titration_code(xdata, ydata, v_max, v_pushoff)`
 
 **Description:** Generates complete JSXGraph JavaScript code for a basic titration curve.
@@ -1968,7 +1968,57 @@ The solubility database contains the following salt categories:
 
 ## Thermodynamic Tables Module
 
-The thermodynamic tables module provides access to standard thermodynamic data and functions for calculating reaction thermodynamics.
+The thermodynamic tables module provides access to standard thermodynamic data and functions for calculating reaction thermodynamics. Each substance in the database includes classification tags for flexible filtering.
+
+### Database Structure
+
+Each entry in the thermodynamic database contains:
+- **Formula**: Chemical formula (string)
+- **ΔHf°**: Standard enthalpy of formation (kJ/mol)
+- **S°**: Standard molar entropy (J/(mol·K))
+- **ΔGf°**: Standard Gibbs free energy of formation (kJ/mol)
+- **Cp°**: Standard molar heat capacity (J/(mol·K))
+- **State**: Physical state ("g", "l", "s", or "aq")
+- **Tags**: List of classification tags (e.g., ["element", "metal", "inorganic"])
+
+### Available Tags
+
+The following standard tags are used for substance classification:
+
+| Tag | Description |
+|-----|-------------|
+| `"element"` | Pure elements |
+| `"ion"` | Ionic species |
+| `"cation"` | Positively charged ions |
+| `"anion"` | Negatively charged ions |
+| `"molecule"` | Molecular compounds |
+| `"salt"` | Ionic salts |
+| `"oxide"` | Oxide compounds |
+| `"hydroxide"` | Hydroxide compounds |
+| `"halogenide"` | Halogen-containing compounds |
+| `"chloride"` | Chloride compounds |
+| `"bromide"` | Bromide compounds |
+| `"iodide"` | Iodide compounds |
+| `"fluoride"` | Fluoride compounds |
+| `"sulfide"` | Sulfide compounds |
+| `"sulfate"` | Sulfate compounds |
+| `"carbonate"` | Carbonate compounds |
+| `"nitrate"` | Nitrate compounds |
+| `"phosphate"` | Phosphate compounds |
+| `"acid"` | Acidic substances |
+| `"base"` | Basic substances |
+| `"organic"` | Organic compounds |
+| `"inorganic"` | Inorganic compounds |
+| `"hydrocarbon"` | Hydrocarbon compounds |
+| `"alcohol"` | Alcohol compounds |
+| `"carboxylic_acid"` | Carboxylic acids |
+| `"aldehyde"` | Aldehyde compounds |
+| `"ketone"` | Ketone compounds |
+| `"sugar"` | Sugar compounds |
+| `"amine"` | Amine compounds |
+| `"metal"` | Metallic elements |
+| `"nonmetal"` | Nonmetallic elements |
+| `"hydrate"` | Hydrated compounds |
 
 ### Thermodynamic Data Retrieval Functions
 
@@ -1978,7 +2028,7 @@ The thermodynamic tables module provides access to standard thermodynamic data a
 
 **Parameters:**
 - `substance` (string): Chemical formula
-- `property` (string): "DeltaHf" (ΔHf°), "S" (S°), "DeltaGf" (ΔGf°), or "State"
+- `property` (string): "DeltaHf" (ΔHf°), "S" (S°), "DeltaGf" (ΔGf°), "Cp" (Cp°), or "State"
 - `state` (string): "g" (gas), "l" (liquid), "s" (solid), or "aq" (aqueous)
 
 **Returns:** Property value or `false` if not found
@@ -1986,13 +2036,13 @@ The thermodynamic tables module provides access to standard thermodynamic data a
 **Example:**
 ```maxima
 /* Get enthalpy of formation for liquid water */
-delta_hf: chem_thermo_data("H2O", "DeltaHf", "l");  /* Returns -285.8 kJ/mol */
+delta_hf: chem_thermo_data("H2O", "DeltaHf", "l");  /* Returns -285.83 kJ/mol */
 
 /* Get entropy for gaseous CO2 */
-entropy: chem_thermo_data("CO2", "S", "g");  /* Returns 213.8 J/(mol·K) */
+entropy: chem_thermo_data("CO2", "S", "g");  /* Returns 213.74 J/(mol·K) */
 
 /* Get Gibbs free energy for solid NaCl */
-delta_gf: chem_thermo_data("NaCl", "DeltaGf", "s");  /* Returns -384.1 kJ/mol */
+delta_gf: chem_thermo_data("NaCl", "DeltaGf", "s");  /* Returns -384.14 kJ/mol */
 ```
 
 ---
@@ -2003,7 +2053,7 @@ delta_gf: chem_thermo_data("NaCl", "DeltaGf", "s");  /* Returns -384.1 kJ/mol */
 
 **Parameters:**
 - `substance` (string): Chemical formula
-- `property` (string): "DeltaHf", "S", "DeltaGf", or "State"
+- `property` (string): "DeltaHf", "S", "DeltaGf", "Cp", or "State"
 - `state` (string): "g", "l", "s", or "aq"
 
 **Returns:** Property value with units using `stackunits()`
@@ -2011,28 +2061,46 @@ delta_gf: chem_thermo_data("NaCl", "DeltaGf", "s");  /* Returns -384.1 kJ/mol */
 **Example:**
 ```maxima
 delta_hf: chem_thermo_data_units("CH4", "DeltaHf", "g");
-/* Returns -74.6*kJ/mol */
+/* Returns stackunits(-74.81, kJ*mol^(-1)) */
 
 entropy: chem_thermo_data_units("H2O", "S", "l");
-/* Returns 69.9*J/(mol*K) */
+/* Returns stackunits(69.91, J*mol^(-1)*K^(-1)) */
 ```
 
 ---
 
 #### `chem_thermo_data_all(substance, state)`
 
-**Description:** Returns all thermodynamic data for a substance in a specific state.
+**Description:** Returns all thermodynamic data for a substance in a specific state as an association list.
 
 **Parameters:**
 - `substance` (string): Chemical formula
 - `state` (string): "g", "l", "s", or "aq"
 
-**Returns:** List of [property, value] pairs
+**Returns:** List of [property, value] pairs, or `false` if not found
 
 **Example:**
 ```maxima
 data: chem_thermo_data_all("H2O", "l");
-/* Returns [["DeltaHf", -285.8], ["S", 69.9], ["DeltaGf", -237.1], ["State", "l"]] */
+/* Returns [["DeltaHf", -285.83], ["S", 69.91], ["DeltaGf", -237.13], 
+            ["Cp", 75.29], ["State", "l"], ["Tags", ["molecule", "oxide", "inorganic"]]] */
+```
+
+---
+
+#### `chem_thermo_data_all_any(substance)`
+
+**Description:** Returns all thermodynamic data for a substance (first match if multiple states exist).
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** List of [property, value] pairs, or `false` if not found
+
+**Example:**
+```maxima
+data: chem_thermo_data_all_any("NaCl");
+/* Returns data for the first matching entry (solid NaCl) */
 ```
 
 ---
@@ -2050,6 +2118,296 @@ data: chem_thermo_data_all("H2O", "l");
 ```maxima
 states: chem_thermo_states("H2O");
 /* Returns ["l", "g"] */
+
+states: chem_thermo_states("NaCl");
+/* Returns ["s", "aq"] */
+```
+
+---
+
+### Tag-Based Filtering Functions
+
+#### `chem_thermo_has_tag(entry, tag)`
+
+**Description:** Checks if a database entry has a specific tag.
+
+**Parameters:**
+- `entry` (list): A database entry from `%_THERMO_DATA`
+- `tag` (string): Tag to check for
+
+**Returns:** `true` if the tag is present, `false` otherwise
+
+**Example:**
+```maxima
+/* Internal function, typically used by other filtering functions */
+```
+
+---
+
+#### `chem_thermo_filter_by_tag(tag)`
+
+**Description:** Returns all database entries that have a specific tag.
+
+**Parameters:**
+- `tag` (string): Tag to filter by
+
+**Returns:** List of database entries (each entry is `["Formula", [data...]]`)
+
+**Example:**
+```maxima
+salts: chem_thermo_filter_by_tag("salt");
+/* Returns all entries tagged as "salt" */
+
+metals: chem_thermo_filter_by_tag("metal");
+/* Returns all entries tagged as "metal" */
+```
+
+---
+
+#### `chem_thermo_filter_by_tags_all(tag_list)`
+
+**Description:** Returns all entries that have ALL specified tags (AND logic).
+
+**Parameters:**
+- `tag_list` (list): List of tags that must all be present
+
+**Returns:** List of database entries
+
+**Example:**
+```maxima
+/* Find all organic acids */
+organic_acids: chem_thermo_filter_by_tags_all(["organic", "acid"]);
+
+/* Find all chloride salts */
+chloride_salts: chem_thermo_filter_by_tags_all(["salt", "chloride"]);
+```
+
+---
+
+#### `chem_thermo_filter_by_tags_any(tag_list)`
+
+**Description:** Returns all entries that have ANY of the specified tags (OR logic).
+
+**Parameters:**
+- `tag_list` (list): List of tags where at least one must be present
+
+**Returns:** List of database entries
+
+**Example:**
+```maxima
+/* Find substances that are either acids or bases */
+acid_or_base: chem_thermo_filter_by_tags_any(["acid", "base"]);
+
+/* Find any halogenide */
+halogenides: chem_thermo_filter_by_tags_any(["chloride", "bromide", "iodide", "fluoride"]);
+```
+
+---
+
+#### `chem_thermo_substances_by_tag(tag)`
+
+**Description:** Returns a list of unique substance formulas with a specific tag.
+
+**Parameters:**
+- `tag` (string): Tag to filter by
+
+**Returns:** List of chemical formula strings (unique)
+
+**Example:**
+```maxima
+salts: chem_thermo_substances_by_tag("salt");
+/* Returns ["AlCl3", "BaCO3", "CaCO3", "CaF2", "CaCl2", ...] */
+
+oxides: chem_thermo_substances_by_tag("oxide");
+/* Returns ["Al2O3", "BaO", "B2O3", "CO", "CO2", ...] */
+
+hydrocarbons: chem_thermo_substances_by_tag("hydrocarbon");
+/* Returns ["CH4", "C2H6", "C2H4", "C2H2", "C3H6", ...] */
+```
+
+---
+
+#### `chem_thermo_substances_by_tags_all(tag_list)`
+
+**Description:** Returns unique substance formulas with ALL specified tags.
+
+**Parameters:**
+- `tag_list` (list): List of tags that must all be present
+
+**Returns:** List of chemical formula strings (unique)
+
+**Example:**
+```maxima
+/* Find all organic alcohols */
+alcohols: chem_thermo_substances_by_tags_all(["organic", "alcohol"]);
+/* Returns ["CH3OH", "C2H5OH", "C6H5OH"] */
+
+/* Find all inorganic chloride salts */
+chlorides: chem_thermo_substances_by_tags_all(["salt", "chloride", "inorganic"]);
+/* Returns ["AlCl3", "CaCl2", "KCl", "NaCl", ...] */
+```
+
+---
+
+#### `chem_thermo_substances_by_tags_any(tag_list)`
+
+**Description:** Returns unique substance formulas with ANY of the specified tags.
+
+**Parameters:**
+- `tag_list` (list): List of tags where at least one must be present
+
+**Returns:** List of chemical formula strings (unique)
+
+**Example:**
+```maxima
+/* Find all aldehydes or ketones */
+carbonyl: chem_thermo_substances_by_tags_any(["aldehyde", "ketone"]);
+/* Returns ["HCHO", "CH3CHO", "CH3COCH3"] */
+```
+
+---
+
+#### `chem_thermo_get_tags(substance)`
+
+**Description:** Returns all tags for a substance (first match if multiple states exist).
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** List of tag strings, or `false` if not found
+
+**Example:**
+```maxima
+tags: chem_thermo_get_tags("NaCl");
+/* Returns ["salt", "halogenide", "chloride", "inorganic"] */
+
+tags: chem_thermo_get_tags("CH3COOH");
+/* Returns ["organic", "carboxylic_acid", "acid", "molecule"] */
+
+tags: chem_thermo_get_tags("Fe");
+/* Returns ["element", "metal", "inorganic"] */
+```
+
+---
+
+#### `chem_thermo_get_tags_state(substance, state)`
+
+**Description:** Returns all tags for a substance in a specific state.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+- `state` (string): "g", "l", "s", or "aq"
+
+**Returns:** List of tag strings, or `false` if not found
+
+**Example:**
+```maxima
+tags: chem_thermo_get_tags_state("H2O", "l");
+/* Returns ["molecule", "oxide", "inorganic"] */
+
+tags: chem_thermo_get_tags_state("NaCl", "aq");
+/* Returns ["salt", "halogenide", "chloride", "inorganic"] */
+```
+
+---
+
+#### `chem_thermo_random_by_tags_all(tag_list)`
+
+**Description:** Returns a random substance formula that has ALL specified tags.
+
+**Parameters:**
+- `tag_list` (list): List of tags that must all be present
+
+**Returns:** Chemical formula string, or `false` if no matches
+
+**Example:**
+```maxima
+/* Get a random organic molecule */
+random_organic: chem_thermo_random_by_tags_all(["organic", "molecule"]);
+
+/* Get a random inorganic salt */
+random_salt: chem_thermo_random_by_tags_all(["salt", "inorganic"]);
+
+/* Get a random metal element */
+random_metal: chem_thermo_random_by_tags_all(["element", "metal"]);
+```
+
+---
+
+#### `chem_thermo_data_by_tag(tag)`
+
+**Description:** Returns full data for all substances filtered by tag.
+
+**Parameters:**
+- `tag` (string): Tag to filter by
+
+**Returns:** List of `[formula, [[property, value], ...]]` pairs
+
+**Example:**
+```maxima
+acid_data: chem_thermo_data_by_tag("acid");
+/* Returns [["HBr", [["DeltaHf", -36.40], ["S", 198.70], ...]], 
+            ["HCl", [["DeltaHf", -92.31], ...]], ...] */
+```
+
+---
+
+#### `chem_thermo_data_by_tag_state(tag, state)`
+
+**Description:** Returns full data for substances filtered by both tag and state.
+
+**Parameters:**
+- `tag` (string): Tag to filter by
+- `state` (string): "g", "l", "s", or "aq"
+
+**Returns:** List of `[formula, [[property, value], ...]]` pairs
+
+**Example:**
+```maxima
+/* Get all gaseous hydrocarbons with their data */
+gas_hydrocarbons: chem_thermo_data_by_tag_state("hydrocarbon", "g");
+
+/* Get all aqueous ions with their data */
+aq_ions: chem_thermo_data_by_tag_state("ion", "aq");
+```
+
+---
+
+### Thermodynamic Navigation Functions
+
+#### `chem_thermo_substance_array()`
+
+**Description:** Returns an array of all unique substance formulas in the database.
+
+**Returns:** List of chemical formula strings
+
+**Example:**
+```maxima
+all_substances: chem_thermo_substance_array();
+/* Returns ["Al", "Al^{3+}", "Al2O3", "Al(OH)3", ...] */
+
+/* Select a random substance */
+substance: rand(chem_thermo_substance_array());
+```
+
+---
+
+#### `chem_thermo_substance_state_array(state)`
+
+**Description:** Returns an array of all unique substance formulas in a specific state.
+
+**Parameters:**
+- `state` (string): "g", "l", "s", or "aq"
+
+**Returns:** List of chemical formula strings
+
+**Example:**
+```maxima
+gases: chem_thermo_substance_state_array("g");
+/* Returns all gaseous substances */
+
+aqueous: chem_thermo_substance_state_array("aq");
+/* Returns all aqueous species */
 ```
 
 ---
@@ -2136,17 +2494,50 @@ delta_h: chem_reaction_enthalpy(products, reactants);
 
 ---
 
+### Function Reference Table (Thermodynamics)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_thermo_data(sub, prop, state)` | Get specific property | `chem_thermo_data("H2O", "DeltaHf", "l")` → `-285.83` |
+| `chem_thermo_data_units(sub, prop, state)` | Get property with units | `chem_thermo_data_units("H2O", "S", "l")` |
+| `chem_thermo_data_all(sub, state)` | Get all data for substance/state | `chem_thermo_data_all("NaCl", "s")` |
+| `chem_thermo_data_all_any(sub)` | Get all data (first match) | `chem_thermo_data_all_any("H2O")` |
+| `chem_thermo_states(sub)` | Get available states | `chem_thermo_states("H2O")` → `["l", "g"]` |
+| `chem_thermo_substance_array()` | All substances | List of all formulas |
+| `chem_thermo_substance_state_array(state)` | Substances by state | `chem_thermo_substance_state_array("g")` |
+| `chem_thermo_filter_by_tag(tag)` | Filter entries by tag | `chem_thermo_filter_by_tag("salt")` |
+| `chem_thermo_filter_by_tags_all(tags)` | Filter by ALL tags | `chem_thermo_filter_by_tags_all(["organic", "acid"])` |
+| `chem_thermo_filter_by_tags_any(tags)` | Filter by ANY tag | `chem_thermo_filter_by_tags_any(["acid", "base"])` |
+| `chem_thermo_substances_by_tag(tag)` | Formulas by tag | `chem_thermo_substances_by_tag("oxide")` |
+| `chem_thermo_substances_by_tags_all(tags)` | Formulas with ALL tags | `chem_thermo_substances_by_tags_all(["salt", "chloride"])` |
+| `chem_thermo_substances_by_tags_any(tags)` | Formulas with ANY tag | `chem_thermo_substances_by_tags_any(["aldehyde", "ketone"])` |
+| `chem_thermo_get_tags(sub)` | Get tags for substance | `chem_thermo_get_tags("NaCl")` → `["salt", ...]` |
+| `chem_thermo_get_tags_state(sub, state)` | Get tags for substance/state | `chem_thermo_get_tags_state("H2O", "l")` |
+| `chem_thermo_random_by_tags_all(tags)` | Random substance with tags | `chem_thermo_random_by_tags_all(["organic"])` |
+| `chem_thermo_data_by_tag(tag)` | Full data by tag | `chem_thermo_data_by_tag("acid")` |
+| `chem_thermo_data_by_tag_state(tag, state)` | Full data by tag and state | `chem_thermo_data_by_tag_state("ion", "aq")` |
+| `chem_reaction_enthalpy(prod, react)` | Calculate ΔH° | See examples above |
+| `chem_reaction_entropy(prod, react)` | Calculate ΔS° | See examples above |
+| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples above |
+| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` |
+| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` |
+
 ### Available Substances
 
 The thermodynamic database includes:
-- **Elements**: H2, O2, N2, Cl2, Br2, I2, C (graphite), S (rhombic)
-- **Simple Inorganics**: H2O (l, g), CO2, CO, NH3, NO, NO2, N2O, SO2, SO3, H2S
-- **Acids**: HCl, HBr, HI, HNO3, H2SO4, CH3COOH
-- **Aqueous Ions**: H+, OH-, Cl-, Br-, I-, Na+, K+, Ca²⁺, Mg²⁺, Fe²⁺, Fe³⁺, Cu²⁺, Ag+, SO₄²⁻, NO₃⁻, CO₃²⁻, HCO₃⁻, NH₄⁺
-- **Salts**: NaCl, KCl, CaCl2, MgCl2, AgCl, NaBr, KBr, NaI, CaCO3, MgCO3, Na2SO4, CaSO4
-- **Oxides**: CaO, MgO, Al2O3, Fe2O3, FeO, CuO, ZnO
-- **Hydroxides**: NaOH, KOH, Ca(OH)2, Mg(OH)2
-- **Organics**: CH4, C2H6, C3H8, C2H4, C2H2, C6H6, CH3OH, C2H5OH, CH2O, CH3CHO, C6H12O6
+- **Elements**: H2, O2, N2, Cl2, Br2, I2, C (graphite/diamond), S (rhombic), Al, Fe, Cu, Zn, Ag, Na, K, Ca, Mg, etc.
+- **Simple Inorganics**: H2O (l, g), CO2, CO, NH3, NO, NO2, N2O, SO2, SO3, H2S, HCN
+- **Acids**: HCl, HBr, HI, HF, HNO3, H2SO4, H3PO4, CH3COOH, HCOOH
+- **Aqueous Ions**: H+, OH-, Cl-, Br-, I-, F-, Na+, K+, Ca²⁺, Mg²⁺, Fe²⁺, Fe³⁺, Cu²⁺, Ag+, SO₄²⁻, NO₃⁻, CO₃²⁻, NH₄⁺
+- **Salts**: NaCl, KCl, CaCl2, MgCl2, AgCl, NaBr, KBr, NaI, CaCO3, MgCO3, Na2SO4, CaSO4, NH4Cl, NH4NO3
+- **Oxides**: CaO, MgO, Al2O3, Fe2O3, Fe3O4, FeO, CuO, Cu2O, ZnO, BaO, SiO2
+- **Hydroxides**: NaOH, KOH, Ca(OH)2, Mg(OH)2, Al(OH)3, Fe(OH)3
+- **Organic Hydrocarbons**: CH4, C2H6, C3H8, C4H10, C5H12, C2H4, C2H2, C3H6, C6H6, C7H8, C8H18
+- **Alcohols**: CH3OH, C2H5OH, C6H5OH
+- **Carboxylic Acids**: HCOOH, CH3COOH, C6H5COOH
+- **Aldehydes/Ketones**: HCHO, CH3CHO, CH3COCH3
+- **Sugars**: C6H12O6 (glucose, fructose), C12H22O11 (sucrose)
+- **Amines**: CH3NH2, C6H5NH2, NH2CH2COOH (glycine), CO(NH2)2 (urea)
 
 ---
 
