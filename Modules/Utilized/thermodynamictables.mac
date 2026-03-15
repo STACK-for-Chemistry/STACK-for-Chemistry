@@ -665,14 +665,9 @@ chem_thermo_get_tags_state(substance, state) := block([matches, data],
         return(sixth(second(first(matches))))
 )$
 
-/* Returns a random substance with ALL specified tags */
-chem_thermo_random_by_tags_all(tag_list) := block([matches],
-    matches: chem_thermo_substances_by_tags_all(tag_list),
-    if emptyp(matches) then
-        return(false)
-    else
-        return(matches[1 + random(length(matches))])
-)$
+/* Returns all substances with ALL specified tags (for random selection by user) */
+chem_thermo_random_by_tags_all(tag_list) := 
+    chem_thermo_substances_by_tags_all(tag_list)$
 
 /* Returns full data for substances filtered by tag */
 chem_thermo_data_by_tag(tag) := 
