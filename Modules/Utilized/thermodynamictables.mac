@@ -718,10 +718,10 @@
 /* Units for thermodynamic data */
 %_THERMO_UNITS: [null, kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), J*mol^(-1)*K^(-1)]$
 
-/* Helper: Get entry for a substance */two lists (replacement for zip_with) */
-_chem_thermo_get_entry(substance) := block([match],,
-    match: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
-    if emptyp(match) then false else first(match)) do (
+/* Helper: Create key-value pairs from two lists */
+_chem_thermo_zip(keys, values) := block([result, i],
+    result: [],
+    for i:1 thru min(length(keys), length(values)) do (
         result: append(result, [[keys[i], values[i]]])
     ),
     return(result)
@@ -904,7 +904,7 @@ chem_thermo_substance_state_array(state) := block([filtered],
 
 /* Returns an array of available states for a substance */
 chem_thermo_states(substance) := block([entry],
-    entry: _chem_thermo_get_entry(substance),)))
+    entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     return(map(first, third(entry)))
 )$
@@ -957,7 +957,7 @@ chem_thermo_get_tags(substance) := block([entry],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     return(second(entry))
-)$), 
+)$
 
 /* Returns all substances with ALL specified tags (for random selection by user) */
 chem_thermo_random_by_tags_all(tag_list) := 
