@@ -720,19 +720,19 @@
 
 /* Helper: Get entry for a substance */
 _chem_thermo_get_entry(substance) := block([match],
-    match: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
-    if emptyp(match) then false else first(match)
+    match: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),], sequal(first(x), substance))),
+    if emptyp(match) then false else first(match) first(match)
 )$
 
-/* Helper: Get phase data from entry */
-_chem_thermo_get_phase_data(entry, state) := block([phases, match],
-    phases: third(entry),
-    match: sublist(phases, lambda([p], sequal(first(p), state))),
+/* Helper: Get phase data from entry *//* Helper: Get phase data from entry */
+_chem_thermo_get_phase_data(entry, state) := block([phases, match],e) := block([phases, match],
+    if is(entry = false) then return(false),
+    phases: third(entry),l(first(p), state))),
+    match: sublist(phases, lambda([p], sequal(first(p), state))), false else first(match)
     if emptyp(match) then false else first(match)
 )$
-
 /* Returns all thermodynamic data for a substance in a specific state */
-chem_thermo_data_all(substance, state) := block([entry, phase_data],
+chem_thermo_data_all(substance, state) := block([entry, phase_data],thermo_get_entry(substance),
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     phase_data: _chem_thermo_get_phase_data(entry, state),
@@ -748,9 +748,16 @@ chem_thermo_data_all_any(substance) := block([entry, phase_data],
     return(zip_with("[", %_THERMO_PHASE_FIELDS, phase_data))
 )$
 
+/* Helper: Get value from key-value pair list */
+_chem_thermo_assoc(key, kvlist) := block([match],
+    if not(listp(kvlist)) then return(false),
+    match: sublist(kvlist, lambda([x], sequal(first(x), key))),
+    if emptyp(match) then false else second(first(match))
+)$
+
 /* Returns a specific thermodynamic property for a substance in a specific state */
 chem_thermo_data(substance, property, state) := 
-    assoc(property, chem_thermo_data_all(substance, state))$
+    _chem_thermo_assoc(property, chem_thermo_data_all(substance, state))$
 
 /* Returns a specific thermodynamic property with units */
 chem_thermo_data_units(substance, property, state) := block([value, unit, field_idx],
