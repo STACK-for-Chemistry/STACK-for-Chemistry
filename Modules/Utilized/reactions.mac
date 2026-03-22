@@ -797,9 +797,9 @@
 /****************************************************************/
 
 /* Helper: Get value from key-value pair list (replacement for assoc) */
-_chem_reaction_assoc(key, kvlist) := block([match],
+_chem_reaction_assoc(search_key, kvlist) := block([match],
     if not(listp(kvlist)) then return(false),
-    match: sublist(kvlist, lambda([x], sequal(first(x), key))),
+    match: sublist(kvlist, lambda([x], sequal(first(x), search_key))),
     if emptyp(match) then false else second(first(match))
 )$
 

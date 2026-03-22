@@ -759,9 +759,9 @@ chem_thermo_data_all_any(substance) := block([entry, phase_data],
 )$
 
 /* Helper: Get value from key-value pair list */
-_chem_thermo_assoc(key, kvlist) := block([match],
+_chem_thermo_assoc(search_key, kvlist) := block([match],
     if not(listp(kvlist)) then return(false),
-    match: sublist(kvlist, lambda([x], sequal(first(x), key))),
+    match: sublist(kvlist, lambda([x], sequal(first(x), search_key))),
     if emptyp(match) then false else second(first(match))
 )$
 
