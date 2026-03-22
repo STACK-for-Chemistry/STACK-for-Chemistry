@@ -74,7 +74,7 @@
    State = Physical state (g, l, s, aq)
    Tags = List of classification tags (applies to substance)
    null indicates the value is not available
-   All values at 298.15 K (25°C) and 1 bar */
+   All value at 298.15 K (25°C) and 1 bar */
 
 %_THERMO_DATA: [
     /****************************************************************/
