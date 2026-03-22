@@ -581,114 +581,6 @@
     ]],
 
     /****************************************************************/
-    /*  Data from Appendix 2A: Inorganic Substances (A14)           */
-    /****************************************************************/
-
-    /* Silver */
-    ["Ag", ["element", "metal", "inorganic"], [
-        ["s", 0, 42.55, 0, 25.35]
-    ]],
-    ["Ag+", ["ion", "cation", "inorganic"], [
-        ["aq", 105.58, 72.68, 77.11, 21.8]
-    ]],
-    ["Ag2O", ["oxide", "inorganic"], [
-        ["s", -31.05, 121.3, -11.20, 65.86]
-    ]],
-    ["AgBr", ["salt", "halogenide", "bromide", "inorganic"], [
-        ["s", -100.37, 107.1, -96.90, 52.38],
-        ["aq", -15.98, 155.2, -26.86, null]
-    ]],
-    ["AgCl", ["salt", "halogenide", "chloride", "inorganic"], [
-        ["s", -127.07, 96.2, -109.79, 50.79],
-        ["aq", -61.58, 129.3, -54.12, null]
-    ]],
-    ["AgI", ["salt", "halogenide", "iodide", "inorganic"], [
-        ["s", -61.84, 115.5, -66.19, 56.82],
-        ["aq", 50.38, 184.1, 25.52, null]
-    ]],
-    ["AgNO3", ["salt", "nitrate", "inorganic"], [
-        ["s", -124.39, 140.92, -33.41, 93.05]
-    ]],
-
-    /* Sodium */
-    ["Na", ["element", "metal", "inorganic"], [
-        ["s", 0, 51.21, 0, 28.24],
-        ["g", 107.32, 153.71, 76.76, 20.79]
-    ]],
-    ["Na+", ["ion", "cation", "inorganic"], [
-        ["aq", -240.12, 59.0, -261.91, 46.4]
-    ]],
-    ["NaOH", ["hydroxide", "base", "inorganic"], [
-        ["s", -425.61, 64.46, -379.49, 59.54],
-        ["aq", -470.11, 48.1, -419.15, null]
-    ]],
-    ["NaCl", ["salt", "halogenide", "chloride", "inorganic"], [
-        ["s", -411.15, 72.13, -384.14, 50.50],
-        ["aq", -407.27, 115.5, -393.13, null]
-    ]],
-    ["NaBr", ["salt", "halogenide", "bromide", "inorganic"], [
-        ["s", -361.06, 86.82, -348.98, 51.38]
-    ]],
-    ["NaI", ["salt", "halogenide", "iodide", "inorganic"], [
-        ["s", -287.78, 98.53, -286.06, 52.09]
-    ]],
-    ["Na2SO4", ["salt", "sulfate", "inorganic"], [
-        ["s", -1387.1, 149.6, -1270.2, 128.20]
-    ]],
-
-    /* Sulfur */
-    ["S", ["element", "nonmetal", "inorganic"], [
-        ["s", 0, 31.80, 0, 22.64]
-    ]],
-    ["S^{2-}", ["ion", "anion", "sulfide", "inorganic"], [
-        ["aq", 33.1, -14.6, 85.8, null]
-    ]],
-    ["SO2", ["molecule", "oxide", "inorganic"], [
-        ["g", -296.83, 248.22, -300.19, 39.87]
-    ]],
-    ["SO3", ["molecule", "oxide", "inorganic"], [
-        ["g", -395.72, 256.76, -371.06, 50.67]
-    ]],
-    ["SO4^{2-}", ["ion", "anion", "sulfate", "inorganic"], [
-        ["aq", -909.27, 20.1, -744.53, -293]
-    ]],
-    ["H2SO4", ["acid", "sulfate", "inorganic"], [
-        ["l", -813.99, 156.90, -690.00, 138.9]
-    ]],
-    ["HSO4-", ["ion", "anion", "sulfate", "inorganic"], [
-        ["aq", -887.34, null, null, null]
-    ]],
-    ["H2S", ["acid", "sulfide", "molecule", "inorganic"], [
-        ["g", -20.63, 205.79, -33.56, 34.23],
-        ["aq", -39.7, 121, -27.83, null]
-    ]],
-    ["SF6", ["halogenide", "fluoride", "molecule", "inorganic"], [
-        ["g", -1209, 291.82, -1105.3, 97.28]
-    ]],
-
-    /* Tin */
-    ["Sn", ["element", "metal", "inorganic"], [
-        ["s", 0, 51.55, 0, 26.99]
-    ]],
-    ["SnO", ["oxide", "inorganic"], [
-        ["s", -285.8, 56.5, -256.9, 44.31]
-    ]],
-    ["SnO2", ["oxide", "inorganic"], [
-        ["s", -580.7, 52.3, -519.6, 52.59]
-    ]],
-
-    /* Zinc */
-    ["Zn", ["element", "metal", "inorganic"], [
-        ["s", 0, 41.63, 0, 25.40]
-    ]],
-    ["Zn^{2+}", ["ion", "cation", "inorganic"], [
-        ["aq", -153.89, -112.1, -147.06, 46]
-    ]],
-    ["ZnO", ["oxide", "inorganic"], [
-        ["s", -348.28, 43.64, -318.30, 40.25]
-    ]],
-
-    /****************************************************************/
     /*  Data from Appendix 2A: Organic Compounds (A15-A16)          */
     /****************************************************************/
 
@@ -942,132 +834,126 @@ chem_equilibrium_constant(delta_g, temp) := block([R],
 
 /* Calculate ΔH° for a reaction by name */
 chem_reaction_enthalpy_by_name(reaction_name) := block([reactants, products],
-    if not(fboundp('chem_reaction_reactants)) thend not(boundp('chem_reaction_reactants)) then
-        return(false),hem_reaction_enthalpy_by_name"),
-    reactants: chem_reaction_reactants(reaction_name),reactants: chem_reaction_reactants(reaction_name),
+    if not(fboundp('chem_reaction_reactants)) then
+        return(false),
+    reactants: chem_reaction_reactants(reaction_name),
     products: chem_reaction_products(reaction_name),
     
-    if is(reactants = false) or is(products = false) then return(false),en return(false),
-      
-    return(chem_reaction_enthalpy(products, reactants))    return(chem_reaction_enthalpy(products, reactants))
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_enthalpy(products, reactants))
 )$
 
 /* Calculate ΔS° for a reaction by name */
-chem_reaction_entropy_by_name(reaction_name) := block([reactants, products],k([reactants, products],
-    if not(fboundp('chem_reaction_reactants)) thenif not(featurep(chem_reaction_reactants, noun)) and not(boundp('chem_reaction_reactants)) then
-        return(false),_by_name"),
-    reactants: chem_reaction_reactants(reaction_name),reactants: chem_reaction_reactants(reaction_name),
+chem_reaction_entropy_by_name(reaction_name) := block([reactants, products],
+    if not(fboundp('chem_reaction_reactants)) then
+        return(false),
+    reactants: chem_reaction_reactants(reaction_name),
     products: chem_reaction_products(reaction_name),
-      
-    if is(reactants = false) or is(products = false) then return(false),    if is(reactants = false) or is(products = false) then return(false),
+    
+    if is(reactants = false) or is(products = false) then return(false),
     
     return(chem_reaction_entropy(products, reactants))
 )$
 
-/* Calculate ΔG° for a reaction by name */alculate ΔG° for a reaction by name */
-chem_reaction_gibbs_by_name(reaction_name) := block([reactants, products],],
-    if not(fboundp('chem_reaction_reactants)) thenif not(featurep(chem_reaction_reactants, noun)) and not(boundp('chem_reaction_reactants)) then
-        return(false),hem_reaction_gibbs_by_name"),
-    reactants: chem_reaction_reactants(reaction_name),  reactants: chem_reaction_reactants(reaction_name),
-    products: chem_reaction_products(reaction_name),    products: chem_reaction_products(reaction_name),
+/* Calculate ΔG° for a reaction by name */
+chem_reaction_gibbs_by_name(reaction_name) := block([reactants, products],
+    if not(fboundp('chem_reaction_reactants)) then
+        return(false),
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
     
-    if is(reactants = false) or is(products = false) then return(false),alse),
+    if is(reactants = false) or is(products = false) then return(false),
     
     return(chem_reaction_gibbs(products, reactants))
 )$
 
-/****************************************************************/*********/
-/*                                                              */                               */
-/*  Thermodynamic Navigation Functions                          */unctions                          */
-/*                                                              *//*                                                              */
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Navigation Functions                          */
+/*                                                              */
 /****************************************************************/
 
-/* Returns an array of all substances in the database */base */
+/* Returns an array of all substances in the database */
 chem_thermo_substance_array() := 
     map(first, %_THERMO_DATA)$
 
-/* Returns an array of all substances that have data for a specific state *//* Returns an array of all substances that have data for a specific state */
-chem_thermo_substance_state_array(state) := block([filtered],d],
-    filtered: sublist(%_THERMO_DATA, lambda([x], , 
-        some(lambda([p], sequal(first(p), state)), third(x)))),te)), third(x)))),
+/* Returns an array of all substances that have data for a specific state */
+chem_thermo_substance_state_array(state) := block([filtered],
+    filtered: sublist(%_THERMO_DATA, lambda([x], 
+        some(lambda([p], sequal(first(p), state)), third(x)))),
     return(map(first, filtered))
 )$
 
-/* Returns an array of available states for a substance *//* Returns an array of available states for a substance */
+/* Returns an array of available states for a substance */
 chem_thermo_states(substance) := block([entry],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     return(map(first, third(entry)))
 )$
 
-/* Returns all phase data for a substance (useful for displaying all phases) *//* Returns all phase data for a substance (useful for displaying all phases) */
+/* Returns all phase data for a substance (useful for displaying all phases) */
 chem_thermo_all_phases(substance) := block([entry],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
-    return(map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(entry)))), third(entry)))
+    return(map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(entry)))
 )$
 
-/****************************************************************/**************/
-/*                                                              */                             */
-/*  Tag-Based Filtering Functions                               */ns                               */
-/*                                                              *//*                                                              */
-/****************************************************************/***************/
+/****************************************************************/
+/*                                                              */
+/*  Tag-Based Filtering Functions                               */
+/*                                                              */
+/****************************************************************/
 
 /* Check if a substance entry has a specific tag */
-chem_thermo_has_tag(entry, tag) := chem_thermo_has_tag(entry, tag) := 
+chem_thermo_has_tag(entry, tag) := 
     member(tag, second(entry))$
 
-/* Returns all entries that have a specific tag */ific tag */
+/* Returns all entries that have a specific tag */
 chem_thermo_filter_by_tag(tag) := 
-    sublist(%_THERMO_DATA, lambda([x], chem_thermo_has_tag(x, tag)))$    sublist(%_THERMO_DATA, lambda([x], chem_thermo_has_tag(x, tag)))$
+    sublist(%_THERMO_DATA, lambda([x], chem_thermo_has_tag(x, tag)))$
 
-/* Returns all entries that have ALL specified tags (AND logic) */ed tags (AND logic) */
-chem_thermo_filter_by_tags_all(tag_list) := ) := 
+/* Returns all entries that have ALL specified tags (AND logic) */
+chem_thermo_filter_by_tags_all(tag_list) := 
     sublist(%_THERMO_DATA, lambda([x], 
-        every(lambda([t], member(t, second(x))), tag_list)))$        every(lambda([t], member(t, second(x))), tag_list)))$
+        every(lambda([t], member(t, second(x))), tag_list)))$
 
-/* Returns all entries that have ANY of the specified tags (OR logic) */f the specified tags (OR logic) */
+/* Returns all entries that have ANY of the specified tags (OR logic) */
 chem_thermo_filter_by_tags_any(tag_list) := 
-    sublist(%_THERMO_DATA, lambda([x],     sublist(%_THERMO_DATA, lambda([x], 
+    sublist(%_THERMO_DATA, lambda([x], 
         some(lambda([t], member(t, second(x))), tag_list)))$
 
-/* Returns list of substance formulas with a specific tag */ */
-chem_thermo_substances_by_tag(tag) := chem_thermo_substances_by_tag(tag) := 
+/* Returns list of substance formulas with a specific tag */
+chem_thermo_substances_by_tag(tag) := 
     map(first, chem_thermo_filter_by_tag(tag))$
 
-/* Returns list of substance formulas with ALL specified tags */tags */
-chem_thermo_substances_by_tags_all(tag_list) := chem_thermo_substances_by_tags_all(tag_list) := 
-    map(first, chem_thermo_filter_by_tags_all(tag_list))$by_tags_all(tag_list))$
+/* Returns list of substance formulas with ALL specified tags */
+chem_thermo_substances_by_tags_all(tag_list) := 
+    map(first, chem_thermo_filter_by_tags_all(tag_list))$
 
-/* Returns list of substance formulas with ANY of the specified tags */Y of the specified tags */
-chem_thermo_substances_by_tags_any(tag_list) :=  := 
-    map(first, chem_thermo_filter_by_tags_any(tag_list))$o_filter_by_tags_any(tag_list))$
+/* Returns list of substance formulas with ANY of the specified tags */
+chem_thermo_substances_by_tags_any(tag_list) := 
+    map(first, chem_thermo_filter_by_tags_any(tag_list))$
 
-/* Get all tags for a substance *//* Get all tags for a substance */
+/* Get all tags for a substance */
 chem_thermo_get_tags(substance) := block([entry],
-    entry: _chem_thermo_get_entry(substance),,
+    entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
-    return(second(entry))    return(second(entry))
+    return(second(entry))
 )$
 
-/* Returns all substances with ALL specified tags (for random selection by user) */ed tags (for random selection by user) */
+/* Returns all substances with ALL specified tags (for random selection by user) */
 chem_thermo_random_by_tags_all(tag_list) := 
-    chem_thermo_substances_by_tags_all(tag_list)$ag_list)$
+    chem_thermo_substances_by_tags_all(tag_list)$
 
 /* Returns full data for substances filtered by tag */
 chem_thermo_data_by_tag(tag) := 
     map(lambda([x], [first(x), second(x), 
-        map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(x))]), MO_PHASE_FIELDS, p)), third(x))]), 
+        map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(x))]), 
         chem_thermo_filter_by_tag(tag))$
 
-/* Returns substances filtered by tag that have data for a specific state */ Returns substances filtered by tag that have data for a specific state */
-
-
-
-
-
-
-)$    return(map(first, with_state))        some(lambda([p], sequal(first(p), state)), third(x)))),    with_state: sublist(tagged, lambda([x],     tagged: chem_thermo_filter_by_tag(tag),chem_thermo_data_by_tag_state(tag, state) := block([tagged, with_state],chem_thermo_data_by_tag_state(tag, state) := block([tagged, with_state],
+/* Returns substances filtered by tag that have data for a specific state */
+chem_thermo_data_by_tag_state(tag, state) := block([tagged, with_state],
     tagged: chem_thermo_filter_by_tag(tag),
     with_state: sublist(tagged, lambda([x], 
         some(lambda([p], sequal(first(p), state)), third(x)))),
