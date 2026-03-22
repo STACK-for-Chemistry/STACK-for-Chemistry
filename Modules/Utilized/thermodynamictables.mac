@@ -770,14 +770,14 @@ chem_thermo_data(substance, property, state) :=
     _chem_thermo_assoc(property, chem_thermo_data_all(substance, state))$
 
 /* Returns a specific thermodynamic property with units */
-chem_thermo_data_units(substance, property, state) := block([value, unit, field_idx],
-    value: chem_thermo_data(substance, property, state),
-    if is(value = false) or is(value = null) then return(false),
+chem_thermo_data_units(substance, property, state) := block([val, unit, field_idx],
+    val: chem_thermo_data(substance, property, state),
+    if is(val = false) or is(val = null) then return(false),
     field_idx: sublist_indices(%_THERMO_PHASE_FIELDS, lambda([f], sequal(f, property))),
     if emptyp(field_idx) then return(false),
     unit: %_THERMO_UNITS[first(field_idx)],
-    if is(unit = null) then return(value)
-    else return(stackunits(value, unit))
+    if is(unit = null) then return(val)
+    else return(stackunits(val, unit))
 )$
 
 /* Calculate reaction enthalpy: ΔH° = Σ(ΔHf°products) - Σ(ΔHf°reactants) */
