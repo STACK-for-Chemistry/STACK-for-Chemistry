@@ -796,8 +796,16 @@
 /*                                                              */
 /****************************************************************/
 
+/* Helper: Get value from key-value pair list (replacement for assoc) */
+_chem_reaction_assoc(key, kvlist) := block([match],
+    if not(listp(kvlist)) then return(false),
+    match: sublist(kvlist, lambda([x], sequal(first(x), key))),
+    if emptyp(match) then false else second(first(match))
+)$
+
 /* Returns the complete reaction data for a given reaction name */
-chem_reaction_data(reaction_name) := assoc(reaction_name, %_REACTIONS_DATA)$
+chem_reaction_data(reaction_name) := 
+    _chem_reaction_assoc(reaction_name, %_REACTIONS_DATA)$
 
 /* Returns the reactants list for a given reaction */
 chem_reaction_reactants(reaction_name) := block([rxn],
