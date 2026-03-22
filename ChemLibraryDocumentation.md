@@ -4,13 +4,16 @@
 1. [Installation](#installation)
 2. [Module Dependencies](#module-dependencies)
 3. [Periodic Table Module](#periodic-table-module)
+   - [Quick Reference](#quick-reference-periodic-table)
    - [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
    - [PSE Navigation Functions](#pse-navigation-functions)
    - [Electron Configuration Functions](#electron-configuration-functions)
    - [Molar Mass and Formula Parsing Functions](#molar-mass-and-formula-parsing-functions)
    - [Chemical Formula Display Function](#chemical-formula-display-function)
+   - [Chemical Constants Functions](#chemical-constants-functions)
    - [Available Data Fields](#available-data-fields)
 4. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
+   - [Quick Reference](#quick-reference-acid-base)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
    - [Equilibrium Expression Functions](#equilibrium-expression-functions)
    - [Conjugate Acid-Base Functions](#conjugate-acid-base-functions)
@@ -20,6 +23,7 @@
    - [JSXGraph Plot Generation Functions](#jsxgraph-plot-generation-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
 5. [Solubility Equilibrium Module](#solubility-equilibrium-module)
+   - [Quick Reference](#quick-reference-solubility)
    - [Solubility Data Retrieval Functions](#solubility-data-retrieval-functions)
    - [Solubility Equilibrium Expression Functions](#solubility-equilibrium-expression-functions)
    - [Molar Solubility Calculation Functions](#molar-solubility-calculation-functions)
@@ -27,17 +31,21 @@
    - [Solubility Navigation Functions](#solubility-navigation-functions)
    - [Dissolution Equation Functions](#dissolution-equation-functions)
    - [Available Salts](#available-salts)
-   - [Function Reference Table (Solubility)](#function-reference-table-solubility)
 6. [Thermodynamic Tables Module](#thermodynamic-tables-module)
+   - [Quick Reference](#quick-reference-thermodynamics)
+   - [Database Structure](#database-structure)
+   - [Available Tags](#available-tags)
    - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
    - [Tag-Based Filtering Functions](#tag-based-filtering-functions)
    - [Thermodynamic Navigation Functions](#thermodynamic-navigation-functions)
    - [Thermodynamic Calculation Functions](#thermodynamic-calculation-functions)
    - [Available Substances](#available-substances)
 7. [Chemical Reactions Module](#chemical-reactions-module)
+   - [Quick Reference](#quick-reference-reactions)
    - [Reaction Data Retrieval Functions](#reaction-data-retrieval-functions)
    - [Available Reactions](#available-reactions)
 8. [Nuclide Database Module](#nuclide-database-module)
+   - [Quick Reference](#quick-reference-nuclides)
    - [Data Structure](#data-structure)
    - [Core Data Retrieval Functions](#core-data-retrieval-functions)
    - [Decay Information Functions](#decay-information-functions)
@@ -159,7 +167,31 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 
 ## Periodic Table Module
 
-The periodic table module provides comprehensive data for all 118 elements, including atomic properties, electron configurations, and molar mass calculations.
+The periodic table module provides comprehensive data for all 118 elements, including atomic properties, electron configurations, molar mass calculations, and physical constants.
+
+### Quick Reference (Periodic Table)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_data(element, dp)` | Get element property | `chem_data("Fe", "AtomicMass")` → `55.85` |
+| `chem_data_units(element, dp)` | Get property with units | `chem_data_units("O", "AtomicMass")` → `stackunits(16.00, g*mol^(-1))` |
+| `chem_data_all(element)` | Get all element data | `chem_data_all("He")` |
+| `chem_element(atomic_num)` | Get symbol by atomic number | `chem_element(26)` → `"Fe"` |
+| `chem_units(dp)` | Get unit for a field | `chem_units("AtomicMass")` → `g*mol^(-1)` |
+| `chem_element_array()` | All element symbols | `rand(chem_element_array())` |
+| `chem_element_array_maingroup()` | Main group elements | `chem_element_array_maingroup()` |
+| `chem_element_period(period)` | Elements in period | `chem_element_period(3)` → `["Na", "Mg", ...]` |
+| `chem_element_group(group)` | Elements in IUPAC group | `chem_element_group(17)` → `["F", "Cl", ...]` |
+| `chem_element_maingroup(mg)` | Elements in main group | `chem_element_maingroup(1)` → `["H", "Li", ...]` |
+| `chem_element_period_group(p, g)` | Element at position | `chem_element_period_group(4, 6)` → `"Cr"` |
+| `chem_element_period_maingroup(p, mg)` | Element at position | `chem_element_period_maingroup(3, 7)` → `"Cl"` |
+| `chem_electron_config(element)` | Formatted e⁻ config | `chem_electron_config("Fe")` → LaTeX string |
+| `chem_electron_config_formatter(str)` | Format config string | `chem_electron_config_formatter("[Ar] 4s2")` |
+| `chem_molar_mass(formula)` | Calculate molar mass | `chem_molar_mass("H2SO4")` → `stackunits(98.09, g*mol^(-1))` |
+| `chem_parse_formula(formula)` | Parse formula | `chem_parse_formula("H2O")` → `[["H", 2], ["O", 1]]` |
+| `chem_display(substance)` | Wrap in `\ce{...}` | `chem_display("H2SO4")` → `"\\ce{H2SO4}"` |
+| `chem_const_value(name)` | Get constant value | `chem_const_value("R")` → `8.314462618` |
+| `chem_const_units(name)` | Get constant with units | `chem_const_units("NA")` → `stackunits(6.022e23, mol^(-1))` |
 
 ### PSE Data Retrieving Functions
 
@@ -537,6 +569,93 @@ acid_display: chem_display(acid);
 
 ---
 
+### Chemical Constants Functions
+
+The periodic table module includes a comprehensive set of physical and chemical constants with their SI units.
+
+#### `chem_const_value(name)`
+
+**Description:** Returns the numerical value of a physical/chemical constant.
+
+**Parameters:**
+- `name` (string): Name of the constant (see table below)
+
+**Returns:** Numerical value of the constant, or `false` if not found
+
+**Example:**
+```maxima
+R: chem_const_value("R");       /* Returns 8.314462618 */
+NA: chem_const_value("NA");     /* Returns 6.02214076e23 */
+F: chem_const_value("F");       /* Returns 96485.33212 */
+c: chem_const_value("c");       /* Returns 299792458 */
+```
+
+---
+
+#### `chem_const_units(name)`
+
+**Description:** Returns a physical/chemical constant with its SI units as a `stackunits` object.
+
+**Parameters:**
+- `name` (string): Name of the constant
+
+**Returns:** `stackunits(value, unit)` object, or `false` if not found
+
+**Example:**
+```maxima
+R: chem_const_units("R");       /* Returns stackunits(8.314462618, J/(mol*K)) */
+NA: chem_const_units("NA");     /* Returns stackunits(6.02214076e23, mol^(-1)) */
+kB: chem_const_units("kB");     /* Returns stackunits(1.380649e-23, J/K) */
+h: chem_const_units("h");       /* Returns stackunits(6.62607015e-34, J*s) */
+```
+
+---
+
+#### Available Constants
+
+| Name | Description | Value | Unit |
+|------|-------------|-------|------|
+| `NA` | Avogadro's number | 6.02214076×10²³ | mol⁻¹ |
+| `kB` | Boltzmann constant | 1.380649×10⁻²³ | J/K |
+| `R` | Universal gas constant | 8.314462618 | J/(mol·K) |
+| `F` | Faraday constant | 96485.33212 | C/mol |
+| `e` | Elementary charge | 1.602176634×10⁻¹⁹ | C |
+| `h` | Planck constant | 6.62607015×10⁻³⁴ | J·s |
+| `c` | Speed of light | 299792458 | m/s |
+| `P0` | Standard pressure | 101325 | Pa |
+| `T0` | Standard temperature (0°C) | 273.15 | K |
+| `Vm` | Molar volume at STP | 22.414 | L/mol |
+| `Vm_SATP` | Molar volume at SATP (25°C, 1 bar) | 24.789 | L/mol |
+| `u` | Unified atomic mass unit | 1.66053906660×10⁻²⁷ | kg |
+| `me` | Electron mass | 9.1093837015×10⁻³¹ | kg |
+| `mp` | Proton mass | 1.67262192369×10⁻²⁷ | kg |
+| `mn` | Neutron mass | 1.67492749804×10⁻²⁷ | kg |
+| `eps0` | Permittivity of free space | 8.8541878128×10⁻¹² | F/m |
+
+**Usage Examples:**
+```maxima
+/* Calculate number of molecules in 2 moles */
+n_molecules: 2 * chem_const_value("NA");
+
+/* Ideal gas law calculation */
+R: chem_const_value("R");
+P: 101325;  /* Pa */
+T: 298;     /* K */
+n: 1;       /* mol */
+V: n * R * T / P;  /* Volume in m³ */
+
+/* Energy of a photon with wavelength 500 nm */
+h: chem_const_value("h");
+c: chem_const_value("c");
+lambda: 500e-9;  /* m */
+E: h * c / lambda;  /* Energy in J */
+
+/* Convert atomic mass units to kg */
+mass_C12: 12 * chem_const_value("u");  /* Mass of C-12 in kg */
+```
+
+---
+
 ### Available Data Fields
 
 The following data fields can be retrieved with `chem_data()` or `chem_data_units()`:
@@ -577,6 +696,37 @@ Element names are automatically translated when using `chem_data(element, "Name"
 ## Acid-Base Chemistry Module
 
 The acid-base module provides comprehensive functions for working with acids and bases, including pKa/pKb lookups, conjugate pair determination, equilibrium expressions, titration curve calculation, and JSXGraph plotting.
+
+### Quick Reference (Acid-Base)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_acidbase_pKa(acid)` | Get pKa value | `chem_acidbase_pKa("CH3COOH")` → `4.76` |
+| `chem_acidbase_pKb(base)` | Get pKb value | `chem_acidbase_pKb("NH3")` → `4.75` |
+| `chem_acidbase_Ka(acid)` | Calculate Ka | `chem_acidbase_Ka("CH3COOH")` → `10^(-4.76)` |
+| `chem_acidbase_Kb(base)` | Calculate Kb | `chem_acidbase_Kb("NH3")` → `10^(-4.75)` |
+| `chem_acidbase_nH(acid)` | Number of acidic protons | `chem_acidbase_nH("H3PO4")` → `3` |
+| `chem_acidbase_num_protons(acid)` | Protons (defaults to 1) | `chem_acidbase_num_protons("HCl")` → `1` |
+| `chem_acidbase_conjugate_base(acid)` | Get conjugate base | `chem_acidbase_conjugate_base("CH3COOH")` → `"CH3COO-"` |
+| `chem_acidbase_conjugate_acid(base)` | Get conjugate acid | `chem_acidbase_conjugate_acid("NH3")` → `"NH4+"` |
+| `chem_acidbase_Ka_expression(acid)` | Ka in bracket notation | Returns LaTeX string |
+| `chem_acidbase_Ka_activity_expression(acid)` | Ka in activity notation | Returns LaTeX string |
+| `chem_acidbase_Kb_expression(base)` | Kb in bracket notation | Returns LaTeX string |
+| `chem_acidbase_Kb_activity_expression(base)` | Kb in activity notation | Returns LaTeX string |
+| `chem_acid_array()` | All acids | `rand(chem_acid_array())` |
+| `chem_base_array()` | All bases | `rand(chem_base_array())` |
+| `chem_strong_acid_array()` | Strong acids (pKa < 0) | `rand(chem_strong_acid_array())` |
+| `chem_weak_acid_array()` | Weak acids (pKa > 0) | `rand(chem_weak_acid_array())` |
+| `chem_strong_base_array()` | Strong bases (pKb ≤ 0) | `rand(chem_strong_base_array())` |
+| `chem_weak_base_array()` | Weak bases (0 < pKb < 14) | `rand(chem_weak_base_array())` |
+| `chem_acid_array_nH(n)` | Acids with n protons | `chem_acid_array_nH(2)` → diprotic acids |
+| `chem_strong_acid_array_nH(n)` | Strong acids with n protons | `chem_strong_acid_array_nH(1)` |
+| `chem_weak_acid_array_nH(n)` | Weak acids with n protons | `chem_weak_acid_array_nH(2)` |
+| `chem_acidbase_pKa_list(acid)` | All pKa values (polyprotic) | `chem_acidbase_pKa_list("H3PO4")` → `[2.12, 7.21, 12.32]` |
+| `chem_titration_pH(acid, c_a, c_b, v_a, v_b)` | pH at titration point | `chem_titration_pH("CH3COOH", 0.1, 0.1, 25, 12.5)` |
+| `chem_titration_curve_data(acid, c_a, c_b, v_a, n)` | Titration curve data | Returns `[[v, pH], ...]` |
+| `chem_titration_equiv_volumes(acid, c_a, c_b, v_a)` | Equivalence volumes | Returns list of volumes |
+| `chem_jsxgraph_titration(acid, c_a, c_b, v_a, n, v_max)` | JSXGraph code | Returns JavaScript string |
 
 ### Acid-Base Data Retrieval Functions
 
@@ -1271,9 +1421,40 @@ The following substances are available in the acid-base database:
 
 ## Solubility Equilibrium Module
 
-The solubility equilibrium module provides functions for working with solubility products (Ksp), molar solubility, precipitation reactions, and dissolution equilibria. The database uses a nested association list with the salt as the key.
+The solubility equilibrium module provides functions for working with solubility products (Ksp), molar solubility, precipitation reactions, and dissolution equilibria.
 
-**Important:** The database stores only `pKsp` values. `Ksp` is always computed as `10^(-pKsp)` to avoid rounding errors from storing both values independently.
+### Quick Reference (Solubility)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_sol_Ksp(salt)` | Get Ksp (from pKsp) | `chem_sol_Ksp("AgCl")` → `1.77e-10` |
+| `chem_sol_pKsp(salt)` | Get pKsp | `chem_sol_pKsp("AgCl")` → `9.75` |
+| `chem_sol_cation(salt)` | Get cation formula | `chem_sol_cation("CaF2")` → `"Ca^{2+}"` |
+| `chem_sol_cation_count(salt)` | Cation coefficient | `chem_sol_cation_count("Ag2SO4")` → `2` |
+| `chem_sol_anion(salt)` | Get anion formula | `chem_sol_anion("BaSO4")` → `"SO4^{2-}"` |
+| `chem_sol_anion_count(salt)` | Anion coefficient | `chem_sol_anion_count("PbCl2")` → `2` |
+| `chem_sol_ion_counts(salt)` | Both coefficients | `chem_sol_ion_counts("Ag2CrO4")` → `[2, 1]` |
+| `chem_sol_total_ion_count(salt)` | Total ions | `chem_sol_total_ion_count("PbCl2")` → `3` |
+| `chem_sol_entry(salt)` | Full database entry | Returns list |
+| `chem_sol_molar_solubility(salt)` | Molar solubility | `chem_sol_molar_solubility("AgCl")` → with units |
+| `chem_sol_molar_solubility_common_ion(salt, c, ion)` | Solubility with common ion | See examples |
+| `chem_sol_ion_product(c_cat, c_an, salt)` | Calculate Q | `chem_sol_ion_product(1e-3, 1e-3, "AgCl")` |
+| `chem_sol_precipitation_check(c_cat, c_an, salt)` | Check precipitation | Returns `"precipitates"` etc. |
+| `chem_sol_max_concentration(c, salt, ion_type)` | Max ion concentration | See examples |
+| `chem_sol_array()` | All salts | `rand(chem_sol_array())` |
+| `chem_sol_array_by_cation(cat)` | Salts by cation | `chem_sol_array_by_cation("Ag^+")` |
+| `chem_sol_array_by_anion(an)` | Salts by anion | `chem_sol_array_by_anion("Cl^-")` |
+| `chem_sol_array_by_cation_count(n)` | Salts by cation count | `chem_sol_array_by_cation_count(2)` |
+| `chem_sol_array_by_anion_count(n)` | Salts by anion count | `chem_sol_array_by_anion_count(3)` |
+| `chem_sol_array_by_total_ions(n)` | Salts by total ions | `chem_sol_array_by_total_ions(5)` |
+| `chem_sol_cation_array()` | All unique cations | Returns list |
+| `chem_sol_anion_array()` | All unique anions | Returns list |
+| `chem_sol_array_sorted_Ksp()` | Salts sorted by Ksp | Ascending order |
+| `chem_sol_array_Ksp_range(min, max)` | Salts in Ksp range | Filter by Ksp |
+| `chem_sol_dissolution_equation(salt)` | Dissolution equation | Returns LaTeX with `\ce{}` |
+| `chem_sol_Ksp_expression(salt)` | Ksp expression | Returns LaTeX |
+| `chem_sol_Ksp_activity_expression(salt)` | Activity expression | Returns LaTeX |
+| `chem_sol_solubility_expression(salt)` | Solubility formula | Returns LaTeX |
 
 ### Solubility Data Retrieval Functions
 
@@ -1970,6 +2151,37 @@ The solubility database contains the following salt categories:
 
 The thermodynamic tables module provides access to standard thermodynamic data and functions for calculating reaction thermodynamics. Each substance in the database includes classification tags for flexible filtering.
 
+### Quick Reference (Thermodynamics)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_thermo_data(sub, prop, state)` | Get specific property | `chem_thermo_data("H2O", "DeltaHf", "l")` → `-285.83` |
+| `chem_thermo_data_units(sub, prop, state)` | Property with units | `chem_thermo_data_units("H2O", "S", "l")` |
+| `chem_thermo_data_all(sub, state)` | All data for substance/state | `chem_thermo_data_all("NaCl", "s")` |
+| `chem_thermo_data_all_any(sub)` | All data (first match) | `chem_thermo_data_all_any("H2O")` |
+| `chem_thermo_states(sub)` | Available states | `chem_thermo_states("H2O")` → `["l", "g"]` |
+| `chem_thermo_substance_array()` | All substances | `rand(chem_thermo_substance_array())` |
+| `chem_thermo_substance_state_array(state)` | Substances by state | `chem_thermo_substance_state_array("g")` |
+| `chem_thermo_filter_by_tag(tag)` | Filter entries by tag | `chem_thermo_filter_by_tag("salt")` |
+| `chem_thermo_filter_by_tags_all(tags)` | Filter by ALL tags (AND) | `chem_thermo_filter_by_tags_all(["organic", "acid"])` |
+| `chem_thermo_filter_by_tags_any(tags)` | Filter by ANY tag (OR) | `chem_thermo_filter_by_tags_any(["acid", "base"])` |
+| `chem_thermo_substances_by_tag(tag)` | Formulas by tag | `chem_thermo_substances_by_tag("oxide")` |
+| `chem_thermo_substances_by_tags_all(tags)` | Formulas with ALL tags | `chem_thermo_substances_by_tags_all(["salt", "chloride"])` |
+| `chem_thermo_substances_by_tags_any(tags)` | Formulas with ANY tag | `chem_thermo_substances_by_tags_any(["aldehyde", "ketone"])` |
+| `chem_thermo_get_tags(sub)` | Get tags for substance | `chem_thermo_get_tags("NaCl")` → `["salt", ...]` |
+| `chem_thermo_get_tags_state(sub, state)` | Tags for substance/state | `chem_thermo_get_tags_state("H2O", "l")` |
+| `chem_thermo_random_by_tags_all(tags)` | All substances with tags | `rand(chem_thermo_random_by_tags_all(["organic"]))` |
+| `chem_thermo_data_by_tag(tag)` | Full data by tag | `chem_thermo_data_by_tag("acid")` |
+| `chem_thermo_data_by_tag_state(tag, state)` | Full data by tag and state | `chem_thermo_data_by_tag_state("ion", "aq")` |
+| `chem_reaction_enthalpy(prod, react)` | Calculate ΔH° | See examples |
+| `chem_reaction_entropy(prod, react)` | Calculate ΔS° | See examples |
+| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples |
+| `chem_reaction_enthalpy_by_name(rxn)` | ΔH° by reaction name | Requires `reactions.mac` |
+| `chem_reaction_entropy_by_name(rxn)` | ΔS° by reaction name | Requires `reactions.mac` |
+| `chem_reaction_gibbs_by_name(rxn)` | ΔG° by reaction name | Requires `reactions.mac` |
+| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` |
+| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` |
+
 ### Database Structure
 
 Each entry in the thermodynamic database contains:
@@ -1980,6 +2192,8 @@ Each entry in the thermodynamic database contains:
 - **Cp°**: Standard molar heat capacity (J/(mol·K))
 - **State**: Physical state ("g", "l", "s", or "aq")
 - **Tags**: List of classification tags (e.g., ["element", "metal", "inorganic"])
+
+---
 
 ### Available Tags
 
@@ -2019,6 +2233,8 @@ The following standard tags are used for substance classification:
 | `"metal"` | Metallic elements |
 | `"nonmetal"` | Nonmetallic elements |
 | `"hydrate"` | Hydrated compounds |
+
+---
 
 ### Thermodynamic Data Retrieval Functions
 
@@ -2516,362 +2732,617 @@ delta_h: chem_reaction_enthalpy(products, reactants);
 | `chem_thermo_substances_by_tags_any(tags)` | Formulas with ANY tag | `chem_thermo_substances_by_tags_any(["aldehyde", "ketone"])` |
 | `chem_thermo_get_tags(sub)` | Get tags for substance | `chem_thermo_get_tags("NaCl")` → `["salt", ...]` |
 | `chem_thermo_get_tags_state(sub, state)` | Get tags for substance/state | `chem_thermo_get_tags_state("H2O", "l")` |
-| `chem_thermo_random_by_tags_all(tags)` | Random substance with tags | `chem_thermo_random_by_tags_all(["organic"])` |)) | `rand(chem_thermo_random_by_tags_all(["organic"]))` |
+| `chem_thermo_random_by_tags_all(tags)` | Random substance with tags | `chem_thermo_random_by_tags_all(["organic"])` |
 | `chem_thermo_data_by_tag(tag)` | Full data by tag | `chem_thermo_data_by_tag("acid")` |
 | `chem_thermo_data_by_tag_state(tag, state)` | Full data by tag and state | `chem_thermo_data_by_tag_state("ion", "aq")` |
 | `chem_reaction_enthalpy(prod, react)` | Calculate ΔH° | See examples above |
 | `chem_reaction_entropy(prod, react)` | Calculate ΔS° | See examples above |
-| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples above |- **Elements**: H2, O2, N2, Cl2, Br2, I2, C (graphite/diamond), S (rhombic), Al, Fe, Cu, Zn, Ag, Na, K, Ca, Mg, etc.
-| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` | H2O (l, g), CO2, CO, NH3, NO, NO2, N2O, SO2, SO3, H2S, HCN
-| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` |- **Acids**: HCl, HBr, HI, HF, HNO3, H2SO4, H3PO4, CH3COOH, HCOOH
--, I-, F-, Na+, K+, Ca²⁺, Mg²⁺, Fe²⁺, Fe³⁺, Cu²⁺, Ag+, SO₄²⁻, NO₃⁻, CO₃²⁻, NH₄⁺
-### Available Substances
+| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples above |
+| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` |
+| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` |
 
-The thermodynamic database includes:
-- **Elements**: H2, O2, N2, Cl2, Br2, I2, C (graphite/diamond), S (rhombic), Al, Fe, Cu, Zn, Ag, Na, K, Ca, Mg, etc.
-- **Simple Inorganics**: H2O (l, g), CO2, CO, NH3, NO, NO2, N2O, SO2, SO3, H2S, HCN
-- **Acids**: HCl, HBr, HI, HF, HNO3, H2SO4, H3PO4, CH3COOH, HCOOH
-- **Aqueous Ions**: H+, OH-, Cl-, Br-, I-, F-, Na+, K+, Ca²⁺, Mg²⁺, Fe²⁺, Fe³⁺, Cu²⁺, Ag+, SO₄²⁻, NO₃⁻, CO₃²⁻, NH₄⁺
-- **Salts**: NaCl, KCl, CaCl2, MgCl2, AgCl, NaBr, KBr, NaI, CaCO3, MgCO3, Na2SO4, CaSO4, NH4Cl, NH4NO3
-- **Oxides**: CaO, MgO, Al2O3, Fe2O3, Fe3O4, FeO, CuO, Cu2O, ZnO, BaO, SiO2COOH (glycine), CO(NH2)2 (urea)
-- **Hydroxides**: NaOH, KOH, Ca(OH)2, Mg(OH)2, Al(OH)3, Fe(OH)3
-- **Organic Hydrocarbons**: CH4, C2H6, C3H8, C4H10, C5H12, C2H4, C2H2, C3H6, C6H6, C7H8, C8H18
-- **Alcohols**: CH3OH, C2H5OH, C6H5OH
-- **Carboxylic Acids**: HCOOH, CH3COOH, C6H5COOH
-- **Aldehydes/Ketones**: HCHO, CH3CHO, CH3COCH3
-- **Sugars**: C6H12O6 (glucose, fructose), C12H22O11 (sucrose) reactions module provides a database of common chemical reactions with complete stoichiometry.
-- **Amines**: CH3NH2, C6H5NH2, NH2CH2COOH (glycine), CO(NH2)2 (urea)
-Functions
 ---
 
 ## Chemical Reactions Module
-ction data for a given reaction.
+
 The reactions module provides a database of common chemical reactions with complete stoichiometry.
 
-### Reaction Data Retrieval Functions- `reaction_name` (string): Name of the reaction
+### Quick Reference (Reactions)
 
-#### `chem_reaction_data(reaction_name)`**Returns:** [reactants_list, products_list] or `false` if not found
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_reaction_data(rxn)` | Complete reaction data | `chem_reaction_data("CombustionMethane")` |
+| `chem_reaction_reactants(rxn)` | Get reactants | `chem_reaction_reactants("CombustionMethane")` |
+| `chem_reaction_products(rxn)` | Get products | `chem_reaction_products("CombustionMethane")` |
+| `chem_reaction_equation(rxn)` | LaTeX equation | `chem_reaction_equation("CombustionMethane")` |
+| `chem_reaction_array()` | All reaction names | `rand(chem_reaction_array())` |
+| `chem_reaction_combustion_array()` | Combustion reactions | `rand(chem_reaction_combustion_array())` |
+| `chem_reaction_formation_array()` | Formation reactions | `rand(chem_reaction_formation_array())` |
+| `chem_reaction_synthesis_array()` | Synthesis reactions | `rand(chem_reaction_synthesis_array())` |
+| `chem_reaction_decomposition_array()` | Decomposition reactions | `rand(chem_reaction_decomposition_array())` |
+
+### Reaction Data Retrieval Functions
+
+#### `chem_reaction_data(reaction_name)`
 
 **Description:** Returns complete reaction data for a given reaction.
-```maxima
+
 **Parameters:**
-- `reaction_name` (string): Name of the reaction/* Returns [[["CH4", "g", 1], ["O2", "g", 2]], [["CO2", "g", 1], ["H2O", "l", 2]]] */
+- `reaction_name` (string): Name of the reaction
 
 **Returns:** [reactants_list, products_list] or `false` if not found
 
 **Example:**
-```maxima# `chem_reaction_reactants(reaction_name)`
+```maxima
 rxn: chem_reaction_data("CombustionMethane");
-/* Returns [[["CH4", "g", 1], ["O2", "g", 2]], [["CO2", "g", 1], ["H2O", "l", 2]]] */escription:** Returns the reactants for a given reaction.
+/* Returns [[["CH4", "g", 1], ["O2", "g", 2]], [["CO2", "g", 1], ["H2O", "l", 2]]] */
 ```
 
 ---
 
 #### `chem_reaction_reactants(reaction_name)`
-escription:** Returns the products for a given reaction.
+
 **Description:** Returns the reactants for a given reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** List of reactants or `false` if not found
+
+**Example:**
+```maxima
+reactants: chem_reaction_reactants("CombustionMethane");
+/* Returns [["CH4", "g", 1], ["O2", "g", 2]] */
+```
 
 ---
 
 #### `chem_reaction_products(reaction_name)`
-escription:** Returns a LaTeX-formatted balanced equation using `\ce{...}`, so the question text only needs `\({@...@}\)` without manual `\ce` wrapping.
+
 **Description:** Returns the products for a given reaction.
 
----- `reaction_name` (string): Name of the reaction
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
 
-#### `chem_reaction_equation(reaction_name)`**Returns:** LaTeX string with `\ce{...}` wrapper, or `false` if not found
+**Returns:** List of products or `false` if not found
+
+**Example:**
+```maxima
+products: chem_reaction_products("CombustionMethane");
+/* Returns [["CO2", "g", 1], ["H2O", "l", 2]] */
+```
+
+---
+
+#### `chem_reaction_equation(reaction_name)`
 
 **Description:** Returns a LaTeX-formatted balanced equation using `\ce{...}`, so the question text only needs `\({@...@}\)` without manual `\ce` wrapping.
-```maxima
+
 **Parameters:**
-- `reaction_name` (string): Name of the reaction/* Returns "\\ce{CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)}" */
+- `reaction_name` (string): Name of the reaction
 
 **Returns:** LaTeX string with `\ce{...}` wrapper, or `false` if not found
 
 **Example:**
-```maximarequire{mhchem}\)
-eqn: chem_reaction_equation("CombustionMethane");<p>\({@chem_reaction_equation("CombustionMethane")@}\)</p>
+```maxima
+eqn: chem_reaction_equation("CombustionMethane");
 /* Returns "\\ce{CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)}" */
 ```
-`\ce{...}` wrapping needed — the function output already contains it.
+
 **Usage in Question Text:**
 ```latex
 \(\require{mhchem}\)
 <p>\({@chem_reaction_equation("CombustionMethane")@}\)</p>
 ```
-escription:** Returns an array of all reaction names.
+
 **Note:** No manual `\ce{...}` wrapping needed — the function output already contains it.
 
 ---
 
 #### `chem_reaction_array()`
-escription:** Returns an array of combustion reaction names.
+
 **Description:** Returns an array of all reaction names.
+
+**Returns:** List of reaction names
+
+**Example:**
+```maxima
+reactions: chem_reaction_array();
+/* Returns ["CombustionMethane", "CombustionEthane", "FormationCO2", ...] */
+```
 
 ---
 
 #### `chem_reaction_combustion_array()`
-escription:** Returns an array of formation reaction names.
+
 **Description:** Returns an array of combustion reaction names.
+
+**Returns:** List of combustion reaction names
+
+**Example:**
+```maxima
+combustion_reactions: chem_reaction_combustion_array();
+/* Returns ["CombustionMethane", "CombustionEthane", "CombustionPropane", ...] */
+```
 
 ---
 
 #### `chem_reaction_formation_array()`
-escription:** Returns an array of synthesis reaction names.
+
 **Description:** Returns an array of formation reaction names.
+
+**Returns:** List of formation reaction names
+
+**Example:**
+```maxima
+formation_reactions: chem_reaction_formation_array();
+/* Returns ["FormationCO2", "FormationH2O_l", "FormationNH3", ...] */
+```
 
 ---
 
 #### `chem_reaction_synthesis_array()`
-escription:** Returns an array of decomposition reaction names.
+
 **Description:** Returns an array of synthesis reaction names.
+
+**Returns:** List of synthesis reaction names
+
+**Example:**
+```maxima
+synthesis_reactions: chem_reaction_synthesis_array();
+/* Returns ["SynthesisAmmonia", "SynthesisWater", "SynthesisSO3", ...] */
+```
 
 ---
 
 #### `chem_reaction_decomposition_array()`
-ombustion:** CombustionMethane, CombustionEthane, CombustionPropane, CombustionGlucose, CombustionEthanol
+
 **Description:** Returns an array of decomposition reaction names.
-sAmmonia, SynthesisWater, SynthesisSO3
+
+**Returns:** List of decomposition reaction names
+
+**Example:**
+```maxima
+decomposition_reactions: chem_reaction_decomposition_array();
+/* Returns ["DecompositionCaCO3", "DecompositionH2O", ...] */
+```
+
 ---
 
 ### Available Reactions
-FormationNH3, FormationCH4
+
 **Combustion:** CombustionMethane, CombustionEthane, CombustionPropane, CombustionGlucose, CombustionEthanol
-onH2SO4NaOH
-**Synthesis:** SynthesisAmmonia, SynthesisWater, SynthesisSO3
-otosynthesisSimplified
-**Decomposition:** DecompositionCaCO3, DecompositionH2O
 
 **Formation:** FormationCO2, FormationH2O_l, FormationH2O_g, FormationNH3, FormationCH4
 
+**Synthesis:** SynthesisAmmonia, SynthesisWater, SynthesisSO3
+
+**Decomposition:** DecompositionCaCO3, DecompositionH2O
+
 **Neutralization:** NeutralizationHClNaOH, NeutralizationH2SO4NaOH
- nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties.
+
 **Other:** PrecipitationAgCl, OxidationIron, VaporizationWater, FermentationGlucose, PhotosynthesisSimplified
 
 ---
 
-## Nuclide Database Module- **Nuclide ID**: String identifier (e.g., "^{185}Tl")
-mber (number of protons)
-The nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties.- **N**: Neutron number
+## Nuclide Database Module
+
+The nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties.
+
+### Quick Reference (Nuclides)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `nucl_data_all(nuclide_id)` | All nuclear data | `nucl_data_all("^{14}C")` |
+| `nucl_data_Z(nuclide_id)` | Atomic number | `nucl_data_Z("^{14}C")` → `6` |
+| `nucl_data_N(nuclide_id)` | Neutron number | `nucl_data_N("^{14}C")` → `8` |
+| `nucl_mass_number(nuclide_id)` | Mass number (A = Z + N) | `nucl_mass_number("^{14}C")` → `14` |
+| `nucl_halflife(nuclide_id)` | Half-life with units | `nucl_halflife("^{14}C")` → `stackunits(5686, "y")` |
+| `nucl_decay_modes(nuclide_id)` | Decay modes | `nucl_decay_modes("^{14}C")` → `["B-"]` |
+| `nucl_branching_ratios(nuclide_id)` | Branching ratios (%) | `nucl_branching_ratios("^{14}C")` → `[100]` |
+| `nucl_array()` | All nuclide IDs | `rand(nucl_array())` |
+| `nucl_array_radioactive()` | Radioactive nuclides | `rand(nucl_array_radioactive())` |
+| `nucl_array_alpha()` | Pure alpha emitters | `rand(nucl_array_alpha())` |
+| `nucl_array_betaminus()` | Pure β⁻ emitters | `rand(nucl_array_betaminus())` |
+| `nucl_array_betaplus()` | Pure β⁺ emitters | `rand(nucl_array_betaplus())` |
+| `nucl_array_ec()` | Pure EC nuclides | `rand(nucl_array_ec())` |
+| `nucl_display(nuclide_id)` | Format for LaTeX | `nucl_display("^{14}C")` → `"\\ce{^{14}C}"` |
 
 ### Data Structure
 
-The nuclide database contains the following information for each nuclide:ed array of decay modes for each level
-- **Nuclide ID**: String identifier (e.g., "^{185}Tl")rcentages)
+The nuclide database contains the following information for each nuclide:
+- **Nuclide ID**: String identifier (e.g., "^{185}Tl")
 - **Z**: Atomic number (number of protons)
 - **N**: Neutron number
 - **Level Energies**: Array of excited state energies in MeV
 - **Half-lives**: Array of half-life values
-- **Half-life Units**: Array of unitsReturns all nuclear data for a given nuclide.
+- **Half-life Units**: Array of units
 - **Decay Modes**: Nested array of decay modes for each level
-- **Branching Ratios**: Nested array of branching ratios (percentages)```maxima
+- **Branching Ratios**: Nested array of branching ratios (percentages)
 
-### Core Data Retrieval Functions]], [[100]]] */
-```
+---
+
+### Core Data Retrieval Functions
+
 #### `nucl_data_all(nuclide_id)`
-Returns all nuclear data for a given nuclide.e_id)`
 
+**Description:** Returns all nuclear data for a given nuclide.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier (e.g., "^{14}C")
+
+**Returns:** List of all nuclear data fields, or `false` if not found
+
+**Example:**
 ```maxima
-nucl_data_all("^{14}C");#### `nucl_data_N(nuclide_id)`
+data: nucl_data_all("^{14}C");
 /* Returns: [6, 8, [0], [5686], ["y"], [["B-"]], [[100]]] */
 ```
-#### `nucl_mass_number(nuclide_id)`
-#### `nucl_data_Z(nuclide_id)` + N).
-Returns the atomic number (Z).
-### Decay Information Functions
+
+---
+
+#### `nucl_data_Z(nuclide_id)`
+
+**Description:** Returns the atomic number (Z).
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Atomic number (integer), or `false` if not found
+
+**Example:**
+```maxima
+z: nucl_data_Z("^{14}C");  /* Returns 6 */
+```
+
+---
+
 #### `nucl_data_N(nuclide_id)`
-Returns the neutron number.
-Returns the half-life of the ground state with units.
+
+**Description:** Returns the neutron number.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Neutron number (integer), or `false` if not found
+
+**Example:**
+```maxima
+n: nucl_data_N("^{14}C");  /* Returns 8 */
+```
+
+---
+
 #### `nucl_mass_number(nuclide_id)`
-Returns the mass number (A = Z + N).```maxima
-Returns: stackunits(5686, "y") */
-### Decay Information Functions38.378, "d") */
+
+**Description:** Returns the mass number (A = Z + N).
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Mass number (integer), or `false` if not found
+
+**Example:**
+```maxima
+a: nucl_mass_number("^{14}C");  /* Returns 14 */
 ```
+
+---
+
+### Decay Information Functions
+
 #### `nucl_halflife(nuclide_id)`
-Returns the half-life of the ground state with units.
 
+**Description:** Returns the half-life of the ground state with units.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Half-life as a `stackunits` object, or `false` if not found
+
+**Example:**
 ```maxima
-nucl_halflife("^{14}C");     /* Returns: stackunits(5686, "y") */```maxima
-nucl_halflife("^{210}Po");   /* Returns: stackunits(138.378, "d") */ Returns: ["B-"] */
-```["B-", "B+"] */
+hl: nucl_halflife("^{14}C");     /* Returns: stackunits(5686, "y") */
+hl: nucl_halflife("^{210}Po");   /* Returns: stackunits(138.378, "d") */
 ```
+
+---
+
 #### `nucl_decay_modes(nuclide_id)`
-Returns the decay modes for the ground state.
-ecay modes.
+
+**Description:** Returns the decay modes for the ground state.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** List of decay modes, or `false` if not found
+
+**Example:**
 ```maxima
-nucl_decay_modes("^{14}C");      /* Returns: ["B-"] */### Navigation and Filtering Functions
-nucl_decay_modes("^{40}K");      /* Returns: ["B-", "B+"] */
+modes: nucl_decay_modes("^{14}C");      /* Returns: ["B-"] */
+modes: nucl_decay_modes("^{40}K");      /* Returns: ["B-", "B+"] */
 ```
-Returns an array of all nuclide IDs.
+
+---
+
 #### `nucl_branching_ratios(nuclide_id)`
-Returns the branching ratios (in percent) for ground state decay modes.#### `nucl_array_radioactive()`
-tive nuclide IDs.
+
+**Description:** Returns the branching ratios (in percent) for ground state decay modes.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** List of branching ratios, or `false` if not found
+
+**Example:**
+```maxima
+br: nucl_branching_ratios("^{14}C");   /* Returns: [100] */
+br: nucl_branching_ratios("^{40}K");   /* Returns: [89.28, 10.72] */
+```
+
+---
+
 ### Navigation and Filtering Functions
+
+#### `nucl_array()`
+
+**Description:** Returns an array of all nuclide IDs.
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+nuclides: nucl_array();
+/* Returns ["^{1}H", "^{2}H", "^{3}H", ..., "^{238}U"] */
+```
+
+---
+
+#### `nucl_array_radioactive()`
+
+**Description:** Returns all radioactive nuclide IDs.
+
+**Returns:** List of radioactive nuclide IDs
+
+**Example:**
+```maxima
+radioactive: nucl_array_radioactive();
+/* Returns ["^{3}H", "^{14}C", "^{40}K", ..., "^{238}U"] */
+```
+
+---
+
 #### `nucl_array_alpha()`
-#### `nucl_array()`lpha decay (100%).
-Returns an array of all nuclide IDs.
+
+**Description:** Returns nuclide IDs with pure alpha decay (100%).
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+alpha_emitters: nucl_array_alpha();
+/* Returns ["^{210}Po", "^{238}U", ...] */
+```
+
+---
+
 #### `nucl_array_betaminus()`
-#### `nucl_array_radioactive()`pure beta-minus decay.
-Returns all radioactive nuclide IDs.
+
+**Description:** Returns nuclide IDs with pure beta-minus decay.
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+beta_minus_emitters: nucl_array_betaminus();
+/* Returns ["^{14}C", "^{32}P", ...] */
+```
+
+---
+
 #### `nucl_array_betaplus()`
-#### `nucl_array_alpha()` beta-plus decay.
-Returns nuclide IDs with pure alpha decay (100%).
+
+**Description:** Returns nuclide IDs with pure beta-plus decay.
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+beta_plus_emitters: nucl_array_betaplus();
+/* Returns ["^{11}C", "^{18}F", ...] */
+```
+
+---
+
 #### `nucl_array_ec()`
-#### `nucl_array_betaminus()`e electron capture.
-Returns nuclide IDs with pure beta-minus decay.
-### Utility Functions
-#### `nucl_array_betaplus()`
-Returns nuclide IDs with pure beta-plus decay.
-Formats a nuclide name for LaTeX display.
-#### `nucl_array_ec()`
-Returns nuclide IDs with pure electron capture.```maxima
-urns: "\\ce{^{14}C}" */
+
+**Description:** Returns nuclide IDs with pure electron capture.
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+ec_nuclides: nucl_array_ec();
+/* Returns ["^{7}Be", "^{37}Ar", ...] */
+```
+
+---
+
 ### Utility Functions
 
-#### `nucl_display(nuclide_id)` Mode Notation
-Formats a nuclide name for LaTeX display.
-*A**: Alpha decay (α)
-```maxima- **B-**: Beta-minus decay (β⁻)
-nucl_display("^{14}C");  /* Returns: "\\ce{^{14}C}" */ay (β⁺)
-```- **EC**: Electron capture
-ition
+#### `nucl_display(nuclide_id)`
+
+**Description:** Formats a nuclide name for LaTeX display.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** LaTeX-formatted string
+
+**Example:**
+```maxima
+disp: nucl_display("^{14}C");  /* Returns: "\\ce{^{14}C}" */
+```
+
+---
+
 ### Decay Mode Notation
 
 - **A**: Alpha decay (α)
 - **B-**: Beta-minus decay (β⁻)
-- **B+**: Beta-plus decay (β⁺)on emission
+- **B+**: Beta-plus decay (β⁺)
 - **EC**: Electron capture
 - **IT**: Isomeric transition
 - **SF**: Spontaneous fission
 - **N**: Neutron emission
-- **P**: Proton emission/* Carbon Dating */
-- **2B-**: Double beta decayflife("^{14}C");
-- **B-N**: Beta-delayed neutron emissiondecay_mode: nucl_decay_modes("^{14}C");
+- **P**: Proton emission
+- **2B-**: Double beta decay
+- **B-N**: Beta-delayed neutron emission
 
-### Practical Examplesve isotope */
-ctive());
-```maximaotope);
-/* Carbon Dating */```
+---
+
+### Practical Examples
+
+#### Carbon Dating
+
+```maxima
 halflife_C14: nucl_halflife("^{14}C");
 decay_mode: nucl_decay_modes("^{14}C");
+```
 
-/* Random radioactive isotope */Usage Examples
+#### Random Radioactive Isotope
+
+```maxima
 random_isotope: rand(nucl_array_radioactive());
-isotope_display: nucl_display(random_isotope); Example 1: Random Element Properties
-``````maxima
-m_element_array());
----name: chem_data(element, "Name");
+isotope_display: nucl_display(random_isotope);
+```
 
-## Usage Examplesm_data_units(element, "AtomicMass");
-);
+---
+
+## Usage Examples
+
 ### Example 1: Random Element Properties
+
 ```maxima
 element: rand(chem_element_array());
 name: chem_data(element, "Name");
-z: chem_data(element, "AtomicNumber");s_h2o: chem_molar_mass("H2O");
-mass: chem_data_units(element, "AtomicMass");mass_h2so4: chem_molar_mass("H2SO4");
+z: chem_data(element, "AtomicNumber");
+mass: chem_data_units(element, "AtomicMass");
 config: chem_electron_config(element);
 ```
 
 ### Example 2: Molar Mass Calculation
-```maxima
-mass_h2o: chem_molar_mass("H2O");d: rand(chem_weak_acid_array());
-mass_h2so4: chem_molar_mass("H2SO4");pka: chem_acidbase_pKa(acid);
-mass_nacl: chem_molar_mass("NaCl");
-```m_acidbase_conjugate_base(acid);
 
-### Example 3: Acid-Base Pair Problemid);
-```maximabase);
+```maxima
+mass_h2o: chem_molar_mass("H2O");
+mass_h2so4: chem_molar_mass("H2SO4");
+mass_nacl: chem_molar_mass("NaCl");
+```
+
+### Example 3: Acid-Base Pair Problem
+
+```maxima
 acid: rand(chem_weak_acid_array());
 pka: chem_acidbase_pKa(acid);
 ka: chem_acidbase_Ka(acid);
 base: chem_acidbase_conjugate_base(acid);
-pkb: chem_acidbase_pKb(base);The acid {@acid_display@} (pKa = {@pka@}) has conjugate base {@base_display@}.</p>
-acid_display: chem_display(acid);<p>\( K_a = {@chem_acidbase_Ka_expression(acid)@} \)</p>
+pkb: chem_acidbase_pKb(base);
+acid_display: chem_display(acid);
 base_display: chem_display(base);
 ```
 
 ```latex
-\(\require{mhchem}\)d: "H3PO4";
-<p>The acid {@acid_display@} (pKa = {@pka@}) has conjugate base {@base_display@}.</p>pka_list: chem_acidbase_pKa_list(acid);
-<p>\( K_a = {@chem_acidbase_Ka_expression(acid)@} \)</p>.1, 0.1, 25, 200, 100);
+\(\require{mhchem}\)
+<p>The acid {@acid_display@} (pKa = {@pka@}) has conjugate base {@base_display@}.</p>
+<p>\( K_a = {@chem_acidbase_Ka_expression(acid)@} \)</p>
 ```
 
 ### Example 4: Polyprotic Acid Titration
+
 ```maxima
-acid: "H3PO4";sxcode#}
-pka_list: chem_acidbase_pKa_list(acid);[[/jsxgraph]]
+acid: "H3PO4";
+pka_list: chem_acidbase_pKa_list(acid);
 jsxcode: chem_jsxgraph_titration(acid, 0.1, 0.1, 25, 200, 100);
 ```
- 5: Solubility Problem
-```html
-[[jsxgraph width="500px" height="400px"]]t: rand(chem_sol_array_by_anion("Cl^-"));
-{#jsxcode#}ksp: chem_sol_Ksp(salt);
-[[/jsxgraph]]);
-```sol_dissolution_equation(salt);
 
-### Example 5: Solubility Problemay(salt);
+```html
+[[jsxgraph width="500px" height="400px"]]
+{#jsxcode#}
+[[/jsxgraph]]
+```
+
+### Example 5: Solubility Problem
+
 ```maxima
 salt: rand(chem_sol_array_by_anion("Cl^-"));
 ksp: chem_sol_Ksp(salt);
 s: chem_sol_molar_solubility(salt);
-eq: chem_sol_dissolution_equation(salt);Consider the salt {@salt_display@}.</p>
-expr: chem_sol_Ksp_expression(salt);<p>Dissolution: \({@eq@}\)</p>
-salt_display: chem_display(salt);{\mathrm{sp}} = {@expr@} = {@ksp@} \)</p>
-```ity is {@s@} mol/L.</p>
+eq: chem_sol_dissolution_equation(salt);
+expr: chem_sol_Ksp_expression(salt);
+salt_display: chem_display(salt);
+```
 
 ```latex
 \(\require{mhchem}\)
 <p>Consider the salt {@salt_display@}.</p>
-<p>Dissolution: \({@eq@}\)</p>t: "AgCl";
-<p>\( K_{\mathrm{sp}} = {@expr@} = {@ksp@} \)</p>c_ag: 0.001;
+<p>Dissolution: \({@eq@}\)</p>
+<p>\( K_{\mathrm{sp}} = {@expr@} = {@ksp@} \)</p>
 <p>The molar solubility is {@s@} mol/L.</p>
-```ol_ion_product(c_ag, c_cl, salt);
-_Ksp(salt);
-### Example 6: Precipitation Check_sol_precipitation_check(c_ag, c_cl, salt);
+```
+
+### Example 6: Precipitation Check
+
 ```maxima
 salt: "AgCl";
-c_ag: 0.001;n Effect
+c_ag: 0.001;
 c_cl: 0.001;
-Q: chem_sol_ion_product(c_ag, c_cl, salt);t: "CaF2";
-ksp: chem_sol_Ksp(salt);s_pure: chem_sol_molar_solubility(salt);
-result: chem_sol_precipitation_check(c_ag, c_cl, salt);ity_common_ion(salt, 0.1, "anion");
-```on << s_pure due to F⁻ already in solution */
+Q: chem_sol_ion_product(c_ag, c_cl, salt);
+ksp: chem_sol_Ksp(salt);
+result: chem_sol_precipitation_check(c_ag, c_cl, salt);
+```
 
 ### Example 7: Common-Ion Effect
+
 ```maxima
 salt: "CaF2";
-s_pure: chem_sol_molar_solubility(salt);: rand(chem_reaction_combustion_array());
-s_common: chem_sol_molar_solubility_common_ion(salt, 0.1, "anion");equation: chem_reaction_equation(rxn);
+s_pure: chem_sol_molar_solubility(salt);
+s_common: chem_sol_molar_solubility_common_ion(salt, 0.1, "anion");
 /* s_common << s_pure due to F⁻ already in solution */
-```chem_reaction_entropy_by_name(rxn);
+```
 
 ### Example 8: Thermodynamic Calculation for Random Combustion
+
 ```maxima
-rxn: rand(chem_reaction_combustion_array());nergy
+rxn: rand(chem_reaction_combustion_array());
 equation: chem_reaction_equation(rxn);
-delta_h: chem_reaction_enthalpy_by_name(rxn);: "SynthesisAmmonia";
-delta_s: chem_reaction_entropy_by_name(rxn);delta_h: chem_reaction_enthalpy_by_name(rxn);
+delta_h: chem_reaction_enthalpy_by_name(rxn);
+delta_s: chem_reaction_entropy_by_name(rxn);
 delta_g: chem_reaction_gibbs_by_name(rxn);
-```98: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 298);
-from_enthalpy_entropy(delta_h, delta_s, 500);
-### Example 9: Temperature-Dependent Gibbs Energy 298);
-```maxima, 500);
+```
+
+### Example 9: Temperature-Dependent Gibbs Energy
+
+```maxima
 rxn: "SynthesisAmmonia";
 delta_h: chem_reaction_enthalpy_by_name(rxn);
 delta_s: chem_reaction_entropy_by_name(rxn);
 delta_g_298: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 298);
-delta_g_500: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 500);tope: rand(nucl_array_alpha());
-k_298: chem_equilibrium_constant(delta_g_298, 298);hl: nucl_halflife(isotope);
+delta_g_500: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 500);
+k_298: chem_equilibrium_constant(delta_g_298, 298);
 k_500: chem_equilibrium_constant(delta_g_500, 500);
-```branching_ratios(isotope);
+```
 
 ### Example 10: Nuclear Decay Problem
+
 ```maxima
 isotope: rand(nucl_array_alpha());
 hl: nucl_halflife(isotope);
-dm: nucl_decay_modes(isotope);The isotope {@disp@} has a half-life of {@hl@} and decays via {@dm@}.</p>
-br: nucl_branching_ratios(isotope);```
-disp: nucl_display(isotope);``````latex\(\require{mhchem}\)
+dm: nucl_decay_modes(isotope);
+br: nucl_branching_ratios(isotope);
+disp: nucl_display(isotope);
+```
+
+```latex
+\(\require{mhchem}\)
 <p>The isotope {@disp@} has a half-life of {@hl@} and decays via {@dm@}.</p>
 ```
