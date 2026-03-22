@@ -411,7 +411,13 @@ chem_const_units(name) := block([val, unt],
   ["Rh", [45, "Rhodium", 5, 0, 9, 102.91, "[Kr] 5s1 4d8", 2.28, 195, 7.459, 1.137, "+3", "Solid", 2237, 3968, 12.4, "Transition metal", 1803]],
   ["Pd", [46, "Palladium", 5, 0, 10, 106.42, "[Kr] 4d10", 2.20, 202, 8.337, 0.557, "+3, +2", "Solid", 1828.05, 3236, 12.0, "Transition metal", 1803]],
   ["Ag", [47, "Silver", 5, 0, 11, 107.87, "[Kr] 5s1 4d10", 1.93, 172, 7.576, 1.302, "+1", "Solid", 1234.93, 2435, 10.501, "Transition metal", Ancient]],
-  ["Cd", [48, "Cadmium", 5, 0, 12, 112.41, "[Kr] 5s2 4d10", 1.69, 158, 8.994, null, "+2", "Solid", 594.22, 1040, 8.69, "Transition metal", 1817]],
+  ["C
+%_CHEM_CONST_VALUES : [
+    6.02214076e23,      /* NA    - Avogadro's number */
+    1.380649e-23,       /* kB   - Boltzmann constant */
+    8.314462618,        /* R    - Universal gas constant */
+    96485.33212,        /* F    - Faraday constant */
+    1.6021766d", [48, "Cadmium", 5, 0, 12, 112.41, "[Kr] 5s2 4d10", 1.69, 158, 8.994, null, "+2", "Solid", 594.22, 1040, 8.69, "Transition metal", 1817]],
   ["In", [49, "Indium", 5, 3, 13, 114.82, "[Kr] 5s2 4d10 5p1", 1.78, 193, 5.786, 0.3, "+3", "Solid", 429.75, 2345, 7.31, "Post-transition metal", 1863]],
   ["Sn", [50, "Tin", 5, 4, 14, 118.71, "[Kr] 5s2 4d10 5p2", 1.96, 217, 7.344, 1.2, "+4, +2", "Solid", 505.08, 2875, 7.287, "Post-transition metal", Ancient]],
   ["Sb", [51, "Antimony", 5, 5, 15, 121.76, "[Kr] 5s2 4d10 5p3", 2.05, 206, 8.64, 1.07, "+5, +3, -3", "Solid", 903.78, 1860, 6.685, "Metalloid", Ancient]],
