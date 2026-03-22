@@ -718,6 +718,15 @@
 /* Units for thermodynamic data */
 %_THERMO_UNITS: [null, kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), J*mol^(-1)*K^(-1)]$
 
+/* Helper: Get entry for a substance */two lists (replacement for zip_with) */
+_chem_thermo_get_entry(substance) := block([match],,
+    match: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
+    if emptyp(match) then false else first(match)) do (
+        result: append(result, [[keys[i], values[i]]])
+    ),
+    return(result)
+)$
+
 /* Helper: Get entry for a substance */
 _chem_thermo_get_entry(substance) := block([match],
     match: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
@@ -738,7 +747,7 @@ chem_thermo_data_all(substance, state) := block([entry, phase_data],
     if is(entry = false) then return(false),
     phase_data: _chem_thermo_get_phase_data(entry, state),
     if is(phase_data = false) then return(false),
-    return(zip_with("[", %_THERMO_PHASE_FIELDS, phase_data))
+    return(_chem_thermo_zip(%_THERMO_PHASE_FIELDS, phase_data))
 )$
 
 /* Returns all thermodynamic data for a substance (first phase if multiple exist) */
@@ -746,7 +755,7 @@ chem_thermo_data_all_any(substance) := block([entry, phase_data],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     phase_data: first(third(entry)),
-    return(zip_with("[", %_THERMO_PHASE_FIELDS, phase_data))
+    return(_chem_thermo_zip(%_THERMO_PHASE_FIELDS, phase_data))
 )$
 
 /* Helper: Get value from key-value pair list */
@@ -895,7 +904,7 @@ chem_thermo_substance_state_array(state) := block([filtered],
 
 /* Returns an array of available states for a substance */
 chem_thermo_states(substance) := block([entry],
-    entry: _chem_thermo_get_entry(substance),
+    entry: _chem_thermo_get_entry(substance),)))
     if is(entry = false) then return(false),
     return(map(first, third(entry)))
 )$
@@ -904,7 +913,7 @@ chem_thermo_states(substance) := block([entry],
 chem_thermo_all_phases(substance) := block([entry],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
-    return(map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(entry)))
+    return(map(lambda([p], _chem_thermo_zip(%_THERMO_PHASE_FIELDS, p)), third(entry)))
 )$
 
 /****************************************************************/
@@ -948,7 +957,7 @@ chem_thermo_get_tags(substance) := block([entry],
     entry: _chem_thermo_get_entry(substance),
     if is(entry = false) then return(false),
     return(second(entry))
-)$
+)$), 
 
 /* Returns all substances with ALL specified tags (for random selection by user) */
 chem_thermo_random_by_tags_all(tag_list) := 
@@ -957,7 +966,7 @@ chem_thermo_random_by_tags_all(tag_list) :=
 /* Returns full data for substances filtered by tag */
 chem_thermo_data_by_tag(tag) := 
     map(lambda([x], [first(x), second(x), 
-        map(lambda([p], zip_with("[", %_THERMO_PHASE_FIELDS, p)), third(x))]), 
+        map(lambda([p], _chem_thermo_zip(%_THERMO_PHASE_FIELDS, p)), third(x))]), 
         chem_thermo_filter_by_tag(tag))$
 
 /* Returns substances filtered by tag that have data for a specific state */
