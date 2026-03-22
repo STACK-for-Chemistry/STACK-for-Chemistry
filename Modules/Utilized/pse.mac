@@ -280,6 +280,64 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
    Example: chem_display("H2SO4") returns "\\ce{H2SO4}" */
 chem_display(substance) := sconcat("\\ce{", substance, "}")$
 
+/****************************************************************/
+/*                                                              */
+/*  Chemical Constants                                          */
+/*                                                              */
+/****************************************************************/
+
+%_CHEM_CONST_FIELDS : ["NA", "kB", "R", "F", "e", "h", "c", "P0", "T0", "Vm", "Vm_SATP", "u", "me", "mp", "mn", "eps0"]$
+
+%_CHEM_CONST_VALUES : [
+    6.02214076e23,      /* NA    - Avogadro's number */
+    1.380649e-23,       /* kB   - Boltzmann constant */
+    8.314462618,        /* R    - Universal gas constant */
+    96485.33212,        /* F    - Faraday constant */
+    1.602176634e-19,    /* e    - Elementary charge */
+    6.62607015e-34,     /* h    - Planck constant */
+    299792458,          /* c    - Speed of light */
+    101325,             /* P0   - Standard pressure */
+    273.15,             /* T0   - Standard temperature (0 degC) */
+    22.414,             /* Vm   - Molar volume at STP */
+    24.789,             /* Vm_SATP - Molar volume at SATP (25 degC, 1 bar) */
+    1.66053906660e-27,  /* u    - Unified atomic mass unit */
+    9.1093837015e-31,   /* me   - Electron mass */
+    1.67262192369e-27,  /* mp   - Proton mass */
+    1.67492749804e-27,  /* mn   - Neutron mass */
+    8.8541878128e-12    /* eps0 - Permittivity of free space */
+]$
+
+%_CHEM_CONST_UNITS : [
+    mol^(-1),           /* NA */
+    J/K,                /* kB */
+    J/(mol*K),          /* R */
+    C/mol,              /* F */
+    C,                  /* e */
+    J*s,                /* h */
+    m/s,                /* c */
+    Pa,                 /* P0 */
+    K,                  /* T0 */
+    L/mol,              /* Vm */
+    L/mol,              /* Vm_SATP */
+    kg,                 /* u */
+    kg,                 /* me */
+    kg,                 /* mp */
+    kg,                 /* mn */
+    F/m                 /* eps0 */
+]$
+
+/* Returns only the numerical value of a constant.
+   Example: chem_const_value("R") returns 8.314462618 */
+chem_const_value(name) := assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_VALUES))$
+
+/* Returns the constant as a stackunits object with its units.
+   Example: chem_const_units("R") returns stackunits(8.314462618, J/(mol*K)) */
+chem_const_units(name) := block([val, unt],
+    val: assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_VALUES)),
+    unt: assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_UNITS)),
+    if is(val = false) then false else stackunits(val, unt)
+)$
+
 /* 
    This is the order of data below.  For efficiency, we don't store all the data as nested lists with repeaed fields.
    The functions above return formatted data for use with "assoc".
