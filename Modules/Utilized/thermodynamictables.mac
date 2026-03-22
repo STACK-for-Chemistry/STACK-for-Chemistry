@@ -719,10 +719,10 @@
 %_THERMO_UNITS: [null, kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), J*mol^(-1)*K^(-1)]$
 
 /* Helper: Create key-value pairs from two lists */
-_chem_thermo_zip(keys, vals) := block([result, i],
+_chem_thermo_zip(lst_keys, lst_vals) := block([result, i],
     result: [],
-    for i:1 thru min(length(keys), length(vals)) do (
-        result: append(result, [[keys[i], vals[i]]])
+    for i:1 thru min(length(lst_keys), length(lst_vals)) do (
+        result: append(result, [[lst_keys[i], lst_vals[i]]])
     ),
     return(result)
 )$
