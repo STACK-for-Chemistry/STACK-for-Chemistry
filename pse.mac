@@ -303,7 +303,7 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 /*
   Chemical data reformatted from https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON on 2025-06-17.
   Missing numerical data is indicated by the atom "null" rather than a zero.
-  Molar masses and electronegativities were adjusted to the periodic table pdf file on this GitHub (values changed slightly).
+  Molar masses and electronegativities were adjusted to the periodic table pdf file on this GitHub (value changed slightly).
 */
 %_CHEM_ELEMENTS: [
   ["H",  [1, "Hydrogen", 1, 1, 1, 1.01, "1s1", 2.20, 120, 13.598, 0.754, "+1, -1", "Gas", 13.81, 20.28, 0.00008988, "Nonmetal", 1766]],
