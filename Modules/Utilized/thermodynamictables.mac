@@ -441,7 +441,7 @@ chem_thermo_data_all(substance, state) := block([data, matches],
         return(false)
     else (
         data: second(first(matches)),
-        return(zip_with("[", %_THERMO_FIELDS, data))
+        return(chem_thermo_make_pairs(%_THERMO_FIELDS, data))
     )
 )$
 
@@ -451,7 +451,7 @@ chem_thermo_data_all_any(substance) := block([data, match],
     if is(match = false) then
         return(false)
     else
-        return(zip_with("[", %_THERMO_FIELDS, match))
+        return(chem_thermo_make_pairs(%_THERMO_FIELDS, match))
 )$
 
 /* Returns a specific thermodynamic property for a substance in a specific state */
@@ -463,7 +463,7 @@ chem_thermo_data_units(substance, property, state) := block([value, unit],
     value: chem_thermo_data(substance, property, state),
     if is(value = false) or is(value = null) then
         return(false),
-    unit: assoc(property, zip_with("[", %_THERMO_FIELDS, %_THERMO_UNITS)),
+    unit: assoc(property, chem_thermo_make_pairs(%_THERMO_FIELDS, %_THERMO_UNITS)),
     if is(unit = null) then
         return(value)
     else
@@ -599,6 +599,14 @@ chem_thermo_states(substance) := block([matches],
 /*                                                              */
 /****************************************************************/
 
+/* Helper function for creating field-value pairs (if zip_with is not available) */
+chem_thermo_make_pairs(fields, values) := block([result, i],
+    result: [],
+    for i: 1 thru min(length(fields), length(values)) do
+        result: endcons([fields[i], values[i]], result),
+    return(result)
+)$
+
 /* Check if a substance entry has a specific tag */
 chem_thermo_has_tag(entry, tag) := block([tags],
     tags: sixth(second(entry)),
@@ -656,9 +664,9 @@ chem_thermo_get_tags(substance) := block([match],
 )$
 
 /* Get all tags for a substance in a specific state */
-chem_thermo_get_tags_state(substance, state) := block([matches, data],
+chem_thermo_get_tags_state(substance, state) := block([matches],
     matches: sublist(%_THERMO_DATA, lambda([x], 
-        sequal(first(x), substance) and sequal(fifth(second(x)), state))),
+        is(first(x) = substance) and is(fifth(second(x)) = state))),
     if emptyp(matches) then
         return(false)
     else
@@ -670,12 +678,16 @@ chem_thermo_random_by_tags_all(tag_list) :=
     chem_thermo_substances_by_tags_all(tag_list)$
 
 /* Returns full data for substances filtered by tag */
-chem_thermo_data_by_tag(tag) := 
-    map(lambda([x], [first(x), zip_with("[", %_THERMO_FIELDS, second(x))]), 
-        chem_thermo_filter_by_tag(tag))$
+chem_thermo_data_by_tag(tag) := block([filtered],
+    filtered: chem_thermo_filter_by_tag(tag),
+    map(lambda([x], [first(x), chem_thermo_make_pairs(%_THERMO_FIELDS, second(x))]), 
+        filtered)
+)$
 
 /* Returns full data for substances filtered by tag and state */
-chem_thermo_data_by_tag_state(tag, state) := 
-    map(lambda([x], [first(x), zip_with("[", %_THERMO_FIELDS, second(x))]), 
-        sublist(chem_thermo_filter_by_tag(tag), 
-            lambda([x], sequal(fifth(second(x)), state))))$
+chem_thermo_data_by_tag_state(tag, state) := block([filtered],
+    filtered: sublist(%_THERMO_DATA, lambda([x], 
+        chem_thermo_has_tag(x, tag) and is(fifth(second(x)) = state))),
+    map(lambda([x], [first(x), chem_thermo_make_pairs(%_THERMO_FIELDS, second(x))]), 
+        filtered)
+)$
