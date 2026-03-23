@@ -74,7 +74,7 @@
    State = Physical state (g, l, s, aq)
    Tags = List of classification tags
    null indicates the value is not available
-   All values at 298.15 K (25°C) and 1 bar */
+   All value at 298.15 K (25°C) and 1 bar */
 
 %_THERMO_DATA: [
     /****************************************************************/
@@ -600,10 +600,10 @@ chem_thermo_states(substance) := block([matches],
 /****************************************************************/
 
 /* Helper function for creating field-value pairs (if zip_with is not available) */
-chem_thermo_make_pairs(fields, values) := block([result, i],
+chem_thermo_make_pairs(fields, val) := block([result, i],
     result: [],
-    for i: 1 thru min(length(fields), length(values)) do
-        result: endcons([fields[i], values[i]], result),
+    for i: 1 thru min(length(fields), length(val)) do
+        result: endcons([fields[i], val[i]], result),
     return(result)
 )$
 
