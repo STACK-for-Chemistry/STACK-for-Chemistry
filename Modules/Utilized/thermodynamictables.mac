@@ -607,6 +607,24 @@ chem_thermo_make_pairs(fields, data) := block([result, i],
     return(result)
 )$
 
+/* Helper function: check if all elements satisfy a predicate (replaces every) */
+chem_thermo_all_match(pred, lst) := block([result, item],
+    result: true,
+    for item in lst do (
+        if not pred(item) then result: false
+    ),
+    return(result)
+)$
+
+/* Helper function: check if any element satisfies a predicate (replaces some) */
+chem_thermo_any_match(pred, lst) := block([result, item],
+    result: false,
+    for item in lst do (
+        if pred(item) then result: true
+    ),
+    return(result)
+)$
+
 /* Check if a substance entry has a specific tag */
 chem_thermo_has_tag(entry, tag) := block([tags],
     tags: sixth(second(entry)),
@@ -626,7 +644,7 @@ chem_thermo_filter_by_tags_all(tag_list) :=
         block([tags],
             tags: sixth(second(x)),
             if listp(tags) then
-                every(lambda([t], member(t, tags)), tag_list)
+                chem_thermo_all_match(lambda([t], member(t, tags)), tag_list)
             else
                 false
         )))$
@@ -637,7 +655,7 @@ chem_thermo_filter_by_tags_any(tag_list) :=
         block([tags],
             tags: sixth(second(x)),
             if listp(tags) then
-                some(lambda([t], member(t, tags)), tag_list)
+                chem_thermo_any_match(lambda([t], member(t, tags)), tag_list)
             else
                 false
         )))$
