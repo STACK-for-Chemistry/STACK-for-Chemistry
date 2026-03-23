@@ -1,0 +1,681 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Thermodynamic Tables for STACK                              */
+/*                                                              */
+/*  V1.1 November 2025                                          */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Tag Definitions                                             */
+/*                                                              */
+/****************************************************************/
+
+/* Standard tags for substance classification */
+%_TAG_ELEMENT: "element"$
+%_TAG_ION: "ion"$
+%_TAG_CATION: "cation"$
+%_TAG_ANION: "anion"$
+%_TAG_MOLECULE: "molecule"$
+%_TAG_SALT: "salt"$
+%_TAG_OXIDE: "oxide"$
+%_TAG_HYDROXIDE: "hydroxide"$
+%_TAG_HALOGENIDE: "halogenide"$
+%_TAG_CHLORIDE: "chloride"$
+%_TAG_BROMIDE: "bromide"$
+%_TAG_IODIDE: "iodide"$
+%_TAG_FLUORIDE: "fluoride"$
+%_TAG_SULFIDE: "sulfide"$
+%_TAG_SULFATE: "sulfate"$
+%_TAG_CARBONATE: "carbonate"$
+%_TAG_NITRATE: "nitrate"$
+%_TAG_PHOSPHATE: "phosphate"$
+%_TAG_ACID: "acid"$
+%_TAG_BASE: "base"$
+%_TAG_ORGANIC: "organic"$
+%_TAG_INORGANIC: "inorganic"$
+%_TAG_HYDROCARBON: "hydrocarbon"$
+%_TAG_ALCOHOL: "alcohol"$
+%_TAG_CARBOXYLIC_ACID: "carboxylic_acid"$
+%_TAG_ALDEHYDE: "aldehyde"$
+%_TAG_KETONE: "ketone"$
+%_TAG_SUGAR: "sugar"$
+%_TAG_AMINE: "amine"$
+%_TAG_METAL: "metal"$
+%_TAG_NONMETAL: "nonmetal"$
+%_TAG_HYDRATE: "hydrate"$
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Database                                      */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Formula", [ΔHf°, S°, ΔGf°, Cp°, State, [Tags]]]
+   ΔHf° = Standard enthalpy of formation (kJ/mol)
+   S° = Standard molar entropy (J/(mol·K))
+   ΔGf° = Standard Gibbs free energy of formation (kJ/mol)
+   Cp° = Standard molar heat capacity (J/(mol·K))
+   State = Physical state (g, l, s, aq)
+   Tags = List of classification tags
+   null indicates the value is not available
+   All values at 298.15 K (25°C) and 1 bar */
+
+%_THERMO_DATA: [
+    /****************************************************************/
+    /*  Data from Appendix 2A: Inorganic Substances (A10-A11)       */
+    /****************************************************************/
+
+    /* Aluminum */
+    ["Al", [0, 28.33, 0, 24.35, "s", ["element", "metal", "inorganic"]]],
+    ["Al^{3+}", [-524.7, -321.7, -481.2, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Al2O3", [-1675.7, 50.92, -1582.35, 79.04, "s", ["oxide", "inorganic"]]],
+    ["Al(OH)3", [-1276, null, null, null, "s", ["hydroxide", "base", "inorganic"]]],
+    ["AlCl3", [-704.2, 110.67, -628.8, 91.84, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+
+    /* Antimony */
+    ["Sb", [0, 45.69, 0, 25.23, "s", ["element", "metal", "inorganic"]]],
+    ["SbH3", [145.11, 232.78, 147.75, null, "g", ["molecule", "inorganic"]]],
+    ["SbCl3", [-313.8, 337.80, -301.2, null, "g", ["halogenide", "chloride", "inorganic"]]],
+    ["SbCl5", [-394.34, 401.94, -334.29, null, "g", ["halogenide", "chloride", "inorganic"]]],
+
+    /* Arsenic */
+    ["As", [0, 35.1, 0, 24.64, "s", ["element", "nonmetal", "inorganic"]]],
+    ["As2S3", [-169.0, 163.6, -168.6, null, "s", ["sulfide", "inorganic"]]],
+    ["AsO4^{3-}", [-888.14, -162.8, -648.41, null, "aq", ["ion", "anion", "inorganic"]]],
+
+    /* Barium */
+    ["Ba", [0, 62.8, 0, 28.07, "s", ["element", "metal", "inorganic"]]],
+    ["Ba^{2+}", [-537.64, 9.6, -560.77, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["BaO", [-553.5, 70.42, -525.1, 47.78, "s", ["oxide", "inorganic"]]],
+    ["BaCO3", [-1216.3, 112.1, -1137.6, 85.35, "s", ["salt", "carbonate", "inorganic"]]],
+    ["BaCO3", [-1214.78, -47.3, -1088.59, null, "aq", ["salt", "carbonate", "inorganic"]]],
+
+    /* Boron */
+    ["B", [0, 5.86, 0, 11.09, "s", ["element", "nonmetal", "inorganic"]]],
+    ["B2O3", [-1272.8, 53.97, -1193.7, 62.93, "s", ["oxide", "inorganic"]]],
+    ["BF3", [-1137.0, 254.12, -1120.3, 50.46, "g", ["halogenide", "fluoride", "molecule", "inorganic"]]],
+
+    /* Bromine */
+    ["Br2", [0, 152.23, 0, 75.69, "l", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["Br2", [30.91, 245.46, 3.11, 36.02, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["Br", [111.88, 175.02, 82.40, 20.79, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["Br-", [-121.55, 82.4, -103.96, null, "aq", ["ion", "anion", "halogenide", "bromide", "inorganic"]]],
+    ["HBr", [-36.40, 198.70, -53.45, 29.14, "g", ["acid", "molecule", "halogenide", "inorganic"]]],
+
+    /* Calcium */
+    ["Ca", [0, 41.42, 0, 25.31, "s", ["element", "metal", "inorganic"]]],
+    ["Ca", [178.2, 154.88, 144.3, 20.79, "g", ["element", "metal", "inorganic"]]],
+    ["Ca^{2+}", [-542.83, -53.1, -553.58, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["CaO", [-635.09, 39.75, -604.03, 42.80, "s", ["oxide", "inorganic"]]],
+    ["Ca(OH)2", [-986.09, 83.39, -898.49, 87.49, "s", ["hydroxide", "base", "inorganic"]]],
+    ["Ca(OH)2", [-1002.82, -74.5, -868.07, null, "aq", ["hydroxide", "base", "inorganic"]]],
+    ["CaCO3", [-1206.9, 92.9, -1128.8, 81.88, "s", ["salt", "carbonate", "inorganic"]]],
+    ["CaCO3", [-1207.1, 88.7, -1127.8, 81.25, "s", ["salt", "carbonate", "inorganic"]]],
+    ["CaCO3", [-1219.97, -110.0, -1081.39, null, "aq", ["salt", "carbonate", "inorganic"]]],
+    ["CaF2", [-1219.6, 68.87, -1167.3, 67.03, "s", ["salt", "halogenide", "fluoride", "inorganic"]]],
+    ["CaF2", [-1208.09, -80.8, -1111.15, null, "aq", ["salt", "halogenide", "fluoride", "inorganic"]]],
+    ["CaCl2", [-795.8, 104.6, -748.1, 72.59, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["CaCl2", [-877.1, 59.8, -816.0, null, "aq", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["CaBr2", [-682.8, 130, -663.6, null, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["CaC2", [-59.8, 69.96, -64.9, 62.72, "s", ["inorganic"]]],
+    ["CaSO4", [-1434.11, 106.7, -1321.79, 99.66, "s", ["salt", "sulfate", "inorganic"]]],
+    ["CaSO4", [-1452.10, -33.1, -1298.10, null, "aq", ["salt", "sulfate", "inorganic"]]],
+
+    /* Carbon */
+    ["C", [0, 5.740, 0, 8.527, "s", ["element", "nonmetal", "inorganic"]]],
+    ["C", [1.895, 2.377, 2.900, 6.113, "s", ["element", "nonmetal", "inorganic"]]],
+    ["C", [716.68, 158.10, 671.26, 20.84, "g", ["element", "nonmetal", "inorganic"]]],
+    ["CO", [-110.53, 197.67, -137.17, 29.14, "g", ["molecule", "oxide", "inorganic"]]],
+    ["CO2", [-393.51, 213.74, -394.36, 37.11, "g", ["molecule", "oxide", "inorganic"]]],
+    ["CCl4", [-135.44, 216.40, -65.21, 131.3, "l", ["molecule", "halogenide", "chloride", "organic"]]],
+    ["CCl4", [-102.9, 309.85, -60.59, 83.30, "g", ["molecule", "halogenide", "chloride", "organic"]]],
+    ["CS2", [89.70, 151.34, 65.27, 75.7, "l", ["molecule", "sulfide", "inorganic"]]],
+    ["CS2", [117.36, 237.84, 67.12, 45.40, "g", ["molecule", "sulfide", "inorganic"]]],
+    ["HCN", [135.1, 201.78, 124.7, 70.63, "l", ["molecule", "acid", "inorganic"]]],
+    ["HCN", [108.87, 112.84, 124.97, 35.86, "g", ["molecule", "acid", "inorganic"]]],
+    ["HCN", [107.1, 124.7, 119.7, null, "aq", ["molecule", "acid", "inorganic"]]],
+
+    /* Chromium */
+    ["Cr", [0, 23.77, 0, 23.35, "s", ["element", "metal", "inorganic"]]],
+    ["Cr^{2+}", [null, null, null, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Cr^{3+}", [null, null, null, null, "aq", ["ion", "cation", "inorganic"]]],
+
+    /* Chlorine */
+    ["Cl2", [0, 223.07, 0, 33.91, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["Cl", [121.68, 165.2, 105.68, 21.84, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["Cl-", [-167.16, 56.5, -131.23, -136.4, "aq", ["ion", "anion", "halogenide", "chloride", "inorganic"]]],
+    ["HCl", [-92.31, 186.91, -95.30, 29.12, "g", ["acid", "molecule", "halogenide", "inorganic"]]],
+    ["HCl", [-167.16, 56.5, -131.23, null, "aq", ["acid", "molecule", "halogenide", "inorganic"]]],
+
+    /* Copper */
+    ["Cu", [0, 33.15, 0, 24.44, "s", ["element", "metal", "inorganic"]]],
+    ["Cu+", [71.67, 40.6, 49.98, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Cu^{2+}", [64.77, -99.6, 65.49, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Cu2O", [-168.6, 93.14, -146.0, 63.64, "s", ["oxide", "inorganic"]]],
+    ["CuO", [-157.3, 42.63, -129.7, 42.30, "s", ["oxide", "inorganic"]]],
+    ["CuSO4", [-771.36, 109, -661.8, 98.5, "s", ["salt", "sulfate", "inorganic"]]],
+    ["CuSO4*5H2O", [-2279.7, 300.4, -1879.7, null, "s", ["salt", "sulfate", "hydrate", "inorganic"]]],
+
+    /* Deuterium */
+    ["D2", [0, 144.96, 0, 29.20, "g", ["element", "nonmetal", "inorganic"]]],
+    ["D2O", [-249.20, 198.34, -234.54, 34.27, "g", ["molecule", "oxide", "inorganic"]]],
+    ["D2O", [-294.60, 75.94, -243.44, 84.35, "l", ["molecule", "oxide", "inorganic"]]],
+
+    /****************************************************************/
+    /*  Data from Appendix 2A: Inorganic Substances (A12)           */
+    /****************************************************************/
+
+    /* Fluorine */
+    ["F2", [0, 202.78, 0, 31.30, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["F", [78.99, 158.75, 61.91, 22.74, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["F-", [-332.63, -13.8, -278.79, -106.7, "aq", ["ion", "anion", "halogenide", "fluoride", "inorganic"]]],
+    ["HF", [-271.1, 173.78, -273.2, 29.13, "g", ["acid", "molecule", "halogenide", "inorganic"]]],
+    ["HF", [-330.08, 88.7, -296.82, null, "aq", ["acid", "molecule", "halogenide", "inorganic"]]],
+
+    /* Hydrogen */
+    ["H2", [0, 130.68, 0, 28.82, "g", ["element", "nonmetal", "inorganic"]]],
+    ["H", [217.97, 114.71, null, 20.78, "g", ["element", "nonmetal", "inorganic"]]],
+    ["H+", [0, 0, 0, 0, "aq", ["ion", "cation", "inorganic"]]],
+    ["H2O", [-285.83, 69.91, -237.13, 75.29, "l", ["molecule", "oxide", "inorganic"]]],
+    ["H2O", [-241.82, 188.83, -228.57, 33.58, "g", ["molecule", "oxide", "inorganic"]]],
+    ["H2O2", [-187.78, 109.6, -120.35, 89.1, "l", ["molecule", "oxide", "inorganic"]]],
+    ["H2O2", [-136.31, 232.7, -105.57, 43.1, "g", ["molecule", "oxide", "inorganic"]]],
+    ["OH-", [-229.99, -10.75, -157.24, -148.5, "aq", ["ion", "anion", "hydroxide", "base", "inorganic"]]],
+
+    /* Iodine */
+    ["I2", [0, 116.14, 0, 54.44, "s", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["I2", [62.44, 260.69, 19.33, 36.90, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["I", [106.84, 180.79, 70.25, 20.79, "g", ["element", "nonmetal", "halogen", "inorganic"]]],
+    ["I-", [-55.19, 111.3, -51.57, -142.3, "aq", ["ion", "anion", "halogenide", "iodide", "inorganic"]]],
+    ["HI", [26.48, 206.59, 1.70, 29.16, "g", ["acid", "molecule", "halogenide", "inorganic"]]],
+
+    /* Iron */
+    ["Fe", [0, 27.28, 0, 25.10, "s", ["element", "metal", "inorganic"]]],
+    ["Fe^{2+}", [-89.1, -137.7, -78.90, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Fe^{3+}", [-48.5, -315.9, -4.7, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["Fe2O3", [-824.2, 87.40, -742.2, 103.85, "s", ["oxide", "inorganic"]]],
+    ["Fe3O4", [-1118.4, 146.4, -1015.4, 143.43, "s", ["oxide", "inorganic"]]],
+    ["FeO", [-272.0, 60.75, -251.4, 49.92, "s", ["oxide", "inorganic"]]],
+    ["Fe(OH)3", [-823.0, 106.7, null, null, "s", ["hydroxide", "base", "inorganic"]]],
+    ["FeS", [-100.0, 60.29, -100.4, 50.54, "s", ["sulfide", "inorganic"]]],
+    ["FeS2", [-178.2, 52.93, -166.9, 62.17, "s", ["sulfide", "inorganic"]]],
+
+    /* Lead */
+    ["Pb", [0, 64.81, 0, 26.44, "s", ["element", "metal", "inorganic"]]],
+    ["Pb^{2+}", [-1.7, 10.5, -24.43, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["PbO", [-277.4, null, -217.33, null, "s", ["oxide", "inorganic"]]],
+    ["PbO2", [-277.4, 68.6, null, 64.64, "s", ["oxide", "inorganic"]]],
+    ["PbSO4", [-919.94, 148.57, -813.14, 103.21, "s", ["salt", "sulfate", "inorganic"]]],
+    ["PbBr2", [-278.7, 161.5, -261.92, null, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["PbCl2", [-244.8, 175.3, -232.34, null, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+
+    /* Magnesium */
+    ["Mg", [0, 32.68, 0, 24.89, "s", ["element", "metal", "inorganic"]]],
+    ["Mg", [147.70, -148.65, null, 20.79, "g", ["element", "metal", "inorganic"]]],
+    ["Mg^{2+}", [-466.85, -138.1, -454.8, null, "aq", ["ion", "cation", "inorganic"]]],
+    ["MgO", [-601.70, 26.94, -569.43, 37.15, "s", ["oxide", "inorganic"]]],
+    ["MgCO3", [-1095.8, 65.7, -1012.1, 75.52, "s", ["salt", "carbonate", "inorganic"]]],
+    ["MgBr2", [-524.3, 117.2, null, null, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+
+    /* Mercury */
+    ["Hg", [0, 76.02, 0, 27.98, "l", ["element", "metal", "inorganic"]]],
+    ["Hg", [61.32, 174.96, 31.82, 20.79, "g", ["element", "metal", "inorganic"]]],
+    ["HgO", [-90.83, 70.29, -58.54, 44.06, "s", ["oxide", "inorganic"]]],
+    ["Hg2Cl2", [-265.22, 192.5, -210.75, 102.0, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+
+    /****************************************************************/
+    /*  Data from Appendix 2A: Inorganic Substances (A13)           */
+    /****************************************************************/
+
+    /* Nitrogen */
+    ["N2", [0, 191.61, 0, 29.13, "g", ["element", "nonmetal", "inorganic"]]],
+    ["N", [472.70, 153.30, null, 20.79, "g", ["element", "nonmetal", "inorganic"]]],
+    ["NO", [90.25, 210.76, 86.55, 29.84, "g", ["molecule", "oxide", "inorganic"]]],
+    ["NO2", [33.18, 240.06, 51.31, 37.20, "g", ["molecule", "oxide", "inorganic"]]],
+    ["N2O", [82.05, 219.85, 104.20, 38.45, "g", ["molecule", "oxide", "inorganic"]]],
+    ["N2O4", [9.16, 304.29, 97.89, 77.28, "g", ["molecule", "oxide", "inorganic"]]],
+    ["N2O5", [-43.1, 178.2, 113.9, 143.1, "g", ["molecule", "oxide", "inorganic"]]],
+    ["HNO3", [-174.10, 155.60, -80.71, 109.87, "l", ["acid", "molecule", "inorganic"]]],
+    ["HNO3", [-207.36, 146.4, -111.25, -86.6, "aq", ["acid", "molecule", "inorganic"]]],
+    ["NO3-", [-205.0, 146.4, -108.74, -86.6, "aq", ["ion", "anion", "nitrate", "inorganic"]]],
+    ["NH3", [-46.11, 192.45, -16.45, 35.06, "g", ["molecule", "base", "inorganic"]]],
+    ["NH3", [-80.29, 111.3, -26.50, null, "aq", ["molecule", "base", "inorganic"]]],
+    ["NH4+", [-132.51, 113.4, -79.31, 79.9, "aq", ["ion", "cation", "inorganic"]]],
+    ["NH4OH", [-114.2, null, null, null, "aq", ["hydroxide", "base", "inorganic"]]],
+    ["NH4Cl", [-314.43, 94.6, -202.87, 84.1, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["NH4NO3", [-365.56, 151.08, -183.87, 139.3, "s", ["salt", "nitrate", "inorganic"]]],
+    ["N2H4", [50.63, 121.21, 149.34, 98.87, "l", ["molecule", "inorganic"]]],
+    ["N2H4", [95.40, 238.97, 159.35, 49.58, "g", ["molecule", "inorganic"]]],
+    ["HN3", [-294.1, 238.97, null, null, "l", ["acid", "molecule", "inorganic"]]],
+    ["NH4HCO3", [-849.4, 120.9, null, null, "s", ["salt", "carbonate", "inorganic"]]],
+    ["NH2CONH2", [-333.51, 104.60, -197.33, 93.14, "s", ["organic", "amine"]]],
+
+    /* Oxygen */
+    ["O2", [0, 205.14, 0, 29.36, "g", ["element", "nonmetal", "inorganic"]]],
+    ["O", [249.17, 161.06, 231.73, 21.91, "g", ["element", "nonmetal", "inorganic"]]],
+    ["O3", [142.7, 238.93, 163.2, 39.20, "g", ["molecule", "inorganic"]]],
+    ["OH-", [-229.99, -10.75, -157.24, -148.5, "aq", ["ion", "anion", "hydroxide", "base", "inorganic"]]],
+
+    /* Phosphorus */
+    ["P", [0, 41.09, 0, 23.84, "s", ["element", "nonmetal", "inorganic"]]],
+    ["P4", [58.91, 279.98, 24.44, 67.15, "g", ["element", "nonmetal", "inorganic"]]],
+    ["PH3", [-9.4, 210.23, 13.4, 37.11, "g", ["molecule", "inorganic"]]],
+    ["P4O10", [-2984.0, 228.86, -2697.0, 211.71, "s", ["oxide", "inorganic"]]],
+    ["H3PO4", [-964.8, null, null, null, "s", ["acid", "phosphate", "inorganic"]]],
+    ["H3PO4", [-1266.9, 110.5, -1142.54, null, "l", ["acid", "phosphate", "inorganic"]]],
+    ["H3PO4", [-1288.34, 158.2, null, null, "aq", ["acid", "phosphate", "inorganic"]]],
+    ["HPO4^{2-}", [-1292.14, null, null, null, "aq", ["ion", "anion", "phosphate", "inorganic"]]],
+    ["PCl3", [-319.7, 217.18, -272.3, null, "l", ["halogenide", "chloride", "inorganic"]]],
+    ["PCl3", [-287.0, 311.78, -267.8, 71.84, "g", ["halogenide", "chloride", "inorganic"]]],
+    ["PCl5", [-443.5, 364.6, -305.0, 112.8, "g", ["halogenide", "chloride", "inorganic"]]],
+
+    /* Potassium */
+    ["K", [0, 64.18, 0, 29.58, "s", ["element", "metal", "inorganic"]]],
+    ["K", [89.24, 160.34, 60.59, 20.79, "g", ["element", "metal", "inorganic"]]],
+    ["K+", [-252.38, 102.5, -283.27, 21.8, "aq", ["ion", "cation", "inorganic"]]],
+    ["KOH", [-424.76, 78.9, -379.08, 64.9, "s", ["hydroxide", "base", "inorganic"]]],
+    ["KOH", [-482.37, 91.6, -440.50, null, "aq", ["hydroxide", "base", "inorganic"]]],
+    ["KF", [-567.27, 66.57, -537.75, 49.04, "s", ["salt", "halogenide", "fluoride", "inorganic"]]],
+    ["KCl", [-436.75, 82.59, -409.14, 51.30, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["KBr", [-393.80, 95.90, -380.66, 52.30, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["KI", [-327.90, 106.32, -324.89, 52.93, "s", ["salt", "halogenide", "iodide", "inorganic"]]],
+    ["KClO3", [-397.73, 143.1, -296.25, 100.25, "s", ["salt", "inorganic"]]],
+    ["KClO4", [-432.75, 151.0, -303.09, 112.38, "s", ["salt", "inorganic"]]],
+    ["K2CO3", [-1150.18, null, null, null, "s", ["salt", "carbonate", "inorganic"]]],
+    ["KNO3", [-494.63, 133.05, -394.86, 96.4, "s", ["salt", "nitrate", "inorganic"]]],
+    ["K2SO4", [-1437.79, 175.56, null, 131.46, "s", ["salt", "sulfate", "inorganic"]]],
+    ["K2Cr2O7", [-2061.5, null, null, null, "s", ["salt", "inorganic"]]],
+    ["KMnO4", [-837.2, 171.71, -737.6, 117.6, "s", ["salt", "inorganic"]]],
+
+    /* Silicon */
+    ["Si", [0, 18.83, 0, 20.00, "s", ["element", "nonmetal", "inorganic"]]],
+    ["SiO2", [-910.94, 41.84, -856.64, 44.43, "s", ["oxide", "inorganic"]]],
+
+    /****************************************************************/
+    /*  Data from Appendix 2A: Inorganic Substances (A14)           */
+    /****************************************************************/
+
+    /* Silver */
+    ["Ag", [0, 42.55, 0, 25.35, "s", ["element", "metal", "inorganic"]]],
+    ["Ag+", [105.58, 72.68, 77.11, 21.8, "aq", ["ion", "cation", "inorganic"]]],
+    ["Ag2O", [-31.05, 121.3, -11.20, 65.86, "s", ["oxide", "inorganic"]]],
+    ["AgBr", [-100.37, 107.1, -96.90, 52.38, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["AgBr", [-15.98, 155.2, -26.86, null, "aq", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["AgCl", [-127.07, 96.2, -109.79, 50.79, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["AgCl", [-61.58, 129.3, -54.12, null, "aq", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["AgI", [-61.84, 115.5, -66.19, 56.82, "s", ["salt", "halogenide", "iodide", "inorganic"]]],
+    ["AgI", [50.38, 184.1, 25.52, null, "aq", ["salt", "halogenide", "iodide", "inorganic"]]],
+    ["AgNO3", [-124.39, 140.92, -33.41, 93.05, "s", ["salt", "nitrate", "inorganic"]]],
+
+    /* Sodium */
+    ["Na", [0, 51.21, 0, 28.24, "s", ["element", "metal", "inorganic"]]],
+    ["Na", [107.32, 153.71, 76.76, 20.79, "g", ["element", "metal", "inorganic"]]],
+    ["Na+", [-240.12, 59.0, -261.91, 46.4, "aq", ["ion", "cation", "inorganic"]]],
+    ["NaOH", [-425.61, 64.46, -379.49, 59.54, "s", ["hydroxide", "base", "inorganic"]]],
+    ["NaOH", [-470.11, 48.1, -419.15, null, "aq", ["hydroxide", "base", "inorganic"]]],
+    ["NaCl", [-411.15, 72.13, -384.14, 50.50, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["NaCl", [-407.27, 115.5, -393.13, null, "aq", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["NaBr", [-361.06, 86.82, -348.98, 51.38, "s", ["salt", "halogenide", "bromide", "inorganic"]]],
+    ["NaI", [-287.78, 98.53, -286.06, 52.09, "s", ["salt", "halogenide", "iodide", "inorganic"]]],
+    ["Na2SO4", [-1387.1, 149.6, -1270.2, 128.20, "s", ["salt", "sulfate", "inorganic"]]],
+
+    /* Sulfur */
+    ["S", [0, 31.80, 0, 22.64, "s", ["element", "nonmetal", "inorganic"]]],
+    ["S", [0.33, 32.6, 0, null, "s", ["element", "nonmetal", "inorganic"]]],
+    ["S^{2-}", [33.1, -14.6, 85.8, null, "aq", ["ion", "anion", "sulfide", "inorganic"]]],
+    ["SO2", [-296.83, 248.22, -300.19, 39.87, "g", ["molecule", "oxide", "inorganic"]]],
+    ["SO3", [-395.72, 256.76, -371.06, 50.67, "g", ["molecule", "oxide", "inorganic"]]],
+    ["SO4^{2-}", [-909.27, 20.1, -744.53, -293, "aq", ["ion", "anion", "sulfate", "inorganic"]]],
+    ["H2SO4", [-813.99, 156.90, -690.00, 138.9, "l", ["acid", "sulfate", "inorganic"]]],
+    ["HSO4-", [-887.34, null, null, null, "aq", ["ion", "anion", "sulfate", "inorganic"]]],
+    ["H2S", [-20.63, 205.79, -33.56, 34.23, "g", ["acid", "sulfide", "molecule", "inorganic"]]],
+    ["H2S", [-39.7, 121, -27.83, null, "aq", ["acid", "sulfide", "molecule", "inorganic"]]],
+    ["SF6", [-1209, 291.82, -1105.3, 97.28, "g", ["halogenide", "fluoride", "molecule", "inorganic"]]],
+
+    /* Tin */
+    ["Sn", [0, 51.55, 0, 26.99, "s", ["element", "metal", "inorganic"]]],
+    ["Sn", [-2.09, 44.14, 0.13, 25.77, "s", ["element", "metal", "inorganic"]]],
+    ["SnO", [-285.8, 56.5, -256.9, 44.31, "s", ["oxide", "inorganic"]]],
+    ["SnO2", [-580.7, 52.3, -519.6, 52.59, "s", ["oxide", "inorganic"]]],
+
+    /* Zinc */
+    ["Zn", [0, 41.63, 0, 25.40, "s", ["element", "metal", "inorganic"]]],
+    ["Zn^{2+}", [-153.89, -112.1, -147.06, 46, "aq", ["ion", "cation", "inorganic"]]],
+    ["ZnO", [-348.28, 43.64, -318.30, 40.25, "s", ["oxide", "inorganic"]]],
+
+    /****************************************************************/
+    /*  Data from Appendix 2A: Organic Compounds (A15-A16)          */
+    /****************************************************************/
+
+    /* Hydrocarbons */
+    ["CH4", [-74.81, 186.26, -50.72, 35.31, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C2H6", [-84.68, 229.60, -32.82, 52.63, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C2H4", [52.26, 219.56, 68.15, 43.56, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C2H2", [226.73, 200.94, 209.20, 43.93, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C3H6", [20.42, 266.6, 62.78, 63.89, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C3H8", [-103.85, 270.2, -23.49, 73.5, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C3H6cyc", [53.30, 237.4, 104.45, 55.94, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C4H10", [-126.15, 310.1, -17.03, 97.45, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C5H12", [-146.44, 349.1, -8.20, 120.2, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C6H6", [49.0, 173.3, 124.3, 136.1, "l", ["organic", "hydrocarbon", "molecule"]]],
+    ["C6H6", [82.9, 269.31, 129.72, 81.67, "g", ["organic", "hydrocarbon", "molecule"]]],
+    ["C7H8", [12.0, 221.0, 113.8, 157.3, "l", ["organic", "hydrocarbon", "molecule"]]],
+    ["C6H12", [null, 204.4, null, 156.5, "l", ["organic", "hydrocarbon", "molecule"]]],
+    ["C8H18", [-250.0, 320.7, 122.0, 254.6, "l", ["organic", "hydrocarbon", "molecule"]]],
+    ["C8H18", [-156.4, 358, 16.4, null, "g", ["organic", "hydrocarbon", "molecule"]]],
+
+    /* Alcohols and phenols */
+    ["CH3OH", [-238.86, 126.8, -166.27, 81.6, "l", ["organic", "alcohol", "molecule"]]],
+    ["CH3OH", [-200.66, 239.81, -161.96, 43.89, "g", ["organic", "alcohol", "molecule"]]],
+    ["C2H5OH", [-277.69, 160.7, -174.78, 111.46, "l", ["organic", "alcohol", "molecule"]]],
+    ["C2H5OH", [-235.10, 282.70, -168.49, 65.44, "g", ["organic", "alcohol", "molecule"]]],
+    ["C6H5OH", [-164.6, 144.0, -50.42, null, "s", ["organic", "alcohol", "molecule"]]],
+
+    /* Carboxylic acids */
+    ["HCOOH", [-424.72, 128.95, -361.35, 99.04, "l", ["organic", "carboxylic_acid", "acid", "molecule"]]],
+    ["CH3COOH", [-484.5, 159.8, -389.9, 123.3, "l", ["organic", "carboxylic_acid", "acid", "molecule"]]],
+    ["CH3COOH", [-485.76, 86.6, -396.46, null, "aq", ["organic", "carboxylic_acid", "acid", "molecule"]]],
+    ["COOH2", [-827.2, 120, -697.9, null, "aq", ["organic", "carboxylic_acid", "acid", "molecule"]]],
+    ["C6H5COOH", [-385.1, 167.6, -245.3, 146.8, "s", ["organic", "carboxylic_acid", "acid", "molecule"]]],
+
+    /* Aldehydes and ketones */
+    ["HCHO", [-108.57, 218.77, -102.53, 35.40, "g", ["organic", "aldehyde", "molecule"]]],
+    ["CH3CHO", [-192.30, 160.2, -128.12, null, "l", ["organic", "aldehyde", "molecule"]]],
+    ["CH3CHO", [-166.19, 250.3, -128.86, 57.3, "g", ["organic", "aldehyde", "molecule"]]],
+    ["CH3COCH3", [-248.1, 200, -155.4, 125.45, "l", ["organic", "ketone", "molecule"]]],
+
+    /* Sugars (A16) */
+    ["C6H12O6", [-1268, 212, -910, null, "s", ["organic", "sugar", "molecule"]]],
+    ["C6H12O6", [-1266, null, -917, null, "aq", ["organic", "sugar", "molecule"]]],
+    ["C6H12O6fru", [-1266, null, null, null, "s", ["organic", "sugar", "molecule"]]],
+    ["C12H22O11", [-2222, 360, -1545, null, "s", ["organic", "sugar", "molecule"]]],
+
+    /* Nitrogen compounds (A16) */
+    ["CO(NH2)2", [-333.51, 104.60, -197.33, 93.14, "s", ["organic", "amine", "molecule"]]],
+    ["C6H5NH2", [31.6, 191.3, 149.1, null, "l", ["organic", "amine", "molecule"]]],
+    ["NH2CH2COOH", [-532.9, 103.51, -373.4, 99.2, "s", ["organic", "amine", "carboxylic_acid", "molecule"]]],
+    ["CH3NH2", [-22.97, 243.41, 32.16, 50.1, "g", ["organic", "amine", "molecule"]]],
+
+    /****************************************************************/
+    /*  Additional data not in appendix                             */
+    /****************************************************************/
+
+    /* Magnesium compounds not in appendix */
+    ["MgCl2", [-641.62, 89.6, -591.8, null, "s", ["salt", "halogenide", "chloride", "inorganic"]]],
+    ["Mg(OH)2", [-924.5, 63.2, -833.5, null, "s", ["hydroxide", "base", "inorganic"]]]
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Data Retrieval Functions                      */
+/*                                                              */
+/****************************************************************/
+
+/* Field names for thermodynamic data */
+%_THERMO_FIELDS: ["DeltaHf", "S", "DeltaGf", "Cp", "State", "Tags"]$
+
+/* Units for thermodynamic data */
+%_THERMO_UNITS: [kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), J*mol^(-1)*K^(-1), null, null]$
+
+/* Returns all thermodynamic data for a substance in a specific state */
+chem_thermo_data_all(substance, state) := block([data, matches],
+    matches: sublist(%_THERMO_DATA, lambda([x], 
+        sequal(first(x), substance) and sequal(fifth(second(x)), state))),
+    if emptyp(matches) then
+        return(false)
+    else (
+        data: second(first(matches)),
+        return(zip_with("[", %_THERMO_FIELDS, data))
+    )
+)$
+
+/* Returns all thermodynamic data for a substance (first match if multiple states exist) */
+chem_thermo_data_all_any(substance) := block([data, match],
+    match: assoc(substance, %_THERMO_DATA),
+    if is(match = false) then
+        return(false)
+    else
+        return(zip_with("[", %_THERMO_FIELDS, match))
+)$
+
+/* Returns a specific thermodynamic property for a substance in a specific state */
+chem_thermo_data(substance, property, state) := 
+    assoc(property, chem_thermo_data_all(substance, state))$
+
+/* Returns a specific thermodynamic property with units */
+chem_thermo_data_units(substance, property, state) := block([value, unit],
+    value: chem_thermo_data(substance, property, state),
+    if is(value = false) or is(value = null) then
+        return(false),
+    unit: assoc(property, zip_with("[", %_THERMO_FIELDS, %_THERMO_UNITS)),
+    if is(unit = null) then
+        return(value)
+    else
+        return(stackunits(value, unit))
+)$
+
+/* Calculate reaction enthalpy: ΔH° = Σ(ΔHf°products) - Σ(ΔHf°reactants) */
+chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react],
+    /* products_list and reactants_list are lists of [[substance, state, stoich_coeff], ...] */
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+    ),
+    
+    return(sum_prod - sum_react)
+)$
+
+/* Calculate reaction entropy: ΔS° = Σ(S°products) - Σ(S°reactants) */
+chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react],
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "S", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "S", second(item))
+    ),
+    
+    return(sum_prod - sum_react)
+)$
+
+/* Calculate reaction Gibbs free energy: ΔG° = Σ(ΔGf°products) - Σ(ΔGf°reactants) with units */
+chem_reaction_gibbs(products_list, reactants_list) := block([sum_prod, sum_react, delta_g],
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+    ),
+    
+    delta_g: sum_prod - sum_react,
+    return(stackunits(delta_g, kJ*mol^(-1)))
+)$
+
+/* Calculate ΔG from ΔH and ΔS: ΔG = ΔH - TΔS with units */
+chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, temp) := block([delta_g],
+    delta_g: delta_h - temp * delta_s / 1000,  /* Convert J to kJ */
+    return(stackunits(delta_g, kJ*mol^(-1)))
+)$
+
+/* Calculate equilibrium constant from ΔG°: K = exp(-ΔG°/RT) */
+chem_equilibrium_constant(delta_g, temp) := block([R],
+    R: 8.314,  /* J/(mol·K) */
+    return(%e^(-delta_g * 1000 / (R * temp)))  /* Convert kJ to J */
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Reaction-Based Thermodynamic Calculations                   */
+/*  (Requires reactions.mac to be loaded)                       */
+/*                                                              */
+/****************************************************************/
+
+/* Calculate ΔH° for a reaction by name */
+chem_reaction_enthalpy_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_enthalpy(products, reactants))
+)$
+
+/* Calculate ΔS° for a reaction by name */
+chem_reaction_entropy_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_entropy(products, reactants))
+)$
+
+/* Calculate ΔG° for a reaction by name */
+chem_reaction_gibbs_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_gibbs(products, reactants))
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Navigation Functions                          */
+/*                                                              */
+/****************************************************************/
+
+/* Returns an array of all substances in the database */
+chem_thermo_substance_array() := block([unique_substances],
+    unique_substances: unique(map(first, %_THERMO_DATA)),
+    return(unique_substances)
+)$
+
+/* Returns an array of all substances in a specific state */
+chem_thermo_substance_state_array(state) := block([filtered],
+    filtered: sublist(%_THERMO_DATA, lambda([x], sequal(fifth(second(x)), state))),
+    return(unique(map(first, filtered)))
+)$
+
+/* Returns an array of available states for a substance */
+chem_thermo_states(substance) := block([matches],
+    matches: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
+    return(map(lambda([x], fifth(second(x))), matches))
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Tag-Based Filtering Functions                               */
+/*                                                              */
+/****************************************************************/
+
+/* Check if a substance entry has a specific tag */
+chem_thermo_has_tag(entry, tag) := block([tags],
+    tags: sixth(second(entry)),
+    if listp(tags) then
+        member(tag, tags)
+    else
+        false
+)$
+
+/* Returns all entries that have a specific tag */
+chem_thermo_filter_by_tag(tag) := 
+    sublist(%_THERMO_DATA, lambda([x], chem_thermo_has_tag(x, tag)))$
+
+/* Returns all entries that have ALL specified tags (AND logic) */
+chem_thermo_filter_by_tags_all(tag_list) := 
+    sublist(%_THERMO_DATA, lambda([x], 
+        block([tags],
+            tags: sixth(second(x)),
+            if listp(tags) then
+                every(lambda([t], member(t, tags)), tag_list)
+            else
+                false
+        )))$
+
+/* Returns all entries that have ANY of the specified tags (OR logic) */
+chem_thermo_filter_by_tags_any(tag_list) := 
+    sublist(%_THERMO_DATA, lambda([x], 
+        block([tags],
+            tags: sixth(second(x)),
+            if listp(tags) then
+                some(lambda([t], member(t, tags)), tag_list)
+            else
+                false
+        )))$
+
+/* Returns list of substance formulas with a specific tag */
+chem_thermo_substances_by_tag(tag) := 
+    unique(map(first, chem_thermo_filter_by_tag(tag)))$
+
+/* Returns list of substance formulas with ALL specified tags */
+chem_thermo_substances_by_tags_all(tag_list) := 
+    unique(map(first, chem_thermo_filter_by_tags_all(tag_list)))$
+
+/* Returns list of substance formulas with ANY of the specified tags */
+chem_thermo_substances_by_tags_any(tag_list) := 
+    unique(map(first, chem_thermo_filter_by_tags_any(tag_list)))$
+
+/* Get all tags for a substance (first match) */
+chem_thermo_get_tags(substance) := block([match],
+    match: assoc(substance, %_THERMO_DATA),
+    if is(match = false) then
+        return(false)
+    else
+        return(sixth(match))
+)$
+
+/* Get all tags for a substance in a specific state */
+chem_thermo_get_tags_state(substance, state) := block([matches, data],
+    matches: sublist(%_THERMO_DATA, lambda([x], 
+        sequal(first(x), substance) and sequal(fifth(second(x)), state))),
+    if emptyp(matches) then
+        return(false)
+    else
+        return(sixth(second(first(matches))))
+)$
+
+/* Returns all substances with ALL specified tags (for random selection by user) */
+chem_thermo_random_by_tags_all(tag_list) := 
+    chem_thermo_substances_by_tags_all(tag_list)$
+
+/* Returns full data for substances filtered by tag */
+chem_thermo_data_by_tag(tag) := 
+    map(lambda([x], [first(x), zip_with("[", %_THERMO_FIELDS, second(x))]), 
+        chem_thermo_filter_by_tag(tag))$
+
+/* Returns full data for substances filtered by tag and state */
+chem_thermo_data_by_tag_state(tag, state) := 
+    map(lambda([x], [first(x), zip_with("[", %_THERMO_FIELDS, second(x))]), 
+        sublist(chem_thermo_filter_by_tag(tag), 
+            lambda([x], sequal(fifth(second(x)), state))))$

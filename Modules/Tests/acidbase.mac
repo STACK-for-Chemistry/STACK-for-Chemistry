@@ -1,0 +1,766 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    Simplified, robust acid-base helper.
+*/
+
+/* Acid-base database: flat list [acid, pKa, pKb, base, nH, acid, pKa, pKb, base, nH, ...] 
+   nH = number of acidic protons for that species */
+%_ACIDBASE_DATA: [
+    /* Strong acids (pKa < 0) */
+    "H3O+", 0, 14, "H2O", 1,
+    "HCl", -7.0, 21.0, "Cl-", 1,
+    "HBr", -9.0, 23.0, "Br-", 1,
+    "HI", -10.0, 24.0, "I-", 1,
+    "H2SO4", -2.0, 16.0, "HSO4-", 2,
+    "HNO3", -1.0, 15.0, "NO3-", 1,
+    "HClO4", -10.0, 24.0, "ClO4-", 1,
+    "HClO3", -1.0, 15.0, "ClO3-", 1,
+    
+    /* Weak acids (pKa > 0) */
+    "H2O", 14, 0, "OH-", 1,
+    "HSO4-", 1.92, 12.08, "SO4^{2-}", 1,
+    "H3PO4", 2.12, 11.88, "H2PO4-", 3,
+    "H2PO4-", 7.21, 6.79, "HPO4^{2-}", 2,
+    "HPO4^{2-}", 12.32, 1.68, "PO4^{3-}", 1,
+    "HF", 3.17, 10.83, "F-", 1,
+    "HNO2", 3.25, 10.75, "NO2-", 1,
+    "HCOOH", 3.75, 10.25, "HCOO-", 1,
+    "C6H5COOH", 4.20, 9.80, "C6H5COO-", 1,
+    "CH3COOH", 4.76, 9.24, "CH3COO-", 1,
+    "H2CO3", 6.35, 7.65, "HCO3-", 2,
+    "HCO3-", 10.33, 3.67, "CO3^{2-}", 1,
+    "H2S", 7.00, 7.00, "HS-", 2,
+    "HS-", 12.89, 1.11, "S^{2-}", 1,
+    "HClO2", 1.94, 12.06, "ClO2-", 1,
+    "HClO", 7.53, 6.47, "ClO-", 1,
+    "HBrO", 8.59, 5.41, "BrO-", 1,
+    "HIO", 10.64, 3.36, "IO-", 1,
+    "HCN", 9.21, 4.79, "CN-", 1,
+    "NH4+", 9.25, 4.75, "NH3", 1,
+    "H2O2", 11.62, 2.38, "HO2-", 2,
+    "C6H5OH", 9.95, 4.05, "C6H5O-", 1,
+    "H3BO3", 9.24, 4.76, "H2BO3-", 3,
+    "H2SiO3", 9.77, 4.23, "HSiO3-", 2,
+    "HSiO3-", 11.80, 2.20, "SiO3^{2-}", 1,
+    "H2C2O4", 1.25, 12.75, "HC2O4-", 2,
+    "HC2O4-", 4.27, 9.73, "C2O4^{2-}", 1,
+    "H2SO3", 1.81, 12.19, "HSO3-", 2,
+    "HSO3-", 6.91, 7.09, "SO3^{2-}", 1,
+    "H3AsO4", 2.22, 11.78, "H2AsO4-", 3,
+    "H2AsO4-", 6.98, 7.02, "HAsO4^{2-}", 2,
+    "HAsO4^{2-}", 11.50, 2.50, "AsO4^{3-}", 1,
+    "H2CrO4", 0.74, 13.26, "HCrO4-", 2,
+    "HCrO4-", 6.49, 7.51, "CrO4^{2-}", 1,
+    "CH3NH3+", 10.64, 3.36, "CH3NH2", 1,
+    "(CH3)2NH2+", 10.73, 3.27, "(CH3)2NH", 1,
+    "(CH3)3NH+", 9.80, 4.20, "(CH3)3N", 1,
+    "C2H5NH3+", 10.81, 3.19, "C2H5NH2", 1,
+    "C6H5NH3+", 4.63, 9.37, "C6H5NH2", 1,
+    "N2H5+", 8.07, 5.93, "N2H4", 1,
+    "HONH3+", 5.96, 8.04, "HONH2", 1,
+    "H2NCONH3+", 0.18, 13.82, "H2NCONH2", 1,
+    "C5H5NH+", 5.23, 8.77, "C5H5N", 1
+]$
+
+/* Helper: find index of acid (returns position of acid, or 0 if not found) */
+_acidbase_find_acid(acid) := block([i, n, result],
+    n: length(%_ACIDBASE_DATA),
+    result: 0,
+    i: 1,
+    while i <= n do (
+        if is(%_ACIDBASE_DATA[i] = acid) then (result: i, return(result)),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Helper: find index of base (returns starting position of entry, or 0 if not found) */
+_acidbase_find_base(base) := block([i, n, result],
+    n: length(%_ACIDBASE_DATA),
+    result: 0,
+    i: 4,
+    while i <= n do (
+        if is(%_ACIDBASE_DATA[i] = base) then (result: i - 3, return(result)),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Get pKa for an ACID - acid is at idx, pKa is at idx+1 */
+chem_acidbase_pKa(acid) := block([idx],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then null else %_ACIDBASE_DATA[idx + 1]
+)$
+
+/* Get pKb for a BASE - find entry via base, pKb is at idx+2 */
+chem_acidbase_pKb(base) := block([idx],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then null else %_ACIDBASE_DATA[idx + 2]
+)$
+
+/* Get Ka for an ACID */
+chem_acidbase_Ka(acid) := block([pKa],
+    pKa: chem_acidbase_pKa(acid),
+    if is(pKa = null) then null
+    else if not numberp(pKa) then null
+    else 10^(-pKa)
+)$
+
+/* Get Kb for a BASE */
+chem_acidbase_Kb(base) := block([pKb],
+    pKb: chem_acidbase_pKb(base),
+    if is(pKb = null) then null
+    else if not numberp(pKb) then null
+    else 10^(-pKb)
+)$
+
+/* Get number of acidic protons for an acid */
+chem_acidbase_nH(acid) := block([idx],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then null else %_ACIDBASE_DATA[idx + 4]
+)$
+
+/* Get conjugate base for an acid - acid at idx, base at idx+3 */
+chem_acidbase_conjugate_base(acid) := block([idx],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then "" else %_ACIDBASE_DATA[idx + 3]
+)$
+
+/* Get conjugate acid for a base - entry starts at idx, acid at idx */
+chem_acidbase_conjugate_acid(base) := block([idx],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then "" else %_ACIDBASE_DATA[idx]
+)$
+
+/* Navigation arrays */
+
+/* All acids */
+chem_acid_array() := block([result, i, n],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* All bases */
+chem_base_array() := block([result, i, n],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 4,
+    while i <= n do (
+        result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Strong acids: pKa < 0 */
+chem_strong_acid_array() := block([result, i, n, pKa],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKa: %_ACIDBASE_DATA[i + 1],
+        if numberp(pKa) and is(pKa < 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Weak acids: pKa > 0 */
+chem_weak_acid_array() := block([result, i, n, pKa],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKa: %_ACIDBASE_DATA[i + 1],
+        if numberp(pKa) and is(pKa > 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Strong bases: pKb <= 0 */
+chem_strong_base_array() := block([result, i, n, pKb],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKb: %_ACIDBASE_DATA[i + 2],
+        if numberp(pKb) and is(pKb <= 0) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Weak bases: 0 < pKb < 14 */
+chem_weak_base_array() := block([result, i, n, pKb],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKb: %_ACIDBASE_DATA[i + 2],
+        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Acids with specific number of acidic protons */
+chem_acid_array_nH(nH_target) := block([result, i, n, nH],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        nH: %_ACIDBASE_DATA[i + 4],
+        if numberp(nH) and is(nH = nH_target) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Strong acids with specific number of acidic protons */
+chem_strong_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKa: %_ACIDBASE_DATA[i + 1],
+        nH: %_ACIDBASE_DATA[i + 4],
+        if numberp(pKa) and is(pKa < 0) and numberp(nH) and is(nH = nH_target) then 
+            result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Weak acids with specific number of acidic protons */
+chem_weak_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
+    n: length(%_ACIDBASE_DATA),
+    result: [],
+    i: 1,
+    while i <= n do (
+        pKa: %_ACIDBASE_DATA[i + 1],
+        nH: %_ACIDBASE_DATA[i + 4],
+        if numberp(pKa) and is(pKa > 0) and numberp(nH) and is(nH = nH_target) then 
+            result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
+    result
+)$
+
+/* Legacy: return all acid formulas */
+chem_acidbase_array() := chem_acid_array()$
+
+/****************************************************************/
+/*                                                              */
+/*  Equilibrium Expression Functions                            */
+/*                                                              */
+/****************************************************************/
+
+/* Generate Ka expression in bracket notation (mhchem-compatible).
+   E.g., for CH3COOH: "[H^+] \\cdot [CH3COO-] / [CH3COOH]"
+   Uses the conjugate base from the database. */
+chem_acidbase_Ka_expression(acid) := block([idx, base_formula],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then return(""),
+    base_formula: %_ACIDBASE_DATA[idx + 3],
+    sconcat("\\frac{[H^+] \\cdot [", base_formula, "]}{[", acid, "]}")
+)$
+
+/* Generate Ka expression in activity notation.
+   E.g., for CH3COOH: "\\frac{a(H^+) \\cdot a(CH3COO-)}{a(CH3COOH)}" */
+chem_acidbase_Ka_activity_expression(acid) := block([idx, base_formula],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then return(""),
+    base_formula: %_ACIDBASE_DATA[idx + 3],
+    sconcat("\\frac{a(H^+) \\cdot a(", base_formula, ")}{a(", acid, ")}")
+)$
+
+/* Generate Kb expression in bracket notation for a base.
+   E.g., for NH3: "\\frac{[NH4^+] \\cdot [OH^-]}{[NH3]}" */
+chem_acidbase_Kb_expression(base) := block([idx, acid_formula],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then return(""),
+    acid_formula: %_ACIDBASE_DATA[idx],
+    sconcat("\\frac{[", acid_formula, "] \\cdot [OH^-]}{[", base, "]}")
+)$
+
+/* Generate Kb expression in activity notation for a base.
+   E.g., for NH3: "\\frac{a(NH4^+) \\cdot a(OH^-)}{a(NH3)}" */
+chem_acidbase_Kb_activity_expression(base) := block([idx, acid_formula],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then return(""),
+    acid_formula: %_ACIDBASE_DATA[idx],
+    sconcat("\\frac{a(", acid_formula, ") \\cdot a(OH^-)}{a(", base, ")}")
+)$
+
+/* filepath: /home/alexander/eth_it/STACK-for-Chemistry/Modules/Utilized/acidbase.mac */
+
+/****************************************************************/
+/*                                                              */
+/*  Titration Curve Functions for Polyprotic Acids              */
+/*  Using Alpha Fractions and Charge Balance                    */
+/*                                                              */
+/****************************************************************/
+
+/* Get all pKa values for a polyprotic acid as a list */
+chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, max_iter],
+    pKa_values: [],
+    current_acid: acid,
+    max_iter: 5,
+    
+    while max_iter > 0 and not is(current_acid = "") and not is(current_acid = null) do (
+        current_pKa: chem_acidbase_pKa(current_acid),
+        if is(current_pKa = null) then return(pKa_values),
+        pKa_values: append(pKa_values, [current_pKa]),
+        current_base: chem_acidbase_conjugate_base(current_acid),
+        if is(current_base = "") or is(current_base = null) then return(pKa_values),
+        current_acid: current_base,
+        max_iter: max_iter - 1
+    ),
+    return(pKa_values)
+)$
+
+/* Convert pKa list to Ka list */
+_pKa_to_Ka(pKa_list) := block([Ka_list, idx],
+    Ka_list: [],
+    idx: 1,
+    while idx <= length(pKa_list) do (
+        Ka_list: append(Ka_list, [float(10^(-pKa_list[idx]))]),
+        idx: idx + 1
+    ),
+    return(Ka_list)
+)$
+
+/* Calculate alpha fractions - OPTIMIZED */
+_alpha_fractions(H, Ka_list) := block([n, D, alphas, prod, idx, Hn],
+    n: length(Ka_list),
+    Hn: float(H^n),
+    
+    /* Build denominator */
+    D: Hn,
+    prod: 1.0,
+    idx: 1,
+    while idx <= n do (
+        prod: prod * Ka_list[idx],
+        D: D + prod * float(H^(n - idx)),
+        idx: idx + 1
+    ),
+    
+    if is(D < 1e-50) then D: 1e-50,
+    
+    /* Calculate alphas */
+    alphas: [Hn / D],
+    prod: 1.0,
+    idx: 1,
+    while idx <= n do (
+        prod: prod * Ka_list[idx],
+        alphas: append(alphas, [prod * float(H^(n - idx)) / D]),
+        idx: idx + 1
+    ),
+    
+    return(alphas)
+)$
+
+/* Charge balance equation - OPTIMIZED */
+_charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, neg_charge, idx, n],
+    alphas: _alpha_fractions(H, Ka_list),
+    n: length(Ka_list),
+    
+    neg_charge: 0.0,
+    idx: 1,
+    while idx <= n do (
+        neg_charge: neg_charge + idx * alphas[idx + 1],
+        idx: idx + 1
+    ),
+    
+    return(float(H + CB - Kw/H - CT * neg_charge))
+)$
+
+/* Solve for pH using bisection - 60 iterations for high precision */
+_solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, iter],
+    Kw: 1.0e-14,
+    
+    H_lo: 1e-14,
+    H_hi: 1.0,
+    
+    f_lo: _charge_balance(H_lo, CT, CB, Ka_list, Kw),
+    f_hi: _charge_balance(H_hi, CT, CB, Ka_list, Kw),
+    
+    /* 60 bisection iterations */
+    iter: 0,
+    while iter < 50 do (
+        H_mid: float((H_lo + H_hi) / 2.0),
+        f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
+        
+        /* Use sign comparison that works reliably with floats */
+        if is(f_lo > 0) = is(f_mid > 0) then (
+            /* f_lo and f_mid have the same sign, root is in upper half */
+            H_lo: H_mid,
+            f_lo: f_mid
+        ) else (
+            /* f_lo and f_mid have opposite signs, root is in lower half */
+            H_hi: H_mid,
+            f_hi: f_mid
+        ),
+        
+        iter: iter + 1
+    ),
+    
+    return(float(-log(H_mid) / log(10)))
+)$
+
+/* Calculate pH at a given point during titration */
+chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
+    [pKa_list, Ka_list, v_total, CT, CB, pH],
+    
+    pKa_list: chem_acidbase_pKa_list(acid),
+    if is(length(pKa_list) = 0) then return(false),
+    Ka_list: _pKa_to_Ka(pKa_list),
+    
+    v_total: float((v_acid + v_base) / 1000.0),
+    CT: float((c_acid * v_acid / 1000.0) / v_total),
+    CB: float((c_base * v_base / 1000.0) / v_total),
+    
+    pH: _solve_pH(CT, CB, Ka_list),
+    
+    if is(pH < 0) then pH: 0.0,
+    if is(pH > 14) then pH: 14.0,
+    
+    return(pH)
+)$
+
+/* Generate titration curve data with automatic end volume */
+chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
+    [num_protons, v_final_equiv, v_max, data, v, pH, idx, delta_v],
+    
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then num_protons: 1,
+    
+    v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
+    v_max: float(v_final_equiv * 1.3),
+    delta_v: float(v_max / (n_points - 1)),
+    
+    data: [],
+    idx: 0,
+    
+    while idx < n_points do (
+        v: float(idx * delta_v),
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]]),
+        idx: idx + 1
+    ),
+    
+    return(data)
+)$
+
+/* Generate titration curve data with custom end volume
+   v_max: maximum volume to plot (mL) - if 0 or negative, uses automatic calculation */
+chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
+    [num_protons, v_final_equiv, v_end, data, v, pH, idx, delta_v],
+    
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then num_protons: 1,
+    
+    /* Use custom v_max if positive, otherwise calculate automatically */
+    if is(v_max > 0) then (
+        v_end: float(v_max)
+    ) else (
+        v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
+        v_end: float(v_final_equiv * 1.3)
+    ),
+    
+    delta_v: float(v_end / (n_points - 1)),
+    
+    data: [],
+    idx: 0,
+    
+    while idx < n_points do (
+        v: float(idx * delta_v),
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]]),
+        idx: idx + 1
+    ),
+    
+    return(data)
+)$
+
+/* Convert titration data to JSXGraph-compatible JavaScript array string 
+   Rounds values to 3 decimal places for cleaner output */
+chem_titration_jsxgraph_points(data) := block([result, idx, pair, vv, pp],
+    result: "[",
+    idx: 1,
+    while idx <= length(data) do (
+        pair: data[idx],
+        /* Round to 3 decimal places */
+        vv: float(round(1000 * first(pair)) / 1000),
+        pp: float(round(1000 * second(pair)) / 1000),
+        result: sconcat(result, "[", string(vv), ",", string(pp), "]"),
+        if is(idx < length(data)) then result: sconcat(result, ","),
+        idx: idx + 1
+    ),
+    result: sconcat(result, "]"),
+    return(result)
+)$
+
+/* NEW: Return X-values as a Maxima list (not a string) for direct JSXGraph use */
+chem_titration_xdata(data) := block([result, idx],
+    result: [],
+    idx: 1,
+    while idx <= length(data) do (
+        result: append(result, [float(round(1000 * first(data[idx])) / 1000)]),
+        idx: idx + 1
+    ),
+    return(result)
+)$
+
+/* NEW: Return Y-values (pH) as a Maxima list (not a string) for direct JSXGraph use */
+chem_titration_ydata(data) := block([result, idx],
+    result: [],
+    idx: 1,
+    while idx <= length(data) do (
+        result: append(result, [float(round(1000 * second(data[idx])) / 1000)]),
+        idx: idx + 1
+    ),
+    return(result)
+)$
+
+/* Get the i-th equivalence point volume (in mL) */
+chem_titration_equiv_volume(c_acid, c_base, v_acid, i) := block([],
+    if not integerp(i) then i: 1,
+    if is(i < 1) then i: 1,
+    float((i * c_acid * v_acid) / c_base)
+)$
+
+/* Get the pH at the i-th equivalence point */
+chem_titration_equiv_pH(acid, c_acid, c_base, v_acid, i) := block([v_equiv],
+    if not integerp(i) then i: 1,
+    v_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid, i),
+    chem_titration_pH(acid, c_acid, c_base, v_acid, v_equiv)
+)$
+
+/* Get the pH at the i-th half-equivalence point */
+chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid, i) := block([v_half, prev_equiv],
+    if not integerp(i) then i: 1,
+    if is(i < 1) then i: 1,
+    
+    if is(i = 1) then (
+        prev_equiv: 0
+    ) else (
+        prev_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid, i - 1)
+    ),
+    v_half: (prev_equiv + chem_titration_equiv_volume(c_acid, c_base, v_acid, i)) / 2,
+    chem_titration_pH(acid, c_acid, c_base, v_acid, v_half)
+)$
+
+/* Get list of all equivalence volumes for a polyprotic acid (in mL) */
+chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid) := block([num_protons, volumes, idx],
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then return([]),
+    
+    volumes: [],
+    idx: 1,
+    while idx <= num_protons do (
+        volumes: append(volumes, [chem_titration_equiv_volume(c_acid, c_base, v_acid, idx)]),
+        idx: idx + 1
+    ),
+    return(volumes)
+)$
+
+/* Get list of all pKa values for plotting reference lines */
+chem_titration_pKa_values(acid) := chem_acidbase_pKa_list(acid)$
+
+/* Get the number of protons for an acid */
+chem_acidbase_num_protons(acid) := block([nH],
+    nH: chem_acidbase_nH(acid),
+    if is(nH = null) then 1 else nH
+)$
+
+/* filepath: /home/alexander/eth_it/STACK-for-Chemistry/Modules/Utilized/acidbase.mac */
+
+/****************************************************************/
+/*                                                              */
+/*  JSXGraph Plot Generation Functions                          */
+/*                                                              */
+/****************************************************************/
+
+/* Generate complete JSXGraph JavaScript code for a titration curve
+   Parameters:
+     xdata: list of x values (volumes)
+     ydata: list of y values (pH)
+     v_max: maximum x-axis value
+     v_pushoff: left boundary offset (typically negative, e.g., -v_equiv/20)
+   Returns: JavaScript code string to be inserted with {# #} */
+chem_jsxgraph_titration_code(xdata, ydata, v_max, v_pushoff) := block([code],
+    code: sconcat(
+        "var board = JXG.JSXGraph.initBoard(divid, {",
+        "boundingbox: [", string(v_pushoff), ", 15, ", string(v_max), ", -1], ",
+        "axis: true, ",
+        "showCopyright: false, ",
+        "defaultAxes: {",
+        "x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}}, ",
+        "y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}",
+        "}",
+        "});",
+        "var xData = ", string(xdata), ";",
+        "var yData = ", string(ydata), ";",
+        "board.create('curve', [xData, yData], {strokeColor: 'blue', strokeWidth: 2});",
+        "board.create('line', [[0, 7], [", string(v_max), ", 7]], {strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});"
+    ),
+    code
+)$
+
+/* Extended version with equivalence points and pKa lines */
+chem_jsxgraph_titration_code_full(xdata, ydata, v_max, v_pushoff, equiv_points, pKa_list) := block(
+    [code, i, ep, pka],
+    
+    /* Base code with axis labels */
+    code: sconcat(
+        "var board = JXG.JSXGraph.initBoard(divid, {",
+        "boundingbox: [", string(v_pushoff), ", 15, ", string(v_max), ", -1], ",
+        "axis: true, ",
+        "showCopyright: false, ",
+        "defaultAxes: {",
+        "x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}}, ",
+        "y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}",
+        "}",
+        "});",
+        "var xData = ", string(xdata), ";",
+        "var yData = ", string(ydata), ";",
+        "board.create('curve', [xData, yData], {strokeColor: 'blue', strokeWidth: 2});"
+    ),
+    
+    /* Add pH 7 line */
+    code: sconcat(code,
+        "board.create('line', [[0, 7], [", string(v_max), ", 7]], ",
+        "{strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});"
+    ),
+    
+    /* Add equivalence points */
+    if listp(equiv_points) and length(equiv_points) > 0 then (
+        for i: 1 thru length(equiv_points) do (
+            ep: equiv_points[i],
+            code: sconcat(code,
+                "board.create('point', [", string(float(first(ep))), ", ", string(float(second(ep))), "], ",
+                "{name: 'EP", string(i), "', size: 3, color: 'red', label: {offset: [10, 10], fontSize: 11}});"
+            )
+        )
+    ),
+    
+    /* Add pKa lines */
+    if listp(pKa_list) and length(pKa_list) > 0 then (
+        for i: 1 thru length(pKa_list) do (
+            pka: pKa_list[i],
+            code: sconcat(code,
+                "board.create('line', [[0, ", string(float(pka)), "], [", string(v_max), ", ", string(float(pka)), "]], ",
+                "{strokeColor: 'gray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});",
+                "board.create('text', [", string(v_max + 1), ", ", string(float(pka)), ", 'pKa", string(i), " = ", string(float(pka)), "'], {fontSize: 10, color: 'gray'});"
+            )
+        )
+    ),
+    
+    code
+)$
+
+/* Convenience function: Generate everything from acid name
+   Returns JavaScript code string for complete titration plot */
+chem_jsxgraph_titration(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
+    [curve_data, xdata, ydata, pKa_list, equiv_vols, equiv_points, i, v_eq, pH_eq, v_pushoff],
+    
+    /* Generate curve data */
+    curve_data: chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max),
+    xdata: chem_titration_xdata(curve_data),
+    ydata: chem_titration_ydata(curve_data),
+    
+    /* Get pKa values */
+    pKa_list: chem_acidbase_pKa_list(acid),
+    
+    /* Calculate equivalence points */
+    equiv_vols: chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid),
+    equiv_points: [],
+    for i: 1 thru length(equiv_vols) do (
+        v_eq: equiv_vols[i],
+        pH_eq: chem_titration_pH(acid, c_acid, c_base, v_acid, v_eq),
+        equiv_points: append(equiv_points, [[v_eq, pH_eq]])
+    ),
+    
+    /* Calculate left boundary offset */
+    if length(equiv_vols) > 0 then
+        v_pushoff: -float(first(equiv_vols) / 20)
+    else
+        v_pushoff: -1,
+    
+    /* Generate code */
+    chem_jsxgraph_titration_code_full(xdata, ydata, v_max, v_pushoff, equiv_points, pKa_list)
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  JSXGraph Helper Functions                                   */
+/*  Prepare all data needed for plotting in Question Text       */
+/*                                                              */
+/****************************************************************/
+
+/* Calculate all data needed for a titration plot in one call.
+   Returns a list that can be unpacked in Question Variables:
+   [xdata, ydata, v_pushoff, equiv_points_list, pKa_list]
+   
+   Usage in Question Variables:
+     plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max);
+     xdata: plot_data[1];
+     ydata: plot_data[2];
+     v_pushoff: plot_data[3];
+     equiv_points: plot_data[4];
+     pKa_list: plot_data[5];
+*/
+chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
+    [curve_data, xdata, ydata, pKa_list, equiv_vols, equiv_points, i, v_eq, pH_eq, v_pushoff],
+    
+    /* Generate curve data */
+    curve_data: chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max),
+    xdata: chem_titration_xdata(curve_data),
+    ydata: chem_titration_ydata(curve_data),
+    
+    /* Get pKa values */
+    pKa_list: chem_acidbase_pKa_list(acid),
+    
+    /* Calculate equivalence points as list of [v, pH] pairs */
+    equiv_vols: chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid),
+    equiv_points: [],
+    for i: 1 thru length(equiv_vols) do (
+        v_eq: equiv_vols[i],
+        pH_eq: chem_titration_pH(acid, c_acid, c_base, v_acid, v_eq),
+        equiv_points: append(equiv_points, [[v_eq, pH_eq]])
+    ),
+    
+    /* Calculate left boundary offset */
+    if length(equiv_vols) > 0 then
+        v_pushoff: float(-first(equiv_vols) / 20)
+    else
+        v_pushoff: -1.0,
+    
+    [xdata, ydata, v_pushoff, equiv_points, pKa_list]
+)$
+
+/* Get equivalence points as flat lists for easier JSXGraph use
+   Returns [v_list, pH_list] where both are simple lists */
+chem_titration_equiv_data(acid, c_acid, c_base, v_acid) := block(
+    [equiv_vols, v_list, pH_list, i, v_eq, pH_eq],
+    equiv_vols: chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid),
+    v_list: [],
+    pH_list: [],
+    for i: 1 thru length(equiv_vols) do (
+        v_eq: equiv_vols[i],
+        pH_eq: chem_titration_pH(acid, c_acid, c_base, v_acid, v_eq),
+        v_list: append(v_list, [v_eq]),
+        pH_list: append(pH_list, [pH_eq])
+    ),
+    [v_list, pH_list]
+)$
