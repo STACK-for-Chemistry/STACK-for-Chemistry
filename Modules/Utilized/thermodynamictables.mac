@@ -600,10 +600,10 @@ chem_thermo_states(substance) := block([matches],
 /****************************************************************/
 
 /* Helper function for creating field-value pairs (if zip_with is not available) */
-chem_thermo_make_pairs(fields, val) := block([result, i],
+chem_thermo_make_pairs(fields, data) := block([result, i],
     result: [],
-    for i: 1 thru min(length(fields), length(val)) do
-        result: endcons([fields[i], val[i]], result),
+    for i: 1 thru min(length(fields), length(data)) do
+        result: endcons([fields[i], data[i]], result),
     return(result)
 )$
 
