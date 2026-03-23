@@ -931,7 +931,8 @@ chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_re
         sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item)),
     for item in reactants_list do
         sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item)),
-    return(sum_prod - sum_react)
+        delta_h: sum_prod - sum_react;
+        return(stackunits(delta_h, kJ*mol^(-1)))
 )$
 
 /* ΔS° */
@@ -942,7 +943,8 @@ chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_rea
         sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "S", second(item)),
     for item in reactants_list do
         sum_react: sum_react + third(item) * chem_thermo_data(first(item), "S", second(item)),
-    return(sum_prod - sum_react)
+        delta_s: sum_prod - sum_react;
+        return(stackunits(delta_s, J*mol^(-1)*K^(-1))
 )$
 
 /* ΔG° with units */
