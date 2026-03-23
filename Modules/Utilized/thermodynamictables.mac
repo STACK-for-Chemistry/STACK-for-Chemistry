@@ -924,27 +924,27 @@ chem_thermo_data_units(substance, property, state) := block([val, unit],
 /****************************************************************/
 
 /* ΔH° = Σ ν·ΔHf°(products) − Σ ν·ΔHf°(reactants) */
-chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react],
+chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react, delta_h],
     sum_prod: 0,
     sum_react: 0,
     for item in products_list do
         sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item)),
     for item in reactants_list do
         sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item)),
-    delta_h: sum_prod - sum_react;
+    delta_h: sum_prod - sum_react,
     return(stackunits(delta_h, kJ*mol^(-1)))
 )$
 
 /* ΔS° */
-chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react],
+chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react, delta_s],
     sum_prod: 0,
     sum_react: 0,
     for item in products_list do
         sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "S", second(item)),
     for item in reactants_list do
         sum_react: sum_react + third(item) * chem_thermo_data(first(item), "S", second(item)),
-    delta_s: sum_prod - sum_react;
-    return(stackunits(delta_s, J*mol^(-1)*K^(-1))
+    delta_s: sum_prod - sum_react,
+    return(stackunits(delta_s, J*mol^(-1)*K^(-1)))
 )$
 
 /* ΔG° with units */
