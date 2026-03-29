@@ -3374,6 +3374,8 @@ nuc_radioactive_isotopes(z) := nuc_by_Z(z)$
 nuc_num_levels(id) := block([lvl],
     lvl: nuc_levels(id),
     if is(lvl = false) then 0 else length(lvl))$
+    lvl: nuc_levels(id),
+    if is(lvl = false) then 0 else length(lvl))$
 
 /* Check whether a nuclide ID exists in the database. */
 nuc_exists(id) := not is(nuc_get_entry(id) = false)$
