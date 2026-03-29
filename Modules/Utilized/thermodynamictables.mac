@@ -72,6 +72,33 @@ zip_pair(l1, l2) := block([n],
     makelist([l1[i], l2[i]], i, 1, n)
 )$
 
+/* every_member: returns true if all elements in tag_list are members of tags */
+every_member(tag_list, tags) := block([result],
+    result: true,
+    for t in tag_list do (
+        if not member(t, tags) then result: false
+    ),
+    result
+)$
+
+/* some_member: returns true if any element in tag_list is a member of tags */
+some_member(tag_list, tags) := block([result],
+    result: false,
+    for t in tag_list do (
+        if member(t, tags) then result: true
+    ),
+    result
+)$
+
+/* unique_strings: removes duplicate strings from a list (since unique may not work reliably on strings) */
+unique_strings(lst) := block([result],
+    result: [],
+    for item in lst do (
+        if not member(item, result) then result: endcons(item, result)
+    ),
+    result
+)$
+
 /****************************************************************/
 /*                                                              */
 /*  Thermodynamic Database                                      */
@@ -483,54 +510,67 @@ chem_thermo_data_units(substance, property, state) := block([value, unit],
 )$
 
 /* Calculate reaction enthalpy: ΔH° = Σ(ΔHf°products) - Σ(ΔHf°reactants) */
-chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react],
+chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react, val],
     /* products_list and reactants_list are lists of [[substance, state, stoich_coeff], ...] */
     sum_prod: 0,
     sum_react: 0,
     
     for item in products_list do (
-        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+        val: chem_thermo_data(first(item), "DeltaHf", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_prod: sum_prod + third(item) * val
     ),
     
     for item in reactants_list do (
-        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+        val: chem_thermo_data(first(item), "DeltaHf", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_react: sum_react + third(item) * val
     ),
     
     return(sum_prod - sum_react)
 )$
 
 /* Calculate reaction entropy: ΔS° = Σ(S°products) - Σ(S°reactants) */
-chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react],
+chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react, val],
     sum_prod: 0,
     sum_react: 0,
     
     for item in products_list do (
-        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "S", second(item))
+        val: chem_thermo_data(first(item), "S", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_prod: sum_prod + third(item) * val
     ),
     
     for item in reactants_list do (
-        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "S", second(item))
+        val: chem_thermo_data(first(item), "S", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_react: sum_react + third(item) * val
     ),
     
     return(sum_prod - sum_react)
 )$
 
 /* Calculate reaction Gibbs free energy: ΔG° = Σ(ΔGf°products) - Σ(ΔGf°reactants) with units */
-chem_reaction_gibbs(products_list, reactants_list) := block([sum_prod, sum_react, delta_g],
+chem_reaction_gibbs(products_list, reactants_list) := block([sum_prod, sum_react, delta_g, val],
     sum_prod: 0,
     sum_react: 0,
     
     for item in products_list do (
-        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+        val: chem_thermo_data(first(item), "DeltaGf", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_prod: sum_prod + third(item) * val
     ),
     
     for item in reactants_list do (
-        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+        val: chem_thermo_data(first(item), "DeltaGf", second(item)),
+        if is(val = false) or is(val = null) then return(false),
+        sum_react: sum_react + third(item) * val
     ),
     
     delta_g: sum_prod - sum_react,
     return(stackunits(delta_g, kJ*mol^(-1)))
 )$
+
 
 /* Calculate ΔG from ΔH and ΔS: ΔG = ΔH - TΔS with units */
 chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, temp) := block([delta_g],
@@ -589,15 +629,16 @@ chem_reaction_gibbs_by_name(reaction_name) := block([reactants, products],
 
 /* Returns an array of all substances in the database */
 chem_thermo_substance_array() := block([unique_substances],
-    unique_substances: unique(map(first, %_THERMO_DATA)),
+    unique_substances: unique_strings(map(first, %_THERMO_DATA)),
     return(unique_substances)
 )$
 
 /* Returns an array of all substances in a specific state */
 chem_thermo_substance_state_array(state) := block([filtered],
     filtered: sublist(%_THERMO_DATA, lambda([x], sequal(fifth(second(x)), state))),
-    return(unique(map(first, filtered)))
+    return(unique_strings(map(first, filtered)))
 )$
+
 
 /* Returns an array of available states for a substance */
 chem_thermo_states(substance) := block([matches],
@@ -630,7 +671,7 @@ chem_thermo_filter_by_tags_all(tag_list) :=
         block([tags],
             tags: sixth(second(x)),
             if listp(tags) then
-                every(lambda([t], member(t, tags)), tag_list)
+                every_member(tag_list, tags)
             else
                 false
         )))$
@@ -641,22 +682,22 @@ chem_thermo_filter_by_tags_any(tag_list) :=
         block([tags],
             tags: sixth(second(x)),
             if listp(tags) then
-                some(lambda([t], member(t, tags)), tag_list)
+                some_member(tag_list, tags)
             else
                 false
         )))$
 
 /* Returns list of substance formulas with a specific tag */
 chem_thermo_substances_by_tag(tag) := 
-    unique(map(first, chem_thermo_filter_by_tag(tag)))$
+    unique_strings(map(first, chem_thermo_filter_by_tag(tag)))$
 
 /* Returns list of substance formulas with ALL specified tags */
 chem_thermo_substances_by_tags_all(tag_list) := 
-    unique(map(first, chem_thermo_filter_by_tags_all(tag_list)))$
+    unique_strings(map(first, chem_thermo_filter_by_tags_all(tag_list)))$
 
 /* Returns list of substance formulas with ANY of the specified tags */
 chem_thermo_substances_by_tags_any(tag_list) := 
-    unique(map(first, chem_thermo_filter_by_tags_any(tag_list)))$
+    unique_strings(map(first, chem_thermo_filter_by_tags_any(tag_list)))$
 
 /* Get all tags for a substance (first match) */
 chem_thermo_get_tags(substance) := block([match],
