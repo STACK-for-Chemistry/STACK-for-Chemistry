@@ -639,7 +639,6 @@ chem_thermo_substance_state_array(state) := block([filtered],
     return(unique_strings(map(first, filtered)))
 )$
 
-
 /* Returns an array of available states for a substance */
 chem_thermo_states(substance) := block([matches],
     matches: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
