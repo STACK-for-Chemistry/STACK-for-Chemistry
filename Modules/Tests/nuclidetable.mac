@@ -97,6 +97,8 @@
     ["^{210}Hg", [80, 130, [0], [63.7], ["s"], [["B-", "B-N"]], [[100, 2.2]]]],
     ["^{211}Hg", [80, 131, [0], [26.4], ["s"], [["B-", "B-N"]], [[100, 6.3]]]]
 ]$
+// ...existing code... (license header, data structure comments, %_NUCLIDE_DATA list through ]$)
+
 /****************************************************************/
 /*                                                              */
 /*  Nuclide Retrieval Functions                                 */
@@ -105,139 +107,151 @@
 
 /* ---- Internal helpers ---- */
 
-/* nuc_get_entry: Return the raw entry for a given nuclide ID string.
-   Returns false if not found. */
-/* nuc_get_entry(id) := block([result],
+nuc_get_entry(id) := block([result],
     result: false,
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[1] = id) then (
+        if sequal(entry[1], id) then (
             result: entry,
             return(result)
         )
     ),
     result
-)$ */
+)$
 
-/* nuc_get_data: Return the data list for a given ID.
-   Returns false if not found. */
-/* nuc_get_data(id) := block([e],
+nuc_get_data(id) := block([e],
     e: nuc_get_entry(id),
     if is(e = false) then false else e[2]
-)$ */
+)$
 
 /* ---- Lookup by Z, N, A ---- */
 
-/* nuc_by_Z: Return list of all nuclide IDs with a given atomic number Z. */
-/* nuc_by_Z(z) := block([results],
+nuc_by_Z(z) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] = z) then
             results: endcons(entry[1], results)
     ),
     results
-)$ */
+)$
 
-/* nuc_by_N: Return list of all nuclide IDs with a given neutron number N. */
-/* nuc_by_N(n) := block([results],
+nuc_by_N(n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][2] = n) then
             results: endcons(entry[1], results)
     ),
     results
-)$ */
+)$
 
-/* nuc_by_A: Return list of all nuclide IDs with a given mass number A = Z + N. */
-/* nuc_by_A(a) := block([results],
+nuc_by_A(a) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] + entry[2][2] = a) then
             results: endcons(entry[1], results)
     ),
     results
-)$ */
+)$
 
-/* nuc_by_ZN: Return list of all nuclide IDs for a given Z and N. */
-/* nuc_by_ZN(z, n) := block([results],
+nuc_by_ZN(z, n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] = z) and is(entry[2][2] = n) then
             results: endcons(entry[1], results)
     ),
     results
-)$ */
+)$
 
 /* ---- Field extractors ---- */
 
-/* nuc_Z(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[1])$ */
+nuc_Z(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[1]
+)$
 
-/* nuc_N(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[2])$ */
+nuc_N(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[2]
+)$
 
-/* nuc_A(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[1] + d[2])$ */
+nuc_A(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[1] + d[2]
+)$
 
-/* nuc_levels(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[3])$ */
+nuc_levels(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[3]
+)$
 
-/* nuc_halflives(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[4])$ */
+nuc_halflives(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[4]
+)$
 
-/* nuc_halflife_units(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[5])$ */
+nuc_halflife_units(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[5]
+)$
 
-/* nuc_decay_modes(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[6])$ */
+nuc_decay_modes(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[6]
+)$
 
-/* nuc_branching(id) := block([d], d: nuc_get_data(id),
-    if is(d = false) then false else d[7])$ */
+nuc_branching(id) := block([d],
+    d: nuc_get_data(id),
+    if is(d = false) then false else d[7]
+)$
 
 /* ---- Ground-state convenience functions ---- */
 
-/* nuc_gs_halflife(id) := block([hl],
+nuc_gs_halflife(id) := block([hl],
     hl: nuc_halflives(id),
-    if is(hl = false) then false else first(hl))$ */
+    if is(hl = false) then false else first(hl)
+)$
 
-/* nuc_gs_halflife_unit(id) := block([u],
+nuc_gs_halflife_unit(id) := block([u],
     u: nuc_halflife_units(id),
-    if is(u = false) then false else first(u))$ */
+    if is(u = false) then false else first(u)
+)$
 
-/* nuc_gs_decay_modes(id) := block([dm],
+nuc_gs_decay_modes(id) := block([dm],
     dm: nuc_decay_modes(id),
-    if is(dm = false) then false else first(dm))$ */
+    if is(dm = false) then false else first(dm)
+)$
 
-/* nuc_gs_branching(id) := block([br],
+nuc_gs_branching(id) := block([br],
     br: nuc_branching(id),
-    if is(br = false) then false else first(br))$ */
+    if is(br = false) then false else first(br)
+)$
 
 /* ---- Half-life unit conversion to seconds ---- */
 
-/* nuc_halflife_to_seconds(val, unit) := block([],
+nuc_halflife_to_seconds(val, unit) := block([],
     if is(val = null) or is(unit = null) then false
-    else if is(unit = "fs") then val * 1e-15
-    else if is(unit = "ps") then val * 1e-12
-    else if is(unit = "ns") then val * 1e-9
-    else if is(unit = "us") then val * 1e-6
-    else if is(unit = "ms") then val * 1e-3
-    else if is(unit = "s")  then val
-    else if is(unit = "m")  then val * 60
-    else if is(unit = "h")  then val * 3600
-    else if is(unit = "d")  then val * 86400
-    else if is(unit = "y")  then val * 31557600
+    else if sequal(unit, "fs") then val * 1e-15
+    else if sequal(unit, "ps") then val * 1e-12
+    else if sequal(unit, "ns") then val * 1e-9
+    else if sequal(unit, "us") then val * 1e-6
+    else if sequal(unit, "ms") then val * 1e-3
+    else if sequal(unit, "s")  then val
+    else if sequal(unit, "m")  then val * 60
+    else if sequal(unit, "h")  then val * 3600
+    else if sequal(unit, "d")  then val * 86400
+    else if sequal(unit, "y")  then val * 31557600
     else false
-)$ */
+)$
 
-/* nuc_gs_halflife_s(id) := block([hl, u],
+nuc_gs_halflife_s(id) := block([hl, u],
     hl: nuc_gs_halflife(id),
     u:  nuc_gs_halflife_unit(id),
     if is(hl = false) or is(u = false) then false
     else nuc_halflife_to_seconds(hl, u)
-)$ */
+)$
 
 /* ---- Filtering / searching ---- */
 
-/* nuc_with_decay_mode(mode) := block([results, dm],
+nuc_with_decay_mode(mode) := block([results, dm],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         dm: first(entry[2][6]),
@@ -245,9 +259,9 @@
             results: endcons(entry[1], results)
     ),
     results
-)$ */
+)$
 
-/* nuc_halflife_range(t_min, t_max) := block([results, hl_s],
+nuc_halflife_range(t_min, t_max) := block([results, hl_s],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         hl_s: block([v, u],
@@ -261,24 +275,25 @@
         )
     ),
     results
-)$ */
+)$
 
-/* nuc_radioactive_isotopes(z) := nuc_by_Z(z)$ */
+nuc_radioactive_isotopes(z) := nuc_by_Z(z)$
 
-/* nuc_num_levels(id) := block([lvl],
+nuc_num_levels(id) := block([lvl],
     lvl: nuc_levels(id),
-    if is(lvl = false) then 0 else length(lvl))$ */
+    if is(lvl = false) then 0 else length(lvl)
+)$
 
-/* nuc_exists(id) := not is(nuc_get_entry(id) = false)$ */
+nuc_exists(id) := not is(nuc_get_entry(id) = false)$
 
-/* nuc_all_ids() := block([results],
+nuc_all_ids() := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do
         results: endcons(entry[1], results),
     results
-)$ */
+)$
 
-/* nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
+nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
     modes:  nuc_gs_decay_modes(id),
     ratios: nuc_gs_branching(id),
     if is(modes = false) or is(ratios = false) then return(false),
@@ -293,4 +308,4 @@
         )
     ),
     best_mode
-)$ */
+)$
