@@ -1052,7 +1052,7 @@
 
 /* ---- Internal helpers ---- */
 
-nuc_get_entry(id) := block([result],
+chem_nuc_get_entry(id) := block([result],
     result: false,
     for entry in %_NUCLIDE_DATA do (
         if sequal(entry[1], id) then (
@@ -1063,14 +1063,21 @@ nuc_get_entry(id) := block([result],
     result
 )$
 
-nuc_get_data(id) := block([e],
-    e: nuc_get_entry(id),
+chem_nuc_get_data(id) := block([e],
+    e: chem_nuc_get_entry(id),
     if is(e = false) then false else e[2]
+)$
+
+chem_nuc_id_from_ZN(z, n) := block([sym],
+    if is(z < 1) or is(n < 0) then return(false),
+    sym: chem_element(z),
+    if is(sym = false) then false
+    else sconcat("^{", z + n, "}", sym)
 )$
 
 /* ---- Lookup by Z, N, A ---- */
 
-nuc_by_Z(z) := block([results],
+chem_nuc_by_Z(z) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] = z) then
@@ -1079,7 +1086,7 @@ nuc_by_Z(z) := block([results],
     results
 )$
 
-nuc_by_N(n) := block([results],
+chem_nuc_by_N(n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][2] = n) then
@@ -1088,7 +1095,7 @@ nuc_by_N(n) := block([results],
     results
 )$
 
-nuc_by_A(a) := block([results],
+chem_nuc_by_A(a) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] + entry[2][2] = a) then
@@ -1097,7 +1104,7 @@ nuc_by_A(a) := block([results],
     results
 )$
 
-nuc_by_ZN(z, n) := block([results],
+chem_nuc_by_ZN(z, n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if is(entry[2][1] = z) and is(entry[2][2] = n) then
@@ -1108,71 +1115,71 @@ nuc_by_ZN(z, n) := block([results],
 
 /* ---- Field extractors ---- */
 
-nuc_Z(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_Z(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[1]
 )$
 
-nuc_N(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_N(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[2]
 )$
 
-nuc_A(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_A(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[1] + d[2]
 )$
 
-nuc_levels(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_levels(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[3]
 )$
 
-nuc_halflives(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_halflives(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[4]
 )$
 
-nuc_halflife_units(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_halflife_units(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[5]
 )$
 
-nuc_decay_modes(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_decay_modes(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[6]
 )$
 
-nuc_branching(id) := block([d],
-    d: nuc_get_data(id),
+chem_nuc_branching(id) := block([d],
+    d: chem_nuc_get_data(id),
     if is(d = false) then false else d[7]
 )$
 
 /* ---- Ground-state convenience functions ---- */
 
-nuc_gs_halflife(id) := block([hl],
-    hl: nuc_halflives(id),
+chem_nuc_gs_halflife(id) := block([hl],
+    hl: chem_nuc_halflives(id),
     if is(hl = false) then false else first(hl)
 )$
 
-nuc_gs_halflife_unit(id) := block([u],
-    u: nuc_halflife_units(id),
+chem_nuc_gs_halflife_unit(id) := block([u],
+    u: chem_nuc_halflife_units(id),
     if is(u = false) then false else first(u)
 )$
 
-nuc_gs_decay_modes(id) := block([dm],
-    dm: nuc_decay_modes(id),
+chem_nuc_gs_decay_modes(id) := block([dm],
+    dm: chem_nuc_decay_modes(id),
     if is(dm = false) then false else first(dm)
 )$
 
-nuc_gs_branching(id) := block([br],
-    br: nuc_branching(id),
+chem_nuc_gs_branching(id) := block([br],
+    br: chem_nuc_branching(id),
     if is(br = false) then false else first(br)
 )$
 
 /* ---- Half-life unit conversion to seconds ---- */
 
-nuc_halflife_to_seconds(val, unit) := block([],
+chem_nuc_halflife_to_seconds(val, unit) := block([],
     if is(val = null) or is(unit = null) then false
     else if sequal(unit, "fs") then val * 1e-15
     else if sequal(unit, "ps") then val * 1e-12
@@ -1187,16 +1194,16 @@ nuc_halflife_to_seconds(val, unit) := block([],
     else false
 )$
 
-nuc_gs_halflife_s(id) := block([hl, u],
-    hl: nuc_gs_halflife(id),
-    u:  nuc_gs_halflife_unit(id),
+chem_nuc_gs_halflife_s(id) := block([hl, u],
+    hl: chem_nuc_gs_halflife(id),
+    u:  chem_nuc_gs_halflife_unit(id),
     if is(hl = false) or is(u = false) then false
-    else nuc_halflife_to_seconds(hl, u)
+    else chem_nuc_halflife_to_seconds(hl, u)
 )$
 
 /* ---- Filtering / searching ---- */
 
-nuc_with_decay_mode(mode) := block([results, dm],
+chem_nuc_with_decay_mode(mode) := block([results, dm],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         dm: first(entry[2][6]),
@@ -1206,13 +1213,13 @@ nuc_with_decay_mode(mode) := block([results, dm],
     results
 )$
 
-nuc_halflife_range(t_min, t_max) := block([results, hl_s],
+chem_nuc_halflife_range(t_min, t_max) := block([results, hl_s],
     results: [],
     for entry in %_NUCLIDE_DATA do (
         hl_s: block([v, u],
             v: first(entry[2][4]),
             u: first(entry[2][5]),
-            nuc_halflife_to_seconds(v, u)
+            chem_nuc_halflife_to_seconds(v, u)
         ),
         if not is(hl_s = false) then (
             if is(hl_s >= t_min) and is(hl_s <= t_max) then
@@ -1222,25 +1229,25 @@ nuc_halflife_range(t_min, t_max) := block([results, hl_s],
     results
 )$
 
-nuc_radioactive_isotopes(z) := nuc_by_Z(z)$
+chem_nuc_radioactive_isotopes(z) := chem_nuc_by_Z(z)$
 
-nuc_num_levels(id) := block([lvl],
-    lvl: nuc_levels(id),
+chem_nuc_num_levels(id) := block([lvl],
+    lvl: chem_nuc_levels(id),
     if is(lvl = false) then 0 else length(lvl)
 )$
 
-nuc_exists(id) := not is(nuc_get_entry(id) = false)$
+chem_nuc_exists(id) := not is(chem_nuc_get_entry(id) = false)$
 
-nuc_all_ids() := block([results],
+chem_nuc_all_ids() := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do
         results: endcons(entry[1], results),
     results
 )$
 
-nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
-    modes:  nuc_gs_decay_modes(id),
-    ratios: nuc_gs_branching(id),
+chem_nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
+    modes:  chem_nuc_gs_decay_modes(id),
+    ratios: chem_nuc_gs_branching(id),
     if is(modes = false) or is(ratios = false) then return(false),
     best_mode: false,
     best_ratio: -1,
@@ -1253,4 +1260,94 @@ nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
         )
     ),
     best_mode
+)$
+
+/* ---- Decay products ---- */
+
+chem_nuc_alpha_product(id) := block([d],
+    d: chem_nuc_get_data(id),
+    if is(d = false) then false
+    else chem_nuc_id_from_ZN(d[1] - 2, d[2] - 2)
+)$
+
+chem_nuc_beta_minus_product(id) := block([d],
+    d: chem_nuc_get_data(id),
+    if is(d = false) then false
+    else chem_nuc_id_from_ZN(d[1] + 1, d[2] - 1)
+)$
+
+chem_nuc_beta_plus_product(id) := block([d],
+    d: chem_nuc_get_data(id),
+    if is(d = false) then false
+    else chem_nuc_id_from_ZN(d[1] - 1, d[2] + 1)
+)$
+
+chem_nuc_decay_product(id, mode) := block([],
+    if sequal(mode, "A") or sequal(mode, "ALPHA") then
+        chem_nuc_alpha_product(id)
+    else if sequal(mode, "B-") or sequal(mode, "BETA-") then
+        chem_nuc_beta_minus_product(id)
+    else if sequal(mode, "B+") or sequal(mode, "BETA+") then
+        chem_nuc_beta_plus_product(id)
+    else false
+)$
+
+/* ---- Ionization helpers ---- */
+
+chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, digits],
+    if is(ox = false) or is(ox = null) then return(false),
+    clean: ssubst("", " ", ox),
+    chars: charlist(clean),
+    n: length(chars),
+    if is(n = 0) then return(false),
+
+    sign: 1,
+    i: 1,
+    if sequal(chars[i], "+") then (
+        sign: 1,
+        i: i + 1
+    ) else if sequal(chars[i], "-") then (
+        sign: -1,
+        i: i + 1
+    ),
+
+    digits: "",
+    while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+        digits: sconcat(digits, chars[i]),
+        i: i + 1
+    ),
+
+    if sequal(digits, "") then false
+    else sign * chem_string_to_number(digits)
+)$
+
+chem_nuc_charge_string(charge) := block([],
+    if is(charge > 0) then sconcat(charge, "+")
+    else if is(charge < 0) then sconcat(-charge, "-")
+    else "0"
+)$
+
+chem_nuc_typical_charge(id) := block([d, z, sym, ox],
+    d: chem_nuc_get_data(id),
+    if is(d = false) then return(false),
+    z: d[1],
+    sym: chem_element(z),
+    if is(sym = false) then return(false),
+    ox: chem_data(sym, "OxidationStates"),
+    chem_nuc_parse_oxidation_charge(ox)
+)$
+
+chem_nuc_ionize(id, charge) := block([d, z, n, sym],
+    d: chem_nuc_get_data(id),
+    if is(d = false) then return(false),
+    z: d[1],
+    n: d[2],
+    sym: chem_element(z),
+    if is(sym = false) then return(false),
+    sconcat("^{", z + n, "}", sym, "^{", chem_nuc_charge_string(charge), "}")
+)$
+
+chem_nuc_ionize_typical(id) := block([q],
+    q: chem_nuc_typical_charge(id),
+    if is(q = false) then false else chem_nuc_ionize(id, q)
 )$
