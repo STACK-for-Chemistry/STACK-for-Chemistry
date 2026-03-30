@@ -327,7 +327,7 @@
 
 /****************************************************************/
 /*                                                              */
-/*  Nuclide Retrieval Functions    Modules/Tests/numericops.mac                             */
+/*  Nuclide Retrieval Functions    Modules/Tests/nuclidetable.mac                             */
 /*                                                              */
 /****************************************************************/
 
@@ -381,7 +381,7 @@ nuc_by_A(a) := block([results],
 nuc_by_ZN(z, n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[2][1] = z) and is(entry[2][2] = n) thenx
+        if is(entry[2][1] = z) and is(entry[2][2] = n) then
             results: endcons(entry[1], results)
     ),
     results
