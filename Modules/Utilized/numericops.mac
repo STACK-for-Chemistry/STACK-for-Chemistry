@@ -1,0 +1,102 @@
+/* Returns the number of significant digits from numeric input.
+   Strings preserve trailing zeros exactly as written.
+   Non-string inputs are converted to string first.
+   Scientific notation is supported (e.g. "1.230e-4"). */
+chem_num_significant_digits(xstr) := block(
+	[s, chars, c, i, n, in_exp, has_decimal, seen_nonzero, sig,
+	 frac_digits_allzero, has_any_digit, mantissa_sign_seen,
+	 exponent_sign_seen, exponent_has_digit],
+
+	if stringp(xstr) then
+		s: sdowncase(xstr)
+	else
+		s: sdowncase(sconcat(xstr)),
+
+	chars: charlist(s),
+	n: length(chars),
+	in_exp: false,
+	has_decimal: false,
+	seen_nonzero: false,
+	sig: 0,
+	frac_digits_allzero: 0,
+	has_any_digit: false,
+	mantissa_sign_seen: false,
+	exponent_sign_seen: false,
+	exponent_has_digit: false,
+
+	for i: 1 thru n do (
+		c: chars[i],
+
+		/* Ignore spaces anywhere. */
+		if sequal(c, " ") then false
+
+		/* Split at scientific notation marker. */
+		else if sequal(c, "e") then (
+			if in_exp then return(false),
+			if not has_any_digit then return(false),
+			in_exp: true
+		)
+
+		/* Exponent parsing. */
+		else if in_exp then (
+			if cgreaterp(c, "/") and clessp(c, ":") then
+				exponent_has_digit: true
+			else if sequal(c, "+") or sequal(c, "-") then (
+				if exponent_sign_seen or exponent_has_digit then return(false),
+				exponent_sign_seen: true
+			)
+			else
+				return(false)
+		)
+
+		/* Mantissa parsing. */
+		else if sequal(c, ".") then (
+			if has_decimal then return(false),
+			has_decimal: true
+		)
+		else if sequal(c, "+") or sequal(c, "-") then (
+			if mantissa_sign_seen or has_any_digit or has_decimal then return(false),
+			mantissa_sign_seen: true
+		)
+		else if cgreaterp(c, "/") and clessp(c, ":") then (
+			has_any_digit: true,
+			if seen_nonzero then
+				sig: sig + 1
+			else if not sequal(c, "0") then (
+				seen_nonzero: true,
+				sig: sig + 1
+			)
+			else if has_decimal then
+				frac_digits_allzero: frac_digits_allzero + 1
+		)
+		else
+			return(false)
+	),
+
+	if not has_any_digit then return(false),
+	if in_exp and not exponent_has_digit then return(false),
+
+	/* Handle all-zero values. */
+	if sig = 0 then (
+		if has_decimal and frac_digits_allzero > 0 then
+			sig: frac_digits_allzero
+		else
+			sig: 1
+	),
+
+	return(sig)
+)$
+
+/* Returns the minimum number of significant digits across all elements of an array.
+   Each element may be a number or a string. Returns false if any element is invalid. */
+chem_num_significant_digits_arr(arr) := block(
+	[min_sig, sig, x],
+	if not listp(arr) or emptyp(arr) then return(false),
+	min_sig: false,
+	for x in arr do (
+		sig: chem_num_significant_digits(x),
+		if is(sig = false) then return(false),
+		if is(min_sig = false) or sig < min_sig then min_sig: sig
+	),
+	return(min_sig)
+)$

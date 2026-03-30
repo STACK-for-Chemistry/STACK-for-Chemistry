@@ -52,7 +52,12 @@
    - [Navigation and Filtering Functions](#navigation-and-filtering-functions)
    - [Utility Functions](#utility-functions)
    - [Practical Examples](#practical-examples)
-9. [Usage Examples](#usage-examples)
+9. [Numeric Operations Module](#numeric-operations-module)
+   - [Quick Reference](#quick-reference-numeric-operations)
+   - [Significant Digits Functions](#significant-digits-functions)
+   - [Input Parsing Rules](#input-parsing-rules)
+   - [Practical Examples](#practical-examples-numeric-operations)
+10. [Usage Examples](#usage-examples)
 
 ---
 
@@ -80,6 +85,9 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 
 /* Load nuclide database module */
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
+
+/* Load numeric operations module */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/numericops.mac");
 ```
 
 You can load modules independently or together as needed. See [Module Dependencies](#module-dependencies) below for information on which modules depend on others.
@@ -118,10 +126,11 @@ These modules have **no dependencies** and can be loaded independently:
 3. **Solubility Module (`solubility.mac`)** — Completely standalone
 4. **Reactions Module (`reactions.mac`)** — Completely standalone
 5. **Nuclide Database Module (`nuclidetable.mac`)** — Completely standalone
+6. **Numeric Operations Module (`numericops.mac`)** — Completely standalone
 
 ### Dependent Modules
 
-6. **Thermodynamic Tables Module (`thermodynamictables.mac`)**
+7. **Thermodynamic Tables Module (`thermodynamictables.mac`)
    - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
    - **Requires `reactions.mac`**: For reaction-based thermodynamic calculations (functions with `_by_name` suffix)
 
@@ -136,6 +145,7 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/numericops.mac");
 ```
 
 #### Option 2: Thermodynamics with Reactions
@@ -162,6 +172,7 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 | `chem_reaction_enthalpy()` | `thermodynamictables.mac` | Manual thermo calculations |
 | `chem_reaction_data()`, `chem_reaction_equation()` | `reactions.mac` | Reaction data |
 | `chem_reaction_enthalpy_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
+| `chem_num_significant_digits()`, `chem_num_significant_digits_arr()` | `numericops.mac` | Significant-digits analysis |
 
 ---
 
@@ -3215,6 +3226,119 @@ decay_mode: nucl_decay_modes("^{14}C");
 ```maxima
 random_isotope: rand(nucl_array_radioactive());
 isotope_display: nucl_display(random_isotope);
+```
+
+---
+
+## Numeric Operations Module
+
+The numeric operations module provides utility functions for counting significant digits in numeric values and arrays. It is especially useful for enforcing significant-figure consistency in question generation and automatic grading logic.
+
+### Quick Reference (Numeric Operations)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_num_significant_digits(x)` | Count significant digits in a numeric input or string | `chem_num_significant_digits("1.230e-4")` → `4` |
+| `chem_num_significant_digits_arr(arr)` | Minimum significant digits across a list | `chem_num_significant_digits_arr(["12.30", "0.0560", "7.1"])` → `2` |
+
+### Significant Digits Functions
+
+#### `chem_num_significant_digits(xstr)`
+
+**Description:** Returns the number of significant digits from a numeric input.
+
+The function supports plain decimal notation and scientific notation (using `e` or `E`).
+If a string is provided, trailing zeros are preserved exactly as written.
+
+**Parameters:**
+- `xstr` (string or number): Numeric value to analyze
+
+**Returns:**
+- Integer number of significant digits
+- `false` if input is malformed
+
+**Example:**
+```maxima
+sig1: chem_num_significant_digits("123.450");    /* Returns 6 */
+sig2: chem_num_significant_digits("0.00450");    /* Returns 3 */
+sig3: chem_num_significant_digits("1.230e-4");   /* Returns 4 */
+sig4: chem_num_significant_digits("0");          /* Returns 1 */
+sig5: chem_num_significant_digits("0.00");       /* Returns 2 */
+sig6: chem_num_significant_digits("1e");         /* Returns false */
+```
+
+**Note:** When preserving trailing zeros matters, pass values as strings (for example, use `"1.20"` instead of `1.20`).
+
+---
+
+#### `chem_num_significant_digits_arr(arr)`
+
+**Description:** Returns the minimum number of significant digits across all elements of a list.
+
+Each element is analyzed with `chem_num_significant_digits()`. If any element is invalid, or if the input is not a non-empty list, the function returns `false`.
+
+**Parameters:**
+- `arr` (list): List of numeric values or numeric strings
+
+**Returns:**
+- Minimum significant-digit count across all elements
+- `false` for invalid input
+
+**Example:**
+```maxima
+minsig1: chem_num_significant_digits_arr(["12.30", "0.0560", "7.1"]);
+/* Returns 2 */
+
+minsig2: chem_num_significant_digits_arr(["1.200", "3.40", "0.0500"]);
+/* Returns 3 */
+
+minsig3: chem_num_significant_digits_arr(["2.30", "abc"]);
+/* Returns false */
+```
+
+---
+
+### Input Parsing Rules
+
+The significant-digit parser follows these rules:
+
+- Leading and trailing spaces are ignored.
+- Optional leading sign (`+` or `-`) is supported.
+- At most one decimal point is allowed in the mantissa.
+- Scientific notation is supported via `e`/`E` with an optional exponent sign.
+- At least one digit is required in the mantissa.
+- If an exponent marker is present, at least one exponent digit is required.
+- For all-zero values:
+   - Without decimal places (e.g., `"0"`), the result is `1` significant digit.
+   - With decimal places (e.g., `"0.000"`), decimal zeros are counted as significant.
+
+Common invalid forms return `false`, for example: `""`, `"1.2.3"`, `"1e"`, `"--3"`, `"abc"`.
+
+---
+
+### Practical Examples (Numeric Operations)
+
+#### Enforcing Common Significant Figures
+
+```maxima
+measurements: ["12.30", "7.1", "0.0560"];
+allowed_sig: chem_num_significant_digits_arr(measurements);   /* Returns 2 */
+```
+
+#### Validating Student Input Format
+
+```maxima
+student_answer: "3.140";
+sig_answer: chem_num_significant_digits(student_answer);       /* Returns 4 */
+
+is_valid_numeric: not is(sig_answer = false);
+```
+
+#### Working with Scientific Notation
+
+```maxima
+sig_a: chem_num_significant_digits("6.022e23");   /* Returns 4 */
+sig_b: chem_num_significant_digits("4.50E-3");    /* Returns 3 */
 ```
 
 ---
