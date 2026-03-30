@@ -89,7 +89,7 @@ chem_num_significant_digits(xstr) := block(
 
 /* Returns the minimum number of significant digits across all elements of an array.
    Each element may be a number or a string. Returns false if any element is invalid. */
-chem_num_min_significant_digits(arr) := block(
+chem_num_significant_digits_arr(arr) := block(
 	[min_sig, sig, x],
 	if not listp(arr) or emptyp(arr) then return(false),
 	min_sig: false,
