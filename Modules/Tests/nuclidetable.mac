@@ -902,9 +902,6 @@
     ["^{294}Og", [118, 176, [0], [0.58], ["ms"], [["A", "SF"]], [[100, 20]]]]
 ]$
 
-// ...existing code... (everything up to and including the closing of %_NUCLIDE_DATA)
-]$
-
 /****************************************************************/
 /*                                                              */
 /*  Nuclide Retrieval Functions                                 */
