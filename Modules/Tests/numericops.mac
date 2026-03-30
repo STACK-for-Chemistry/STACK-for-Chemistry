@@ -1,16 +1,15 @@
-/* Returns the number of significant digits from a numeric string.
-   This preserves trailing zeros exactly as written by the user and
-   supports scientific notation (e.g. "1.230e-4").
-   It prints the result and returns it as an integer. */
+/* Returns the number of significant digits from numeric input.
+   Strings preserve trailing zeros exactly as written.
+   Non-string inputs are converted to string first.
+   Scientific notation is supported (e.g. "1.230e-4"). */
 chem_num_significant_digits(xstr) := block(
 	[s, chars, c, mantissa, exponent, in_exp, has_exp, has_decimal,
 	 seen_nonzero, sig, frac_digits_allzero, has_any_digit],
 
-	if not stringp(xstr) then (
-		return(false)
-	),
-
-	s: sdowncase(xstr),
+	if stringp(xstr) then
+		s: sdowncase(xstr)
+	else
+		s: sdowncase(sconcat(xstr)),
 	chars: explode(s),
 	mantissa: [],
 	exponent: [],
