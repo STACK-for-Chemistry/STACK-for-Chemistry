@@ -29,36 +29,64 @@
 /*                                                              */
 /****************************************************************/
 
-chem_data_all(element) := block([cdat, cname, langpack],
-    cdat:zip_with("[", %_CHEM_FIELDS, assoc(element, %_CHEM_ELEMENTS)),
-    langpack:assoc(%_STACK_LANG, %_CHEM_LANG),
-    /* If the language pack is missing, use English. */
-    if is(langpack=false) then return(cdat),
-    /* Default to the English name if missing. */
-    cname:assoc(element,langpack, assoc("Name", cdat)),
-    append([first(cdat),["Name", cname]], rest(rest(cdat)))
+chem_internal_element_list_by_field(field_pos, field_value) := block([result, entry],
+    result: [],
+    for entry in %_CHEM_ELEMENTS do (
+        if second(entry)[field_pos] = field_value then result: cons(first(entry), result)
+    ),
+    reverse(result)
+)$
+
+chem_internal_element_list_by_positive_field(field_pos) := block([result, entry],
+    result: [],
+    for entry in %_CHEM_ELEMENTS do (
+        if second(entry)[field_pos] > 0 then result: cons(first(entry), result)
+    ),
+    reverse(result)
+)$
+
+chem_internal_element_by_two_fields(field_pos_1, field_value_1, field_pos_2, field_value_2) := block([entry, data],
+    for entry in %_CHEM_ELEMENTS do (
+        data: second(entry),
+        if data[field_pos_1] = field_value_1 and data[field_pos_2] = field_value_2 then return(first(entry))
+    ),
+    false
+)$
+
+chem_data_all(element) := block([entry, cdat, i],
+    entry: assoc(element, %_CHEM_ELEMENTS),
+    if is(entry=false) then return(false),
+    cdat: [],
+    for i:length(%_CHEM_FIELDS) step -1 thru 1 do (
+        cdat: cons([%_CHEM_FIELDS[i], entry[i]], cdat)
+    ),
+    cdat
 )$
 
 /* This function returns the data "dp" associated with "element". */
-chem_data(element, dp) := assoc(dp, chem_data_all(element))$
+chem_data(element, dp) := block([entry, idx],
+    entry: assoc(element, %_CHEM_ELEMENTS),
+    idx: assoc(dp, %_CHEM_FIELD_INDEX),
+    if is(entry=false) or is(idx=false) then false else entry[idx]
+)$
 
 /* This function returns the element symbol for a given atomic number. */
-chem_element(atomic_num) := block([elem],
-    elem: sublist(%_CHEM_ELEMENTS, lambda([x], first(second(x)) = atomic_num)),
-    if emptyp(elem) then false else first(first(elem))
+chem_element(atomic_num) := block([entry],
+    if not integerp(atomic_num) or atomic_num < 1 or atomic_num > length(%_CHEM_ELEMENTS) then return(false),
+    entry: %_CHEM_ELEMENTS[atomic_num],
+    if second(entry)[1] = atomic_num then first(entry) else false
 )$
 
 /* This function returns the data "dp" associated with "element", with units. */
-chem_data_units(element, dp) := block([cunit],
-    cunit:assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)),
-    if is(cunit=null) then 
-       assoc(dp, chem_data_all(element)) 
-    else 
-       stackunits(assoc(dp, chem_data_all(element)), cunit)
+chem_data_units(element, dp) := block([cunit, cdat],
+    cdat: chem_data(element, dp),
+    if is(cdat=false) then return(false),
+    cunit: chem_units(dp),
+    if is(cunit=null) then cdat else stackunits(cdat, cunit)
 )$
 
 /* This function returns the units addociated with field "dp". */
-chem_units(dp) := assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS))$
+chem_units(dp) := assoc(dp, %_CHEM_FIELD_UNIT_DATA)$
 
 /****************************************************************/
 /*                                                              */
@@ -67,45 +95,27 @@ chem_units(dp) := assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS))$
 /****************************************************************/
 
 /* This function returns an array of all element symbols. */
-chem_element_array() := map(first, %_CHEM_ELEMENTS)$
+chem_element_array() := %_CHEM_ELEMENT_SYMBOLS$
 
 /* This function returns an array of main group element symbols (MainGroup > 0). */
-chem_element_array_maingroup() := block([filtered_elements],
-    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fourth(second(x)) > 0)),
-    map(first, filtered_elements)
-)$
+chem_element_array_maingroup() := chem_internal_element_list_by_positive_field(4)$
 
 /* This function returns an array of element symbols for a given period. */
-chem_element_period(period_num) := block([filtered_elements],
-    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num)),
-    map(first, filtered_elements)
-)$
+chem_element_period(period_num) := chem_internal_element_list_by_field(3, period_num)$
 
 /* This function returns an array of element symbols for a given group number (IUPAC). */
-chem_element_group(group_num) := block([filtered_elements],
-    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fifth(second(x)) = group_num)),
-    map(first, filtered_elements)
-)$
+chem_element_group(group_num) := chem_internal_element_list_by_field(5, group_num)$
 
 /* This function returns an array of element symbols for a given main group number (1-8). */
-chem_element_maingroup(maingroup_num) := block([filtered_elements],
-    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fourth(second(x)) = maingroup_num)),
-    map(first, filtered_elements)
-)$
+chem_element_maingroup(maingroup_num) := chem_internal_element_list_by_field(4, maingroup_num)$
 
 /* This function returns the element symbol for a given period and group number (IUPAC).
    Returns false if no such element exists. */
-chem_element_period_group(period_num, group_num) := block([elem],
-    elem: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num and fifth(second(x)) = group_num)),
-    if emptyp(elem) then false else first(first(elem))
-)$
+chem_element_period_group(period_num, group_num) := chem_internal_element_by_two_fields(3, period_num, 5, group_num)$
 
 /* This function returns the element symbol for a given period and main group number.
    Returns false if no such element exists. */
-chem_element_period_maingroup(period_num, maingroup_num) := block([elem],
-    elem: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num and fourth(second(x)) = maingroup_num)),
-    if emptyp(elem) then false else first(first(elem))
-)$
+chem_element_period_maingroup(period_num, maingroup_num) := chem_internal_element_by_two_fields(3, period_num, 4, maingroup_num)$
 
 /****************************************************************/
 /*                                                              */
@@ -206,7 +216,7 @@ chem_string_to_number(str) := block([chars, result, i, digit_val],
 )$
 
 /* This function parses a chemical formula string and returns a list of [element, count] pairs.
-   Example: chem_parse_formula("H2SO4") returns [["H", 2], ["S", 1], ["O", 4]] */
+   Example: chem_parse_formula("H2SO4") returns [["H", 2], ["S", 1], ["O"]] */
 chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, clean_formula, num_val],
     /* Remove charge indicators (+, -, ^, {, }) from formula */
     clean_formula: ssubst("", "}", ssubst("", "{", ssubst("", "^", ssubst("", "-", ssubst("", "+", formula))))),
@@ -242,14 +252,14 @@ chem_parse_formula(formula) := block([chars, i, n, result, current_element, curr
                 num_val: chem_string_to_number(current_count)
             ),
             
-            /* Add to result */
-            result: append(result, [[current_element, num_val]])
+            /* Prepend and reverse at the end for linear runtime. */
+            result: cons([current_element, num_val], result)
         ) else (
             i: i + 1
         )
     ),
     
-    return(result)
+    return(reverse(result))
 )$
 
 /* This function calculates the molar mass of a molecule from its formula string with units.
@@ -328,13 +338,13 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 
 /* Returns only the numerical value of a constant.
    Example: chem_const_value("R") returns 8.314462618 */
-chem_const_value(name) := assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_VALUES))$
+chem_const_value(name) := assoc(name, %_CHEM_CONST_VALUE_DATA)$
 
 /* Returns the constant as a stackunits object with its units.
    Example: chem_const_units("R") returns stackunits(8.314462618, J/(mol*K)) */
 chem_const_units(name) := block([val, unt],
-    val: assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_VALUES)),
-    unt: assoc(name, zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_UNITS)),
+    val: assoc(name, %_CHEM_CONST_VALUE_DATA),
+    unt: assoc(name, %_CHEM_CONST_UNIT_DATA),
     if is(val = false) then false else stackunits(val, unt)
 )$
 
@@ -347,7 +357,7 @@ chem_const_units(name) := block([val, unt],
     "ElectronConfiguration", "Electronegativity", "AtomicRadius",
     "IonizationEnergy", "ElectronAffinity", "OxidationStates",
     "StandardState", "MeltingPoint", "BoilingPoint", "Density",
-    "GroupBlock", "YearDiscovered"
+    "GroupBlock"
 ]$
 
 %_CHEM_UNITS : [
@@ -355,8 +365,22 @@ chem_const_units(name) := block([val, unt],
     null, null, pm,
     J, null, null,
     null, K, K, g/cm^3,
-    null, null
+    null
 ]$
+
+%_CHEM_FIELD_INDEX : [
+    ["AtomicNumber", 1], ["Name", 2], ["Period", 3], ["MainGroup", 4], ["GroupNumber", 5], ["AtomicMass", 6],
+    ["ElectronConfiguration", 7], ["Electronegativity", 8], ["AtomicRadius", 9],
+    ["IonizationEnergy", 10], ["ElectronAffinity", 11], ["OxidationStates", 12],
+    ["StandardState", 13], ["MeltingPoint", 14], ["BoilingPoint", 15], ["Density", 16],
+    ["GroupBlock", 17]
+]$
+
+%_CHEM_FIELD_UNIT_DATA : zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)$
+
+%_CHEM_CONST_VALUE_DATA : zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_VALUES)$
+
+%_CHEM_CONST_UNIT_DATA : zip_with("[", %_CHEM_CONST_FIELDS, %_CHEM_CONST_UNITS)$
 
 /*
   Chemical data reformatted from https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON on 2025-06-17.
@@ -364,280 +388,124 @@ chem_const_units(name) := block([val, unt],
   Molar masses and electronegativities were adjusted to the periodic table pdf file on this GitHub (values changed slightly).
 */
 %_CHEM_ELEMENTS: [
-  ["H",  [1, "Hydrogen", 1, 1, 1, 1.01, "1s1", 2.20, 120, 13.598, 0.754, "+1, -1", "Gas", 13.81, 20.28, 0.00008988, "Nonmetal", 1766]],
-  ["He", [2, "Helium", 1, 8, 18, 4.00, "1s2", null, 140, 24.587, null, "0", "Gas", 0.95, 4.22, 0.0001785, "Noble gas", 1868]],
-  ["Li", [3, "Lithium", 2, 1, 1, 6.94, "[He] 2s1", 0.98, 182, 5.392, 0.618, "+1", "Solid", 453.65, 1615, 0.534, "Alkali metal", 1817]],
-  ["Be", [4, "Beryllium", 2, 2, 2, 9.01, "[He] 2s2", 1.57, 153, 9.323, null, "+2", "Solid", 1560, 2744, 1.85, "Alkaline earth metal", 1798]],
-  ["B",  [5, "Boron", 2, 3, 13, 10.81, "[He] 2s2 2p1", 2.04, 192, 8.298, 0.277, "+3", "Solid", 2348, 4273, 2.37, "Metalloid", 1808]],
-  ["C",  [6, "Carbon", 2, 4, 14, 12.01, "[He] 2s2 2p2", 2.55, 170, 11.260, 1.263, "+4, +2, -4", "Solid", 3823, 4098, 2.2670, "Nonmetal", Ancient]],
-  ["N",  [7, "Nitrogen", 2, 5, 15, 14.01, "[He] 2s2 2p3", 3.04, 155, 14.534, null, "+5, +4, +3, +2, +1, -1, -2, -3", "Gas", 63.15, 77.36, 0.0012506, "Nonmetal", 1772]],
-  ["O",  [8, "Oxygen", 2, 6, 16, 16.00, "[He] 2s2 2p4", 3.44, 152, 13.618, 1.461, "-2", "Gas", 54.36, 90.2, 0.001429, "Nonmetal", 1774]],
-  ["F",  [9, "Fluorine", 2, 7, 17, 19.00, "[He] 2s2 2p5", 3.98, 135, 17.423, 3.339, "-1", "Gas", 53.53, 85.03, 0.001696, "Halogen", 1670]],
-  ["Ne", [10, "Neon", 2, 8, 18, 20.18, "[He] 2s2 2p6", null, 154, 21.565, null, "0", "Gas", 24.56, 27.07, 0.0008999, "Noble gas", 1898]],
-  ["Na", [11, "Sodium", 3, 1, 1, 22.99, "[Ne] 3s1", 0.93, 227, 5.139, 0.548, "+1", "Solid", 370.95, 1156, 0.97, "Alkali metal", 1807]],
-  ["Mg", [12, "Magnesium", 3, 2, 2, 24.31, "[Ne] 3s2", 1.31, 173, 7.646, null, "+2", "Solid", 923, 1363, 1.74, "Alkaline earth metal", 1808]],
-  ["Al", [13, "Aluminum", 3, 3, 13, 26.98, "[Ne] 3s2 3p1", 1.61, 184, 5.986, 0.441, "+3", "Solid", 933.437, 2792, 2.70, "Post-transition metal", Ancient]],
-  ["Si", [14, "Silicon", 3, 4, 14, 28.09, "[Ne] 3s2 3p2", 1.90, 210, 8.152, 1.385, "+4, +2, -4", "Solid", 1687, 3538, 2.3296, "Metalloid", 1854]],
-  ["P",  [15, "Phosphorus", 3, 5, 15, 30.97, "[Ne] 3s2 3p3", 2.19, 180, 10.487, 0.746, "+5, +3, -3", "Solid", 317.3, 553.65, 1.82, "Nonmetal", 1669]],
-  ["S",  [16, "Sulfur", 3, 6, 16, 32.07, "[Ne] 3s2 3p4", 2.58, 180, 10.360, 2.077, "+6, +4, -2", "Solid", 388.36, 717.75, 2.067, "Nonmetal", Ancient]],
-  ["Cl", [17, "Chlorine", 3, 7, 17, 35.45, "[Ne] 3s2 3p5", 3.16, 175, 12.968, 3.617, "+7, +5, +1, -1", "Gas", 171.65, 239.11, 0.003214, "Halogen", 1774]],
-  ["Ar", [18, "Argon", 3, 8, 18, 39.95, "[Ne] 3s2 3p6", null, 188, 15.760, null, "0", "Gas", 83.8, 87.3, 0.0017837, "Noble gas", 1894]],
-  ["K",  [19, "Potassium", 4, 1, 1, 39.10, "[Ar] 4s1", 0.82, 275, 4.341, 0.501, "+1", "Solid", 336.53, 1032, 0.89, "Alkali metal", 1807]],
-  ["Ca", [20, "Calcium", 4, 2, 2, 40.08, "[Ar] 4s2", 1.00, 231, 6.113, null, "+2", "Solid", 1115, 1757, 1.54, "Alkaline earth metal", Ancient]],
-  ["Sc", [21, "Scandium", 4, 0, 3, 44.96, "[Ar] 4s2 3d1", 1.36, 211, 6.561, 0.188, "+3", "Solid", 1814, 3109, 2.99, "Transition metal", 1879]],
-  ["Ti", [22, "Titanium", 4, 0, 4, 47.87, "[Ar] 4s2 3d2", 1.54, 187, 6.828, 0.079, "+4, +3, +2", "Solid", 1941, 3560, 4.5, "Transition metal", 1791]],
-  ["V",  [23, "Vanadium", 4, 0, 5, 50.94, "[Ar] 4s2 3d3", 1.63, 179, 6.746, 0.525, "+5, +4, +3, +2", "Solid", 2183, 3680, 6.0, "Transition metal", 1801]],
-  ["Cr", [24, "Chromium", 4, 0, 6, 52.00, "[Ar] 4s1 3d5", 1.66, 189, 6.767, 0.666, "+6, +3, +2", "Solid", 2180, 2944, 7.15, "Transition metal", 1797]],
-  ["Mn", [25, "Manganese", 4, 0, 7, 54.94, "[Ar] 4s2 3d5", 1.55, 197, 7.434, null, "+7, +4, +3, +2", "Solid", 1519, 2334, 7.3, "Transition metal", 1774]],
-  ["Fe", [26, "Iron", 4, 0, 8, 55.85, "[Ar] 4s2 3d6", 1.83, 194, 7.902, 0.163, "+3, +2", "Solid", 1811, 3134, 7.874, "Transition metal", Ancient]],
-  ["Co", [27, "Cobalt", 4, 0, 9, 58.93, "[Ar] 4s2 3d7", 1.88, 192, 7.881, 0.661, "+3", "Solid", 1768, 3200, 8.86, "Transition metal", 1735]],
-  ["Ni", [28, "Nickel", 4, 0, 10, 58.69, "[Ar] 4s2 3d8", 1.91, 163, 7.640, 1.156, "+3, +2", "Solid", 1728, 3186, 8.912, "Transition metal", 1751]],
-  ["Cu", [29, "Copper", 4, 0, 11, 63.55, "[Ar] 4s1 3d10", 1.90, 140, 7.726, 1.228, "+2, +1", "Solid", 1357.77, 2835, 8.933, "Transition metal", Ancient]],
-  ["Zn", [30, "Zinc", 4, 0, 12, 65.38, "[Ar] 4s2 3d10", 1.65, 139, 9.394, null, "+2", "Solid", 692.68, 1180, 7.134, "Transition metal", 1746]],
-  ["Ga", [31, "Gallium", 4, 3, 13, 69.72, "[Ar] 4s2 3d10 4p1", 1.81, 187, 5.999, 0.3, "+3", "Solid", 302.91, 2477, 5.91, "Post-transition metal", 1875]],
-  ["Ge", [32, "Germanium", 4, 4, 14, 72.64, "[Ar] 4s2 3d10 4p2", 2.01, 211, 7.900, 1.35, "+4, +2", "Solid", 1211.4, 3106, 5.323, "Metalloid", 1886]],
-  ["As", [33, "Arsenic", 4, 5, 15, 74.92, "[Ar] 4s2 3d10 4p3", 2.18, 185, 9.815, 0.81, "+5, +3, -3", "Solid", 1090, 887, 5.776, "Metalloid", Ancient]],
-  ["Se", [34, "Selenium", 4, 6, 16, 78.96, "[Ar] 4s2 3d10 4p4", 2.55, 190, 9.752, 2.021, "+6, +4, -2", "Solid", 493.65, 958, 4.809, "Nonmetal", 1817]],
-  ["Br", [35, "Bromine", 4, 7, 17, 79.90, "[Ar] 4s2 3d10 4p5", 2.96, 183, 11.814, 3.365, "+5, +1, -1", "Liquid", 265.95, 331.95, 3.11, "Halogen", 1826]],
-  ["Kr", [36, "Krypton", 4, 8, 18, 83.80, "[Ar] 4s2 3d10 4p6", 3.00, 202, 14.000, null, "0", "Gas", 115.79, 119.93, 0.003733, "Noble gas", 1898]],
-  ["Rb", [37, "Rubidium", 5, 1, 1, 85.47, "[Kr] 5s1", 0.82, 303, 4.177, 0.468, "+1", "Solid", 312.46, 961, 1.53, "Alkali metal", 1861]],
-  ["Sr", [38, "Strontium", 5, 2, 2, 87.62, "[Kr] 5s2", 0.95, 249, 5.695, null, "+2", "Solid", 1050, 1655, 2.64, "Alkaline earth metal", 1790]],
-  ["Y",  [39, "Yttrium", 5, 0, 3, 88.91, "[Kr] 5s2 4d1", 1.22, 219, 6.217, 0.307, "+3", "Solid", 1795, 3618, 4.47, "Transition metal", 1794]],
-  ["Zr", [40, "Zirconium", 5, 0, 4, 91.22, "[Kr] 5s2 4d2", 1.33, 186, 6.634, 0.426, "+4", "Solid", 2128, 4682, 6.52, "Transition metal", 1789]],
-  ["Nb", [41, "Niobium", 5, 0, 5, 92.91, "[Kr] 5s1 4d4", 1.6, 207, 6.759, 0.893, "+5, +3", "Solid", 2750, 5017, 8.57, "Transition metal", 1801]],
-  ["Mo", [42, "Molybdenum", 5, 0, 6, 95.94, "[Kr] 5s1 4d5", 2.16, 209, 7.092, 0.746, "+6", "Solid", 2896, 4912, 10.2, "Transition metal", 1778]],
-  ["Tc", [43, "Technetium", 5, 0, 7, 98, "[Kr] 5s2 4d5", 1.9, 209, 7.28, 0.55, "+7, +6, +4", "Solid", 2430, 4538, 11, "Transition metal", 1937]],
-  ["Ru", [44, "Ruthenium", 5, 0, 8, 101.07, "[Kr] 5s1 4d7", 2.2, 207, 7.361, 1.05, "+3", "Solid", 2607, 4423, 12.1, "Transition metal", 1827]],
-  ["Rh", [45, "Rhodium", 5, 0, 9, 102.91, "[Kr] 5s1 4d8", 2.28, 195, 7.459, 1.137, "+3", "Solid", 2237, 3968, 12.4, "Transition metal", 1803]],
-  ["Pd", [46, "Palladium", 5, 0, 10, 106.42, "[Kr] 4d10", 2.20, 202, 8.337, 0.557, "+3, +2", "Solid", 1828.05, 3236, 12.0, "Transition metal", 1803]],
-  ["Ag", [47, "Silver", 5, 0, 11, 107.87, "[Kr] 5s1 4d10", 1.93, 172, 7.576, 1.302, "+1", "Solid", 1234.93, 2435, 10.501, "Transition metal", Ancient]],
-  ["C
-%_CHEM_CONST_VALUES : [
-    6.02214076e23,      /* NA    - Avogadro's number */
-    1.380649e-23,       /* kB   - Boltzmann constant */
-    8.314462618,        /* R    - Universal gas constant */
-    96485.33212,        /* F    - Faraday constant */
-    1.6021766d", [48, "Cadmium", 5, 0, 12, 112.41, "[Kr] 5s2 4d10", 1.69, 158, 8.994, null, "+2", "Solid", 594.22, 1040, 8.69, "Transition metal", 1817]],
-  ["In", [49, "Indium", 5, 3, 13, 114.82, "[Kr] 5s2 4d10 5p1", 1.78, 193, 5.786, 0.3, "+3", "Solid", 429.75, 2345, 7.31, "Post-transition metal", 1863]],
-  ["Sn", [50, "Tin", 5, 4, 14, 118.71, "[Kr] 5s2 4d10 5p2", 1.96, 217, 7.344, 1.2, "+4, +2", "Solid", 505.08, 2875, 7.287, "Post-transition metal", Ancient]],
-  ["Sb", [51, "Antimony", 5, 5, 15, 121.76, "[Kr] 5s2 4d10 5p3", 2.05, 206, 8.64, 1.07, "+5, +3, -3", "Solid", 903.78, 1860, 6.685, "Metalloid", Ancient]],
-  ["Te", [52, "Tellurium", 5, 6, 16, 127.60, "[Kr] 5s2 4d10 5p4", 2.1, 206, 9.010, 1.971, "+6, +4, -2", "Solid", 722.66, 1261, 6.232, "Metalloid", 1782]],
-  ["I",  [53, "Iodine", 5, 7, 17, 126.90, "[Kr] 5s2 4d10 5p5", 2.66, 198, 10.451, 3.059, "+7, +5, +1, -1", "Solid", 386.85, 457.55, 4.93, "Halogen", 1811]],
-  ["Xe", [54, "Xenon", 5, 8, 18, 131.29, "[Kr] 5s2 4d10 5p6", 2.60, 216, 12.130, null, "0", "Gas", 161.36, 165.03, 0.005887, "Noble gas", 1898]],
-  ["Cs", [55, "Cesium", 6, 1, 1, 132.91, "[Xe] 6s1", 0.79, 343, 3.894, 0.472, "+1", "Solid", 301.59, 944, 1.93, "Alkali metal", 1860]],
-  ["Ba", [56, "Barium", 6, 2, 2, 137.33, "[Xe] 6s2", 0.89, 268, 5.212, null, "+2", "Solid", 1000, 2170, 3.62, "Alkaline earth metal", 1808]],
-  ["La", [57, "Lanthanum", 6, 0, 3, 138.91, "[Xe] 6s2 5d1", 1.1, 240, 5.577, 0.5, "+3", "Solid", 1191, 3737, 6.15, "Lanthanide", 1839]],
-  ["Ce", [58, "Cerium", 6, 0, 3, 140.12, "[Xe] 6s2 4f1 5d1", 1.12, 235, 5.539, 0.5, "+4, +3", "Solid", 1071, 3697, 6.770, "Lanthanide", 1803]],
-  ["Pr", [59, "Praseodymium", 6, 0, 3, 140.91, "[Xe] 6s2 4f3", 1.13, 239, 5.464, null, "+3", "Solid", 1204, 3793, 6.77, "Lanthanide", 1885]],
-  ["Nd", [60, "Neodymium", 6, 0, 3, 144.24, "[Xe] 6s2 4f4", 1.14, 229, 5.525, null, "+3", "Solid", 1294, 3347, 7.01, "Lanthanide", 1885]],
-  ["Pm", [61, "Promethium", 6, 0, 3, 145, "[Xe] 6s2 4f5", null, 236, 5.55, null, "+3", "Solid", 1315, 3273, 7.26, "Lanthanide", 1945]],
-  ["Sm", [62, "Samarium", 6, 0, 3, 150.36, "[Xe] 6s2 4f6", 1.17, 229, 5.644, null, "+3, +2", "Solid", 1347, 2067, 7.52, "Lanthanide", 1879]],
-  ["Eu", [63, "Europium", 6, 0, 3, 151.96, "[Xe] 6s2 4f7", null, 233, 5.670, null, "+3, +2", "Solid", 1095, 1802, 5.24, "Lanthanide", 1901]],
-  ["Gd", [64, "Gadolinium", 6, 0, 3, 157.25, "[Xe] 6s2 4f7 5d1", 1.2, 237, 6.150, null, "+3", "Solid", 1586, 3546, 7.90, "Lanthanide", 1880]],
-  ["Tb", [65, "Terbium", 6, 0, 3, 158.93, "[Xe] 6s2 4f9", null, 221, 5.864, null, "+3", "Solid", 1629, 3503, 8.23, "Lanthanide", 1843]],
-  ["Dy", [66, "Dysprosium", 6, 0, 3, 162.50, "[Xe] 6s2 4f10", 1.22, 229, 5.939, null, "+3", "Solid", 1685, 2840, 8.55, "Lanthanide", 1886]],
-  ["Ho", [67, "Holmium", 6, 0, 3, 164.93, "[Xe] 6s2 4f11", 1.23, 216, 6.022, null, "+3", "Solid", 1747, 2973, 8.80, "Lanthanide", 1878]],
-  ["Er", [68, "Erbium", 6, 0, 3, 167.26, "[Xe] 6s2 4f12", 1.24, 235, 6.108, null, "+3", "Solid", 1802, 3141, 9.07, "Lanthanide", 1843]],
-  ["Tm", [69, "Thulium", 6, 0, 3, 168.93, "[Xe] 6s2 4f13", 1.25, 227, 6.184, null, "+3", "Solid", 1818, 2223, 9.32, "Lanthanide", 1879]],
-  ["Yb", [70, "Ytterbium", 6, 0, 3, 173.04, "[Xe] 6s2 4f14", null, 242, 6.254, null, "+3, +2", "Solid", 1092, 1469, 6.90, "Lanthanide", 1878]],
-  ["Lu", [71, "Lutetium", 6, 0, 3, 174.97, "[Xe] 6s2 4f14 5d1", 1.27, 221, 5.426, null, "+3", "Solid", 1936, 3675, 9.84, "Lanthanide", 1907]],
-  ["Hf", [72, "Hafnium", 6, 0, 4, 178.49, "[Xe] 6s2 4f14 5d2", 1.3, 212, 6.825, null, "+4", "Solid", 2506, 4876, 13.3, "Transition metal", 1923]],
-  ["Ta", [73, "Tantalum", 6, 0, 5, 180.85, "[Xe] 6s2 4f14 5d3", 1.5, 217, 7.89, 0.322, "+5", "Solid", 3290, 5731, 16.4, "Transition metal", 1802]],
-  ["W",  [74, "Tungsten", 6, 0, 6, 183.84, "[Xe] 6s2 4f14 5d4", 2.36, 210, 7.98, 0.815, "+6", "Solid", 3695, 5828, 19.3, "Transition metal", 1783]],
-  ["Re", [75, "Rhenium", 6, 0, 7, 186.21, "[Xe] 6s2 4f14 5d5", 1.9, 217, 7.88, 0.15, "+7, +6, +4", "Solid", 3459, 5869, 20.8, "Transition metal", 1925]],
-  ["Os", [76, "Osmium", 6, 0, 8, 190.23, "[Xe] 6s2 4f14 5d6", 2.2, 216, 8.7, 1.1, "+4, +3", "Solid", 3306, 5285, 22.57, "Transition metal", 1803]],
-  ["Ir", [77, "Iridium", 6, 0, 9, 192.22, "[Xe] 6s2 4f14 5d7", 2.2, 202, 9.1, 1.565, "+4, +3", "Solid", 2719, 4701, 22.42, "Transition metal", 1803]],
-  ["Pt", [78, "Platinum", 6, 0, 10, 195.08, "[Xe] 6s1 4f14 5d9", 2.28, 209, 9, 2.128, "+4, +2", "Solid", 2041.55, 4098, 21.46, "Transition metal", 1735]],
-  ["Au", [79, "Gold", 6, 0, 11, 196.97, "[Xe] 6s1 4f14 5d10", 2.54, 166, 9.226, 2.309, "+3, +1", "Solid", 1337.33, 3129, 19.282, "Transition metal", Ancient]],
-  ["Hg", [80, "Mercury", 6, 0, 12, 200.59, "[Xe] 6s2 4f14 5d10", 2, 209, 10.438, null, "+2, +1", "Liquid", 234.32, 629.88, 13.5336, "Transition metal", Ancient]],
-  ["Tl", [81, "Thallium", 6, 3, 13, 204.38, "[Xe] 6s2 4f14 5d10 6p1", 1.62, 196, 6.108, 0.2, "+3, +1", "Solid", 577, 1746, 11.8, "Post-transition metal", 1861]],
-  ["Pb", [82, "Lead", 6, 4, 14, 207.20, "[Xe] 6s2 4f14 5d10 6p2", 2.33, 202, 7.417, 0.36, "+4, +2", "Solid", 600.61, 2022, 11.342, "Post-transition metal", Ancient]],
-  ["Bi", [83, "Bismuth", 6, 5, 15, 208.98, "[Xe] 6s2 4f14 5d10 6p3", 2.02, 207, 7.289, 0.946, "+5, +3", "Solid", 544.55, 1837, 9.807, "Post-transition metal", 1753]],
-  ["Po", [84, "Polonium", 6, 6, 16, 209, "[Xe] 6s2 4f14 5d10 6p4", 2, 197, 8.417, 1.9, "+4, +2", "Solid", 527, 1235, 9.32, "Metalloid", 1898]],
-  ["At", [85, "Astatine", 6, 7, 17, 210, "[Xe] 6s2 4f14 5d10 6p5", 2.2, 202, 9.5, 2.8, "7, 5, 3, 1, -1", "Solid", 575, null, 7, "Halogen", 1940]],
-  ["Rn", [86, "Radon", 6, 8, 18, 222, "[Xe] 6s2 4f14 5d10 6p6", null, 220, 10.745, null, "0", "Gas", 202, 211.45, 0.00973, "Noble gas", 1900]],
-  ["Fr", [87, "Francium", 7, 1, 1, 223, "[Rn] 7s1", 0.7, 348, 3.9, 0.47, "+1", "Solid", 300, null, null, "Alkali metal", 1939]],
-  ["Ra", [88, "Radium", 7, 2, 2, 226, "[Rn] 7s2", 0.9, 283, 5.279, null, "+2", "Solid", 973, 1413, 5, "Alkaline earth metal", 1898]],
-  ["Ac", [89, "Actinium", 7, 0, 3, 227, "[Rn] 7s2 6d1", 1.1, 260, 5.17, null, "+3", "Solid", 1324, 3471, 10.07, "Actinide", 1899]],
-  ["Th", [90, "Thorium", 7, 0, 3, 232.04, "[Rn] 7s2 6d2", 1.3, 237, 6.08, null, "+4", "Solid", 2023, 5061, 11.72, "Actinide", 1828]],
-  ["Pa", [91, "Protactinium", 7, 0, 3, 231.04, "[Rn] 7s2 5f2 6d1", 1.5, 243, 5.89, null, "+5, +4", "Solid", 1845, null, 15.37, "Actinide", 1913]],
-  ["U",  [92, "Uranium", 7, 0, 3, 238.03, "[Rn] 7s2 5f3 6d1", 1.38, 240, 6.194, null, "+6, +5, +4, +3", "Solid", 1408, 4404, 18.95, "Actinide", 1789]],
-  ["Np", [93, "Neptunium", 7, 0, 3, 237, "[Rn] 7s2 5f4 6d1", 1.36, 221, 6.266, null, "+6, +5, +4, +3", "Solid", 917, 4175, 20.25, "Actinide", 1940]],
-  ["Pu", [94, "Plutonium", 7, 0, 3, 244, "[Rn] 7s2 5f6", 1.28, 243, 6.06, null, "+6, +5, +4, +3", "Solid", 913, 3501, 19.84, "Actinide", 1940]],
-  ["Am", [95, "Americium", 7, 0, 3, 243, "[Rn] 7s2 5f7", 1.3, 244, 5.993, null, "+6, +5, +4, +3", "Solid", 1449, 2284, 13.69, "Actinide", 1944]],
-  ["Cm", [96, "Curium", 7, 0, 3, 247, "[Rn] 7s2 5f7 6d1", 1.3, 245, 6.02, null, "+3", "Solid", 1618, 3400, 13.51, "Actinide", 1944]],
-  ["Bk", [97, "Berkelium", 7, 0, 3, 247, "[Rn] 7s2 5f9", 1.3, 244, 6.23, null, "+4, +3", "Solid", 1323, null, 14, "Actinide", 1949]],
-  ["Cf", [98, "Californium", 7, 0, 3, 251, "[Rn] 7s2 5f10", 1.3, 245, 6.30, null, "+3", "Solid", 1173, null, null, "Actinide", 1950]],
-  ["Es", [99, "Einsteinium", 7, 0, 3, 252, "[Rn] 7s2 5f11", 1.3, 245, 6.42, null, "+3", "Solid", 1133, null, null, "Actinide", 1952]],
-  ["Fm", [100, "Fermium", 7, 0, 3, 257, "[Rn] 7s2 5f12", 1.3, null, 6.50, null, "+3", "Solid", 1800, null, null, "Actinide", 1952]],
-  ["Md", [101, "Mendelevium", 7, 0, 3, 258, "[Rn] 7s2 5f13", 1.3, null, 6.58, null, "+3, +2", "Solid", 1100, null, null, "Actinide", 1955]],
-  ["No", [102, "Nobelium", 7, 0, 3, 259, "[Rn] 7s2 5f14", 1.3, null, 6.65, null, "+3, +2", "Solid", 1100, null, null, "Actinide", 1957]],
-  ["Lr", [103, "Lawrencium", 7, 0, 3, 262, "[Rn] 7s2 5f14 6d1", 1.3, null, null, null, "+3", "Solid", 1900, null, null, "Actinide", 1961]],
-  ["Rf", [104, "Rutherfordium", 7, 0, 4, 261, "[Rn] 7s2 5f14 6d2", null, null, null, null, "+4", "Solid", null, null, null, "Transition metal", 1964]],
-  ["Db", [105, "Dubnium", 7, 0, 5, 262, "[Rn] 7s2 5f14 6d3", null, null, null, null, "5, 4, 3", "Solid", null, null, null, "Transition metal", 1967]],
-  ["Sg", [106, "Seaborgium", 7, 0, 6, 266, "[Rn] 7s2 5f14 6d4", null, null, null, null, "6, 5, 4, 3, 0", "Solid", null, null, null, "Transition metal", 1974]],
-  ["Bh", [107, "Bohrium", 7, 0, 7, 264, "[Rn] 7s2 5f14 6d5", null, null, null, null, "7, 5, 4, 3", "Solid", null, null, null, "Transition metal", 1976]],
-  ["Hs", [108, "Hassium", 7, 0, 8, 277, "[Rn] 7s2 5f14 6d6", null, null, null, null, "8, 6, 5, 4, 3, 2", "Solid", null, null, null, "Transition metal", 1984]],
-  ["Mt", [109, "Meitnerium", 7, 0, 9, 268, "[Rn] 7s2 5f14 6d7", null, null, null, null, "9, 8, 6, 4, 3, 1", "Solid", null, null, null, "Transition metal", 1982]],
-  ["Ds", [110, "Darmstadtium", 7, 0, 10, 281, "[Rn] 7s2 5f14 6d8", null, null, null, null, "8, 6, 4, 2, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
-  ["Rg", [111, "Roentgenium", 7, 0, 11, 272, "[Rn] 7s2 5f14 6d9", null, null, null, null, "5, 3, 1, -1", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
-  ["Cn", [112, "Copernicium", 7, 0, 12, 285, "[Rn] 7s2 5f14 6d10", null, null, null, null, "2, 1, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1996]],
-  ["Nh", [113, "Nihonium", 7, 3, 13, 286, "[Rn] 7s2 5f14 6d10 7p1", null, null, null, null, "", "Expected to be a Solid", null, null, null, "Post-transition metal", 2004]],
-  ["Fl", [114, "Flerovium", 7, 4, 14, 289, "[Rn] 7s2 5f14 6d10 7p2", null, null, null, null, "6, 4,2, 1, 0", "Expected to be a Solid", null, null, null, "Post-transition metal", 1998]],
-  ["Mc", [115, "Moscovium", 7, 5, 15, 288, "[Rn] 7s2 5f14 6d10 7p3", null, null, null, null, "3, 1", "Expected to be a Solid", null, null, null, "Post-transition metal", 2003]],
-  ["Lv", [116, "Livermorium", 7, 6, 16, 292, "[Rn] 7s2 5f14 6d10 7p4", null, null, null, null, "+4, +2, -2", "Expected to be a Solid", null, null, null, "Post-transition metal", 2000]],
-  ["Ts", [117, "Tennessine", 7, 7, 17, 294, "[Rn] 7s2 5f14 6d10 7p5", null, null, null, null, "+5, +3, +1, -1", "Expected to be a Solid", null, null, null, "Halogen", 2010]],
-  ["Og", [118, "Oganesson", 7, 8, 18, 294, "[Rn] 7s2 5f14 6d10 7p6", null, null, null, null, "+6, +4, +2, +1, 0, -1", "Expected to be a Gas", null, null, null, "Noble gas", 2006]]
+  ["H",  [1, "Wasserstoff", 1, 1, 1, 1.01, "1s1", 2.20, 120, 13.598, 0.754, "+1, -1", "Gas", 13.81, 20.28, 0.00008988, "Nonmetal"]],
+  ["He", [2, "Helium", 1, 8, 18, 4.00, "1s2", null, 140, 24.587, null, "0", "Gas", 0.95, 4.22, 0.0001785, "Noble gas"]],
+  ["Li", [3, "Lithium", 2, 1, 1, 6.94, "[He] 2s1", 0.98, 182, 5.392, 0.618, "+1", "Solid", 453.65, 1615, 0.534, "Alkali metal"]],
+  ["Be", [4, "Beryllium", 2, 2, 2, 9.01, "[He] 2s2", 1.57, 153, 9.323, null, "+2", "Solid", 1560, 2744, 1.85, "Alkaline earth metal"]],
+  ["B",  [5, "Bor", 2, 3, 13, 10.81, "[He] 2s2 2p1", 2.04, 192, 8.298, 0.277, "+3", "Solid", 2348, 4273, 2.37, "Metalloid"]],
+  ["C",  [6, "Kohlenstoff", 2, 4, 14, 12.01, "[He] 2s2 2p2", 2.55, 170, 11.260, 1.263, "+4, +2, -4", "Solid", 3823, 4098, 2.2670, "Nonmetal"]],
+  ["N",  [7, "Stickstoff", 2, 5, 15, 14.01, "[He] 2s2 2p3", 3.04, 155, 14.534, null, "+5, +4, +3, +2, +1, -1, -2, -3", "Gas", 63.15, 77.36, 0.0012506, "Nonmetal"]],
+  ["O",  [8, "Sauerstoff", 2, 6, 16, 16.00, "[He] 2s2 2p4", 3.44, 152, 13.618, 1.461, "-2", "Gas", 54.36, 90.2, 0.001429, "Nonmetal"]],
+  ["F",  [9, "Fluor", 2, 7, 17, 19.00, "[He] 2s2 2p5", 3.98, 135, 17.423, 3.339, "-1", "Gas", 53.53, 85.03, 0.001696, "Halogen"]],
+  ["Ne", [10, "Neon", 2, 8, 18, 20.18, "[He] 2s2 2p6", null, 154, 21.565, null, "0", "Gas", 24.56, 27.07, 0.0008999, "Noble gas"]],
+  ["Na", [11, "Natrium", 3, 1, 1, 22.99, "[Ne] 3s1", 0.93, 227, 5.139, 0.548, "+1", "Solid", 370.95, 1156, 0.97, "Alkali metal"]],
+  ["Mg", [12, "Magnesium", 3, 2, 2, 24.31, "[Ne] 3s2", 1.31, 173, 7.646, null, "+2", "Solid", 923, 1363, 1.74, "Alkaline earth metal"]],
+  ["Al", [13, "Aluminium", 3, 3, 13, 26.98, "[Ne] 3s2 3p1", 1.61, 184, 5.986, 0.441, "+3", "Solid", 933.437, 2792, 2.70, "Post-transition metal"]],
+  ["Si", [14, "Silicium", 3, 4, 14, 28.09, "[Ne] 3s2 3p2", 1.90, 210, 8.152, 1.385, "+4, +2, -4", "Solid", 1687, 3538, 2.3296, "Metalloid"]],
+  ["P",  [15, "Phosphor", 3, 5, 15, 30.97, "[Ne] 3s2 3p3", 2.19, 180, 10.487, 0.746, "+5, +3, -3", "Solid", 317.3, 553.65, 1.82, "Nonmetal"]],
+  ["S",  [16, "Schwefel", 3, 6, 16, 32.07, "[Ne] 3s2 3p4", 2.58, 180, 10.360, 2.077, "+6, +4, -2", "Solid", 388.36, 717.75, 2.067, "Nonmetal"]],
+  ["Cl", [17, "Chlor", 3, 7, 17, 35.45, "[Ne] 3s2 3p5", 3.16, 175, 12.968, 3.617, "+7, +5, +1, -1", "Gas", 171.65, 239.11, 0.003214, "Halogen"]],
+  ["Ar", [18, "Argon", 3, 8, 18, 39.95, "[Ne] 3s2 3p6", null, 188, 15.760, null, "0", "Gas", 83.8, 87.3, 0.0017837, "Noble gas"]],
+  ["K",  [19, "Kalium", 4, 1, 1, 39.10, "[Ar] 4s1", 0.82, 275, 4.341, 0.501, "+1", "Solid", 336.53, 1032, 0.89, "Alkali metal"]],
+  ["Ca", [20, "Calcium", 4, 2, 2, 40.08, "[Ar] 4s2", 1.00, 231, 6.113, null, "+2", "Solid", 1115, 1757, 1.54, "Alkaline earth metal"]],
+  ["Sc", [21, "Skandium", 4, 0, 3, 44.96, "[Ar] 4s2 3d1", 1.36, 211, 6.561, 0.188, "+3", "Solid", 1814, 3109, 2.99, "Transition metal"]],
+  ["Ti", [22, "Titan", 4, 0, 4, 47.87, "[Ar] 4s2 3d2", 1.54, 187, 6.828, 0.079, "+4, +3, +2", "Solid", 1941, 3560, 4.5, "Transition metal"]],
+  ["V",  [23, "Vanadium", 4, 0, 5, 50.94, "[Ar] 4s2 3d3", 1.63, 179, 6.746, 0.525, "+5, +4, +3, +2", "Solid", 2183, 3680, 6.0, "Transition metal"]],
+  ["Cr", [24, "Chrom", 4, 0, 6, 52.00, "[Ar] 4s1 3d5", 1.66, 189, 6.767, 0.666, "+6, +3, +2", "Solid", 2180, 2944, 7.15, "Transition metal"]],
+  ["Mn", [25, "Mangan", 4, 0, 7, 54.94, "[Ar] 4s2 3d5", 1.55, 197, 7.434, null, "+7, +4, +3, +2", "Solid", 1519, 2334, 7.3, "Transition metal"]],
+  ["Fe", [26, "Eisen", 4, 0, 8, 55.85, "[Ar] 4s2 3d6", 1.83, 194, 7.902, 0.163, "+3, +2", "Solid", 1811, 3134, 7.874, "Transition metal"]],
+  ["Co", [27, "Kobalt", 4, 0, 9, 58.93, "[Ar] 4s2 3d7", 1.88, 192, 7.881, 0.661, "+3", "Solid", 1768, 3200, 8.86, "Transition metal"]],
+  ["Ni", [28, "Nickel", 4, 0, 10, 58.69, "[Ar] 4s2 3d8", 1.91, 163, 7.640, 1.156, "+3, +2", "Solid", 1728, 3186, 8.912, "Transition metal"]],
+  ["Cu", [29, "Kupfer", 4, 0, 11, 63.55, "[Ar] 4s1 3d10", 1.90, 140, 7.726, 1.228, "+2, +1", "Solid", 1357.77, 2835, 8.933, "Transition metal"]],
+  ["Zn", [30, "Zink", 4, 0, 12, 65.38, "[Ar] 4s2 3d10", 1.65, 139, 9.394, null, "+2", "Solid", 692.68, 1180, 7.134, "Transition metal"]],
+  ["Ga", [31, "Gallium", 4, 3, 13, 69.72, "[Ar] 4s2 3d10 4p1", 1.81, 187, 5.999, 0.3, "+3", "Solid", 302.91, 2477, 5.91, "Post-transition metal"]],
+  ["Ge", [32, "Germanium", 4, 4, 14, 72.64, "[Ar] 4s2 3d10 4p2", 2.01, 211, 7.900, 1.35, "+4, +2", "Solid", 1211.4, 3106, 5.323, "Metalloid"]],
+  ["As", [33, "Arsen", 4, 5, 15, 74.92, "[Ar] 4s2 3d10 4p3", 2.18, 185, 9.815, 0.81, "+5, +3, -3", "Solid", 1090, 887, 5.776, "Metalloid"]],
+  ["Se", [34, "Selen", 4, 6, 16, 78.96, "[Ar] 4s2 3d10 4p4", 2.55, 190, 9.752, 2.021, "+6, +4, -2", "Solid", 493.65, 958, 4.809, "Nonmetal"]],
+  ["Br", [35, "Brom", 4, 7, 17, 79.90, "[Ar] 4s2 3d10 4p5", 2.96, 183, 11.814, 3.365, "+5, +1, -1", "Liquid", 265.95, 331.95, 3.11, "Halogen"]],
+  ["Kr", [36, "Krypton", 4, 8, 18, 83.80, "[Ar] 4s2 3d10 4p6", 3.00, 202, 14.000, null, "0", "Gas", 115.79, 119.93, 0.003733, "Noble gas"]],
+  ["Rb", [37, "Rubidium", 5, 1, 1, 85.47, "[Kr] 5s1", 0.82, 303, 4.177, 0.468, "+1", "Solid", 312.46, 961, 1.53, "Alkali metal"]],
+  ["Sr", [38, "Strontium", 5, 2, 2, 87.62, "[Kr] 5s2", 0.95, 249, 5.695, null, "+2", "Solid", 1050, 1655, 2.64, "Alkaline earth metal"]],
+  ["Y",  [39, "Yttrium", 5, 0, 3, 88.91, "[Kr] 5s2 4d1", 1.22, 219, 6.217, 0.307, "+3", "Solid", 1795, 3618, 4.47, "Transition metal"]],
+  ["Zr", [40, "Zirkonium", 5, 0, 4, 91.22, "[Kr] 5s2 4d2", 1.33, 186, 6.634, 0.426, "+4", "Solid", 2128, 4682, 6.52, "Transition metal"]],
+  ["Nb", [41, "Niob", 5, 0, 5, 92.91, "[Kr] 5s1 4d4", 1.6, 207, 6.759, 0.893, "+5, +3", "Solid", 2750, 5017, 8.57, "Transition metal"]],
+  ["Mo", [42, "Molybdän", 5, 0, 6, 95.94, "[Kr] 5s1 4d5", 2.16, 209, 7.092, 0.746, "+6", "Solid", 2896, 4912, 10.2, "Transition metal"]],
+  ["Tc", [43, "Technetium", 5, 0, 7, 98, "[Kr] 5s2 4d5", 1.9, 209, 7.28, 0.55, "+7, +6, +4", "Solid", 2430, 4538, 11, "Transition metal"]],
+  ["Ru", [44, "Ruthenium", 5, 0, 8, 101.07, "[Kr] 5s1 4d7", 2.2, 207, 7.361, 1.05, "+3", "Solid", 2607, 4423, 12.1, "Transition metal"]],
+  ["Rh", [45, "Rhodium", 5, 0, 9, 102.91, "[Kr] 5s1 4d8", 2.28, 195, 7.459, 1.137, "+3", "Solid", 2237, 3968, 12.4, "Transition metal"]],
+  ["Pd", [46, "Palladium", 5, 0, 10, 106.42, "[Kr] 4d10", 2.20, 202, 8.337, 0.557, "+3, +2", "Solid", 1828.05, 3236, 12.0, "Transition metal"]],
+  ["Ag", [47, "Silber", 5, 0, 11, 107.87, "[Kr] 5s1 4d10", 1.93, 172, 7.576, 1.302, "+1", "Solid", 1234.93, 2435, 10.501, "Transition metal"]],
+    ["Cd", [48, "Cadmium", 5, 0, 12, 112.41, "[Kr] 5s2 4d10", 1.69, 158, 8.994, null, "+2", "Solid", 594.22, 1040, 8.69, "Transition metal"]],
+  ["In", [49, "Indium", 5, 3, 13, 114.82, "[Kr] 5s2 4d10 5p1", 1.78, 193, 5.786, 0.3, "+3", "Solid", 429.75, 2345, 7.31, "Post-transition metal"]],
+  ["Sn", [50, "Zinn", 5, 4, 14, 118.71, "[Kr] 5s2 4d10 5p2", 1.96, 217, 7.344, 1.2, "+4, +2", "Solid", 505.08, 2875, 7.287, "Post-transition metal"]],
+  ["Sb", [51, "Antimon", 5, 5, 15, 121.76, "[Kr] 5s2 4d10 5p3", 2.05, 206, 8.64, 1.07, "+5, +3, -3", "Solid", 903.78, 1860, 6.685, "Metalloid"]],
+  ["Te", [52, "Tellur", 5, 6, 16, 127.60, "[Kr] 5s2 4d10 5p4", 2.1, 206, 9.010, 1.971, "+6, +4, -2", "Solid", 722.66, 1261, 6.232, "Metalloid"]],
+  ["I",  [53, "Iod", 5, 7, 17, 126.90, "[Kr] 5s2 4d10 5p5", 2.66, 198, 10.451, 3.059, "+7, +5, +1, -1", "Solid", 386.85, 457.55, 4.93, "Halogen"]],
+  ["Xe", [54, "Xenon", 5, 8, 18, 131.29, "[Kr] 5s2 4d10 5p6", 2.60, 216, 12.130, null, "0", "Gas", 161.36, 165.03, 0.005887, "Noble gas"]],
+  ["Cs", [55, "Caesium", 6, 1, 1, 132.91, "[Xe] 6s1", 0.79, 343, 3.894, 0.472, "+1", "Solid", 301.59, 944, 1.93, "Alkali metal"]],
+  ["Ba", [56, "Barium", 6, 2, 2, 137.33, "[Xe] 6s2", 0.89, 268, 5.212, null, "+2", "Solid", 1000, 2170, 3.62, "Alkaline earth metal"]],
+  ["La", [57, "Lanthan", 6, 0, 3, 138.91, "[Xe] 6s2 5d1", 1.1, 240, 5.577, 0.5, "+3", "Solid", 1191, 3737, 6.15, "Lanthanide"]],
+  ["Ce", [58, "Cer", 6, 0, 3, 140.12, "[Xe] 6s2 4f1 5d1", 1.12, 235, 5.539, 0.5, "+4, +3", "Solid", 1071, 3697, 6.770, "Lanthanide"]],
+  ["Pr", [59, "Praseodym", 6, 0, 3, 140.91, "[Xe] 6s2 4f3", 1.13, 239, 5.464, null, "+3", "Solid", 1204, 3793, 6.77, "Lanthanide"]],
+  ["Nd", [60, "Neodym", 6, 0, 3, 144.24, "[Xe] 6s2 4f4", 1.14, 229, 5.525, null, "+3", "Solid", 1294, 3347, 7.01, "Lanthanide"]],
+  ["Pm", [61, "Promethium", 6, 0, 3, 145, "[Xe] 6s2 4f5", null, 236, 5.55, null, "+3", "Solid", 1315, 3273, 7.26, "Lanthanide"]],
+  ["Sm", [62, "Samarium", 6, 0, 3, 150.36, "[Xe] 6s2 4f6", 1.17, 229, 5.644, null, "+3, +2", "Solid", 1347, 2067, 7.52, "Lanthanide"]],
+  ["Eu", [63, "Europium", 6, 0, 3, 151.96, "[Xe] 6s2 4f7", null, 233, 5.670, null, "+3, +2", "Solid", 1095, 1802, 5.24, "Lanthanide"]],
+  ["Gd", [64, "Gadolinium", 6, 0, 3, 157.25, "[Xe] 6s2 4f7 5d1", 1.2, 237, 6.150, null, "+3", "Solid", 1586, 3546, 7.90, "Lanthanide"]],
+  ["Tb", [65, "Terbium", 6, 0, 3, 158.93, "[Xe] 6s2 4f9", null, 221, 5.864, null, "+3", "Solid", 1629, 3503, 8.23, "Lanthanide"]],
+  ["Dy", [66, "Dysprosium", 6, 0, 3, 162.50, "[Xe] 6s2 4f10", 1.22, 229, 5.939, null, "+3", "Solid", 1685, 2840, 8.55, "Lanthanide"]],
+  ["Ho", [67, "Holmium", 6, 0, 3, 164.93, "[Xe] 6s2 4f11", 1.23, 216, 6.022, null, "+3", "Solid", 1747, 2973, 8.80, "Lanthanide"]],
+  ["Er", [68, "Erbium", 6, 0, 3, 167.26, "[Xe] 6s2 4f12", 1.24, 235, 6.108, null, "+3", "Solid", 1802, 3141, 9.07, "Lanthanide"]],
+  ["Tm", [69, "Thulium", 6, 0, 3, 168.93, "[Xe] 6s2 4f13", 1.25, 227, 6.184, null, "+3", "Solid", 1818, 2223, 9.32, "Lanthanide"]],
+  ["Yb", [70, "Ytterbium", 6, 0, 3, 173.04, "[Xe] 6s2 4f14", null, 242, 6.254, null, "+3, +2", "Solid", 1092, 1469, 6.90, "Lanthanide"]],
+  ["Lu", [71, "Lutetium", 6, 0, 3, 174.97, "[Xe] 6s2 4f14 5d1", 1.27, 221, 5.426, null, "+3", "Solid", 1936, 3675, 9.84, "Lanthanide"]],
+  ["Hf", [72, "Hafnium", 6, 0, 4, 178.49, "[Xe] 6s2 4f14 5d2", 1.3, 212, 6.825, null, "+4", "Solid", 2506, 4876, 13.3, "Transition metal"]],
+  ["Ta", [73, "Tantal", 6, 0, 5, 180.85, "[Xe] 6s2 4f14 5d3", 1.5, 217, 7.89, 0.322, "+5", "Solid", 3290, 5731, 16.4, "Transition metal"]],
+  ["W",  [74, "Wolfram", 6, 0, 6, 183.84, "[Xe] 6s2 4f14 5d4", 2.36, 210, 7.98, 0.815, "+6", "Solid", 3695, 5828, 19.3, "Transition metal"]],
+  ["Re", [75, "Rhenium", 6, 0, 7, 186.21, "[Xe] 6s2 4f14 5d5", 1.9, 217, 7.88, 0.15, "+7, +6, +4", "Solid", 3459, 5869, 20.8, "Transition metal"]],
+  ["Os", [76, "Osmium", 6, 0, 8, 190.23, "[Xe] 6s2 4f14 5d6", 2.2, 216, 8.7, 1.1, "+4, +3", "Solid", 3306, 5285, 22.57, "Transition metal"]],
+  ["Ir", [77, "Iridium", 6, 0, 9, 192.22, "[Xe] 6s2 4f14 5d7", 2.2, 202, 9.1, 1.565, "+4, +3", "Solid", 2719, 4701, 22.42, "Transition metal"]],
+  ["Pt", [78, "Platin", 6, 0, 10, 195.08, "[Xe] 6s1 4f14 5d9", 2.28, 209, 9, 2.128, "+4, +2", "Solid", 2041.55, 4098, 21.46, "Transition metal"]],
+  ["Au", [79, "Gold", 6, 0, 11, 196.97, "[Xe] 6s1 4f14 5d10", 2.54, 166, 9.226, 2.309, "+3, +1", "Solid", 1337.33, 3129, 19.282, "Transition metal"]],
+  ["Hg", [80, "Quecksilber", 6, 0, 12, 200.59, "[Xe] 6s2 4f14 5d10", 2, 209, 10.438, null, "+2, +1", "Liquid", 234.32, 629.88, 13.5336, "Transition metal"]],
+  ["Tl", [81, "Thallium", 6, 3, 13, 204.38, "[Xe] 6s2 4f14 5d10 6p1", 1.62, 196, 6.108, 0.2, "+3, +1", "Solid", 577, 1746, 11.8, "Post-transition metal"]],
+  ["Pb", [82, "Blei", 6, 4, 14, 207.20, "[Xe] 6s2 4f14 5d10 6p2", 2.33, 202, 7.417, 0.36, "+4, +2", "Solid", 600.61, 2022, 11.342, "Post-transition metal"]],
+  ["Bi", [83, "Bismut", 6, 5, 15, 208.98, "[Xe] 6s2 4f14 5d10 6p3", 2.02, 207, 7.289, 0.946, "+5, +3", "Solid", 544.55, 1837, 9.807, "Post-transition metal"]],
+  ["Po", [84, "Polonium", 6, 6, 16, 209, "[Xe] 6s2 4f14 5d10 6p4", 2, 197, 8.417, 1.9, "+4, +2", "Solid", 527, 1235, 9.32, "Metalloid"]],
+  ["At", [85, "Astat", 6, 7, 17, 210, "[Xe] 6s2 4f14 5d10 6p5", 2.2, 202, 9.5, 2.8, "7, 5, 3, 1, -1", "Solid", 575, null, 7, "Halogen"]],
+  ["Rn", [86, "Radon", 6, 8, 18, 222, "[Xe] 6s2 4f14 5d10 6p6", null, 220, 10.745, null, "0", "Gas", 202, 211.45, 0.00973, "Noble gas"]],
+  ["Fr", [87, "Francium", 7, 1, 1, 223, "[Rn] 7s1", 0.7, 348, 3.9, 0.47, "+1", "Solid", 300, null, null, "Alkali metal"]],
+  ["Ra", [88, "Radium", 7, 2, 2, 226, "[Rn] 7s2", 0.9, 283, 5.279, null, "+2", "Solid", 973, 1413, 5, "Alkaline earth metal"]],
+  ["Ac", [89, "Actinium", 7, 0, 3, 227, "[Rn] 7s2 6d1", 1.1, 260, 5.17, null, "+3", "Solid", 1324, 3471, 10.07, "Actinide"]],
+  ["Th", [90, "Thorium", 7, 0, 3, 232.04, "[Rn] 7s2 6d2", 1.3, 237, 6.08, null, "+4", "Solid", 2023, 5061, 11.72, "Actinide"]],
+  ["Pa", [91, "Protactinium", 7, 0, 3, 231.04, "[Rn] 7s2 5f2 6d1", 1.5, 243, 5.89, null, "+5, +4", "Solid", 1845, null, 15.37, "Actinide"]],
+  ["U",  [92, "Uran", 7, 0, 3, 238.03, "[Rn] 7s2 5f3 6d1", 1.38, 240, 6.194, null, "+6, +5, +4, +3", "Solid", 1408, 4404, 18.95, "Actinide"]],
+  ["Np", [93, "Neptunium", 7, 0, 3, 237, "[Rn] 7s2 5f4 6d1", 1.36, 221, 6.266, null, "+6, +5, +4, +3", "Solid", 917, 4175, 20.25, "Actinide"]],
+  ["Pu", [94, "Plutonium", 7, 0, 3, 244, "[Rn] 7s2 5f6", 1.28, 243, 6.06, null, "+6, +5, +4, +3", "Solid", 913, 3501, 19.84, "Actinide"]],
+  ["Am", [95, "Amerikium", 7, 0, 3, 243, "[Rn] 7s2 5f7", 1.3, 244, 5.993, null, "+6, +5, +4, +3", "Solid", 1449, 2284, 13.69, "Actinide"]],
+  ["Cm", [96, "Curium", 7, 0, 3, 247, "[Rn] 7s2 5f7 6d1", 1.3, 245, 6.02, null, "+3", "Solid", 1618, 3400, 13.51, "Actinide"]],
+  ["Bk", [97, "Berkelium", 7, 0, 3, 247, "[Rn] 7s2 5f9", 1.3, 244, 6.23, null, "+4, +3", "Solid", 1323, null, 14, "Actinide"]],
+  ["Cf", [98, "Californium", 7, 0, 3, 251, "[Rn] 7s2 5f10", 1.3, 245, 6.30, null, "+3", "Solid", 1173, null, null, "Actinide"]],
+  ["Es", [99, "Einsteinium", 7, 0, 3, 252, "[Rn] 7s2 5f11", 1.3, 245, 6.42, null, "+3", "Solid", 1133, null, null, "Actinide"]],
+  ["Fm", [100, "Fermium", 7, 0, 3, 257, "[Rn] 7s2 5f12", 1.3, null, 6.50, null, "+3", "Solid", 1800, null, null, "Actinide"]],
+  ["Md", [101, "Mendelevium", 7, 0, 3, 258, "[Rn] 7s2 5f13", 1.3, null, 6.58, null, "+3, +2", "Solid", 1100, null, null, "Actinide"]],
+  ["No", [102, "Nobelium", 7, 0, 3, 259, "[Rn] 7s2 5f14", 1.3, null, 6.65, null, "+3, +2", "Solid", 1100, null, null, "Actinide"]],
+  ["Lr", [103, "Lawrencium", 7, 0, 3, 262, "[Rn] 7s2 5f14 6d1", 1.3, null, null, null, "+3", "Solid", 1900, null, null, "Actinide"]],
+  ["Rf", [104, "Rutherfordium", 7, 0, 4, 261, "[Rn] 7s2 5f14 6d2", null, null, null, null, "+4", "Solid", null, null, null, "Transition metal"]],
+  ["Db", [105, "Dubnium", 7, 0, 5, 262, "[Rn] 7s2 5f14 6d3", null, null, null, null, "5, 4, 3", "Solid", null, null, null, "Transition metal"]],
+  ["Sg", [106, "Seaborgium", 7, 0, 6, 266, "[Rn] 7s2 5f14 6d4", null, null, null, null, "6, 5, 4, 3, 0", "Solid", null, null, null, "Transition metal"]],
+  ["Bh", [107, "Bohrium", 7, 0, 7, 264, "[Rn] 7s2 5f14 6d5", null, null, null, null, "7, 5, 4, 3", "Solid", null, null, null, "Transition metal"]],
+  ["Hs", [108, "Hassium", 7, 0, 8, 277, "[Rn] 7s2 5f14 6d6", null, null, null, null, "8, 6, 5, 4, 3, 2", "Solid", null, null, null, "Transition metal"]],
+  ["Mt", [109, "Meitnerium", 7, 0, 9, 268, "[Rn] 7s2 5f14 6d7", null, null, null, null, "9, 8, 6, 4, 3, 1", "Solid", null, null, null, "Transition metal"]],
+  ["Ds", [110, "Darmstadtium", 7, 0, 10, 281, "[Rn] 7s2 5f14 6d8", null, null, null, null, "8, 6, 4, 2, 0", "Expected to be a Solid", null, null, null, "Transition metal"]],
+  ["Rg", [111, "Roentgenium", 7, 0, 11, 272, "[Rn] 7s2 5f14 6d9", null, null, null, null, "5, 3, 1, -1", "Expected to be a Solid", null, null, null, "Transition metal"]],
+  ["Cn", [112, "Copernicium", 7, 0, 12, 285, "[Rn] 7s2 5f14 6d10", null, null, null, null, "2, 1, 0", "Expected to be a Solid", null, null, null, "Transition metal"]],
+  ["Nh", [113, "Nihonium", 7, 3, 13, 286, "[Rn] 7s2 5f14 6d10 7p1", null, null, null, null, "", "Expected to be a Solid", null, null, null, "Post-transition metal"]],
+  ["Fl", [114, "Flerovium", 7, 4, 14, 289, "[Rn] 7s2 5f14 6d10 7p2", null, null, null, null, "6, 4,2, 1, 0", "Expected to be a Solid", null, null, null, "Post-transition metal"]],
+  ["Mc", [115, "Moscovium", 7, 5, 15, 288, "[Rn] 7s2 5f14 6d10 7p3", null, null, null, null, "3, 1", "Expected to be a Solid", null, null, null, "Post-transition metal"]],
+  ["Lv", [116, "Livermorium", 7, 6, 16, 292, "[Rn] 7s2 5f14 6d10 7p4", null, null, null, null, "+4, +2, -2", "Expected to be a Solid", null, null, null, "Post-transition metal"]],
+  ["Ts", [117, "Tennessine", 7, 7, 17, 294, "[Rn] 7s2 5f14 6d10 7p5", null, null, null, null, "+5, +3, +1, -1", "Expected to be a Solid", null, null, null, "Halogen"]],
+  ["Og", [118, "Oganesson", 7, 8, 18, 294, "[Rn] 7s2 5f14 6d10 7p6", null, null, null, null, "+6, +4, +2, +1, 0, -1", "Expected to be a Gas", null, null, null, "Noble gas"]]
 ]$
 
-/*
-  Separating the language data in this format makes it easier to add a new language.
-  That's a prioity over having the language embedded in a format like this.
-  ["H", [
-        ["Name", [ ["en", "hydrogen"], ["fi", "vety"] ]],
-        ["AtomicNumber", 1],
-        ["AtomicMass", 1.008]
-   ]],
-  The above is logically better, but less easy to maintain!
-*/
-%_CHEM_LANG:[
-  ["de", [
-    ["H",  "Wasserstoff"],
-    ["He", "Helium"],
-    ["Li", "Lithium"],
-    ["Be", "Beryllium"],
-    ["B",  "Bor"],
-    ["C",  "Kohlenstoff"],
-    ["N",  "Stickstoff"],
-    ["O",  "Sauerstoff"],
-    ["F",  "Fluor"],
-    ["Ne", "Neon"],
-    ["Na", "Natrium"],
-    ["Mg", "Magnesium"],
-    ["Al", "Aluminium"],
-    ["Si", "Silicium"],
-    ["P",  "Phosphor"],
-    ["S",  "Schwefel"],
-    ["Cl", "Chlor"],
-    ["Ar", "Argon"],
-    ["K",  "Kalium"],
-    ["Ca", "Calcium"],
-    ["Sc", "Skandium"],
-    ["Ti", "Titan"],
-    ["V",  "Vanadium"],
-    ["Cr", "Chrom"],
-    ["Mn", "Mangan"],
-    ["Fe", "Eisen"],
-    ["Co", "Kobalt"],
-    ["Ni", "Nickel"],
-    ["Cu", "Kupfer"],
-    ["Zn", "Zink"],
-    ["Ga", "Gallium"],
-    ["Ge", "Germanium"],
-    ["As", "Arsen"],
-    ["Se", "Selen"],
-    ["Br", "Brom"],
-    ["Kr", "Krypton"],
-    ["Rb", "Rubidium"],
-    ["Sr", "Strontium"],
-    ["Y",  "Yttrium"],
-    ["Zr", "Zirkonium"],
-    ["Nb", "Niob"],
-    ["Mo", "Molybdän"],
-    ["Tc", "Technetium"],
-    ["Ru", "Ruthenium"],
-    ["Rh", "Rhodium"],
-    ["Pd", "Palladium"],
-    ["Ag", "Silber"],
-    ["Cd", "Cadmium"],
-    ["In", "Indium"],
-    ["Sn", "Zinn"],
-    ["Sb", "Antimon"],
-    ["Te", "Tellur"],
-    ["I",  "Iod"],
-    ["Xe", "Xenon"],
-    ["Cs", "Caesium"],
-    ["Ba", "Barium"],
-    ["La", "Lanthan"],
-    ["Ce", "Cer"],
-    ["Pr", "Praseodym"],
-    ["Nd", "Neodym"],
-    ["Pm", "Promethium"],
-    ["Sm", "Samarium"],
-    ["Eu", "Europium"],
-    ["Gd", "Gadolinium"],
-    ["Tb", "Terbium"],
-    ["Dy", "Dysprosium"],
-    ["Ho", "Holmium"],
-    ["Er", "Erbium"],
-    ["Tm", "Thulium"],
-    ["Yb", "Ytterbium"],
-    ["Lu", "Lutetium"],
-    ["Hf", "Hafnium"],
-    ["Ta", "Tantal"],
-    ["W",  "Wolfram"],
-    ["Re", "Rhenium"],
-    ["Os", "Osmium"],
-    ["Ir", "Iridium"],
-    ["Pt", "Platin"],
-    ["Au", "Gold"],
-    ["Hg", "Quecksilber"],
-    ["Tl", "Thallium"],
-    ["Pb", "Blei"],
-    ["Bi", "Bismut"],
-    ["Po", "Polonium"],
-    ["At", "Astat"],
-    ["Rn", "Radon"],
-    ["Fr", "Francium"],
-    ["Ra", "Radium"],
-    ["Ac", "Actinium"],
-    ["Th", "Thorium"],
-    ["Pa", "Protactinium"],
-    ["U",  "Uran"],
-    ["Np", "Neptunium"],
-    ["Pu", "Plutonium"],
-    ["Am", "Amerikium"],
-    ["Cm", "Curium"],
-    ["Bk", "Berkelium"],
-    ["Cf", "Californium"],
-    ["Es", "Einsteinium"],
-    ["Fm", "Fermium"],
-    ["Md", "Mendelevium"],
-    ["No", "Nobelium"],
-    ["Lr", "Lawrencium"],
-    ["Rf", "Rutherfordium"],
-    ["Db", "Dubnium"],
-    ["Sg", "Seaborgium"],
-    ["Bh", "Bohrium"],
-    ["Hs", "Hassium"],
-    ["Mt", "Meitnerium"],
-    ["Rg", "Roentgenium"],
-    ["Cn", "Copernicium"],
-    ["Nh", "Nihonium"],
-    ["Fl", "Flerovium"],
-    ["Mc", "Moscovium"],
-    ["Lv", "Livermorium"],
-    ["Ts", "Tennessine"],
-    ["Og", "Oganesson"]
-  ]]
-]$
-
-
-/* Each element must be a list of atoms and numbers. */
-CLL:[
-     [["H",2],["O",1]],            /* Water */
-     [["C",1],["O",2]],            /* Carbon dioxide */
-     [["Ca",1],["C", 1], ["O",3]]  /* Calcium carbonate */
-    ];
-/* Choose one of these. */
-CL:rand(CLL);
-/* The CL list written as a single string. */
-CN:apply(sconcat, map(lambda([ex], if is(second(ex)=1) then first(ex) else sconcat(first(ex),string(second(ex)))), CL));
-/* Calculate the final answer. */
-ta1:stackunits(dispsf(apply("+",map(lambda([ex],second(ex)*chem_data(first(ex),"AtomicMass")), CL)),3), chem_units("AtomicMass"));
-/* Create a table of atomic masses of the elements used. */
-/* Get unique elements in the formula CL. */
-tt:setify(map(first, CL));
-/* Make a list of list of values. */
-tt:map(lambda([ex], [ex, dispsf(chem_data(ex,"AtomicMass"),3)]), listify(tt));
-tt:apply(table, append([["Element", "Atomic Mass"]], tt));
+%_CHEM_ELEMENT_SYMBOLS : map(first, %_CHEM_ELEMENTS)$
