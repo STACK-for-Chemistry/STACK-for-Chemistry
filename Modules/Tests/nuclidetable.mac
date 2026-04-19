@@ -317,12 +317,12 @@
 
 /* ---- Internal helpers ---- */
 
-chem_nuc_get_entry(id) := assoc(id, %_NUCLIDE_DATA)$
-
-chem_nuc_get_data(id) := block([e],
-    e: chem_nuc_get_entry(id),
-    if is(e = false) then false else e[2]
+chem_nuc_get_entry(id) := block([d],
+    d: assoc(id, %_NUCLIDE_DATA),
+    if is(d = false) then false else [id, d]
 )$
+
+chem_nuc_get_data(id) := assoc(id, %_NUCLIDE_DATA)$
 
 chem_nuc_id_from_ZN(z, n) := block([sym],
     if is(z < 1) or is(n < 0) then return(false),
