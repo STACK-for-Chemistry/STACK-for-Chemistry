@@ -541,7 +541,7 @@ chem_nuc_decay_product(id, mode) := block([],
 
 /* ---- Ionization helpers ---- */
 
-chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, value],
+chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, charge_num],
     if is(ox = false) or is(ox = null) then return(false),
     clean: ssubst("", " ", ox),
     chars: charlist(clean),
@@ -558,14 +558,14 @@ chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, value],
         i: i + 1
     ),
 
-    value: 0,
+    charge_num: 0,
     while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
-        value: value * 10 + (cint(chars[i]) - 48),
+        charge_num: charge_num * 10 + (cint(chars[i]) - 48),
         i: i + 1
     ),
 
-    if is(value = 0) then false
-    else sign * value
+    if is(charge_num = 0) then false
+    else sign * charge_num
 )$
 
 chem_nuc_charge_string(charge) := block([],
