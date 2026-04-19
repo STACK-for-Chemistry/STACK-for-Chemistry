@@ -1,0 +1,46 @@
+/* nuclidetable tests - Part 1 (timeout-safe) */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/nuclidetable.mac?t=part1");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/pse.mac?t=part1");
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b=true) then 1 else 0$
+passfail(s) := if is(s=1) then "PASS" else "FAIL"$
+
+id_c14:"^{14}C"$
+id_c11:"^{11}C"$
+id_po210:"^{210}Po"$
+
+/* Core + extractors + ground-state + conversions */
+s_1: bool_to_score(chem_nuc_get_entry(id_c14) # false);
+s_2: bool_to_score(chem_nuc_get_data(id_c14) # false);
+s_3: bool_to_score(length(chem_nuc_by_Z(6)) > 0);
+s_4: bool_to_score(length(chem_nuc_by_N(2)) > 0);
+s_5: bool_to_score(length(chem_nuc_by_A(14)) > 0);
+s_6: bool_to_score(length(chem_nuc_by_ZN(6,8)) > 0);
+s_7: bool_to_score(sequal(chem_nuc_id_from_ZN(6,8), id_c14));
+
+s_8: bool_to_score(chem_nuc_Z(id_c14) = 6);
+s_9: bool_to_score(chem_nuc_N(id_c14) = 8);
+s_10: bool_to_score(chem_nuc_A(id_c14) = 14);
+s_11: bool_to_score(chem_nuc_levels(id_c14) # false);
+s_12: bool_to_score(chem_nuc_halflives(id_c14) # false);
+s_13: bool_to_score(chem_nuc_halflife_units(id_c14) # false);
+s_14: bool_to_score(chem_nuc_decay_modes(id_c14) # false);
+s_15: bool_to_score(chem_nuc_branching(id_c14) # false);
+
+s_16: bool_to_score(chem_nuc_gs_halflife(id_c14) # false);
+s_17: bool_to_score(chem_nuc_gs_halflife_unit(id_c14) # false);
+s_18: bool_to_score(chem_nuc_gs_decay_modes(id_c14) # false);
+s_19: bool_to_score(chem_nuc_gs_branching(id_c14) # false);
+s_20: bool_to_score(chem_nuc_gs_halflife_s(id_c14) # false);
+s_21: bool_to_score(chem_nuc_gs_dominant_mode(id_c14) # false);
+
+s_22: bool_to_score(chem_nuc_halflife_to_seconds(1,"fs") > 0);
+s_23: bool_to_score(chem_nuc_halflife_to_seconds(1,"ms") = 0.001);
+
+max_score: 23;
+total_score: s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18+s_19+s_20+s_21+s_22+s_23;
+score_pct: float(100*total_score/max_score);
+
+ta1:10;
