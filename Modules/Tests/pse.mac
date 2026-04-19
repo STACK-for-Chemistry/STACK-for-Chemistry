@@ -45,17 +45,14 @@ chem_internal_element_list_by_positive_field(field_pos) := block([result, entry]
     reverse(result)
 )$
 
-chem_internal_element_by_two_fields(field_pos_1, field_value_1, field_pos_2, field_value_2) := block([entry, data, result],
-    result: false,
+chem_internal_element_by_two_fields(field_pos_1, field_value_1, field_pos_2, field_value_2) := block([entry, data],
     for entry in %_CHEM_ELEMENTS do (
-        if is(result = false) then (
-            data: second(entry),
-            if is(data[field_pos_1] = field_value_1) then (
-                if is(data[field_pos_2] = field_value_2) then result: first(entry)
-            )
+        data: second(entry),
+        if is(data[field_pos_1] = field_value_1) and is(data[field_pos_2] = field_value_2) then (
+            return(first(entry))
         )
     ),
-    result
+    false
 )$
 
 chem_data_all(element) := block([entry, cdat, i],
@@ -222,10 +219,9 @@ chem_string_to_number(str) := block([chars, result, i, digit_val],
 
 /* This function parses a chemical formula string and returns a list of [element, count] pairs.
    Example: chem_parse_formula("H2SO4") returns [["H", 2], ["S", 1], ["O"]] */
-chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, clean_formula, num_val],
-    /* Remove charge indicators (+, -, ^, {, }) from formula */
-    clean_formula: ssubst("", "}", ssubst("", "{", ssubst("", "^", ssubst("", "-", ssubst("", "+", formula))))),
-    chars: charlist(clean_formula),
+chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, num_val],
+    /* Parse directly in one pass; charge markers and other non-element tokens are skipped naturally. */
+    chars: charlist(formula),
     n: length(chars),
     i: 1,
     result: [],
