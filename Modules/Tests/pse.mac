@@ -176,7 +176,7 @@ chem_electron_config_formatter(config_str) := block([chars, parts, i, n, in_brac
         )
     ),
     
-    return(apply(concat, reverse(parts)))
+    return(apply(sconcat, reverse(parts)))
 )$
 
 /* This function returns the formatted electron configuration for an element.
