@@ -1,0 +1,395 @@
+<h2>Nuclidetable Module - Comprehensive Function Tests</h2>
+
+<p>This test suite validates all functions in the nuclidetable.mac module (45 test cases).</p>
+
+<hr>
+
+<h3>GROUP 1: Core Retrieval and Basic Lookups</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td><code>chem_nuc_get_entry("^{14}C")</code> — Retrieve full entry</td>
+    <td>{@p_1@}</td>
+    <td><code>{@t_1_entry@}</code></td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><code>chem_nuc_get_data("^{14}C")</code> — Retrieve data array</td>
+    <td>{@p_2@}</td>
+    <td><code>{@t_1_data@}</code></td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><code>chem_nuc_by_Z(6)</code> — All Carbon isotopes</td>
+    <td>{@p_3@}</td>
+    <td>{@t_2_by_Z@}</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><code>chem_nuc_by_N(8)</code> — All nuclides with N=8</td>
+    <td>{@p_4@}</td>
+    <td>{@t_2_by_N@}</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><code>chem_nuc_by_A(14)</code> — All nuclides with A=14</td>
+    <td>{@p_5@}</td>
+    <td>{@t_2_by_A@}</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td><code>chem_nuc_by_ZN(6, 8)</code> — C-14 by Z and N</td>
+    <td>{@p_6@}</td>
+    <td>{@t_2_by_ZN@}</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td><code>chem_nuc_id_from_ZN(6, 8)</code> — Generate ID</td>
+    <td>{@p_7@}</td>
+    <td><code>{@t_2_id_from_ZN@}</code></td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 2: Field Extraction</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td><code>chem_nuc_Z("^{14}C")</code> — Atomic number (expect 6)</td>
+    <td>{@p_8@}</td>
+    <td>{@t_3_Z@}</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td><code>chem_nuc_N("^{14}C")</code> — Neutron number (expect 8)</td>
+    <td>{@p_9@}</td>
+    <td>{@t_3_N@}</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td><code>chem_nuc_A("^{14}C")</code> — Mass number (expect 14)</td>
+    <td>{@p_10@}</td>
+    <td>{@t_3_A@}</td>
+  </tr>
+  <tr>
+    <td>11</td>
+    <td><code>chem_nuc_levels("^{14}C")</code> — Energy levels</td>
+    <td>{@p_11@}</td>
+    <td>{@t_3_levels@}</td>
+  </tr>
+  <tr>
+    <td>12</td>
+    <td><code>chem_nuc_halflives("^{14}C")</code> — Half-life values</td>
+    <td>{@p_12@}</td>
+    <td>{@t_3_halflives@}</td>
+  </tr>
+  <tr>
+    <td>13</td>
+    <td><code>chem_nuc_halflife_units("^{14}C")</code> — Units (expect ["y"])</td>
+    <td>{@p_13@}</td>
+    <td>{@t_3_units@}</td>
+  </tr>
+  <tr>
+    <td>14</td>
+    <td><code>chem_nuc_decay_modes("^{14}C")</code> — Decay modes</td>
+    <td>{@p_14@}</td>
+    <td>{@t_3_decay_modes@}</td>
+  </tr>
+  <tr>
+    <td>15</td>
+    <td><code>chem_nuc_branching("^{14}C")</code> — Branching ratios</td>
+    <td>{@p_15@}</td>
+    <td>{@t_3_branching@}</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 3: Ground-State Convenience Functions</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>16</td>
+    <td><code>chem_nuc_gs_halflife("^{14}C")</code> — Ground state half-life</td>
+    <td>{@p_16@}</td>
+    <td>{@t_4_gs_hl@}</td>
+  </tr>
+  <tr>
+    <td>17</td>
+    <td><code>chem_nuc_gs_halflife_unit("^{14}C")</code> — Ground state unit</td>
+    <td>{@p_17@}</td>
+    <td><code>{@t_4_gs_unit@}</code></td>
+  </tr>
+  <tr>
+    <td>18</td>
+    <td><code>chem_nuc_gs_decay_modes("^{14}C")</code> — Ground state modes</td>
+    <td>{@p_18@}</td>
+    <td>{@t_4_gs_modes@}</td>
+  </tr>
+  <tr>
+    <td>19</td>
+    <td><code>chem_nuc_gs_branching("^{14}C")</code> — Ground state branching</td>
+    <td>{@p_19@}</td>
+    <td>{@t_4_gs_branch@}</td>
+  </tr>
+  <tr>
+    <td>20</td>
+    <td><code>chem_nuc_gs_halflife_s("^{14}C")</code> — Half-life in seconds</td>
+    <td>{@p_20@}</td>
+    <td>{@t_4_gs_hl_s@}</td>
+  </tr>
+  <tr>
+    <td>21</td>
+    <td><code>chem_nuc_gs_dominant_mode("^{14}C")</code> — Dominant decay mode</td>
+    <td>{@p_21@}</td>
+    <td>{@t_4_gs_dom@}</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 4: Half-Life Unit Conversions to Seconds</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Conversion</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>22</td>
+    <td>1 fs → seconds</td>
+    <td>{@p_22@}</td>
+    <td>{@t_5_conv_fs@}</td>
+  </tr>
+  <tr>
+    <td>23</td>
+    <td>1 ms → seconds (expect 0.001)</td>
+    <td>{@p_23@}</td>
+    <td>{@t_5_conv_ms@}</td>
+  </tr>
+  <tr>
+    <td>24</td>
+    <td>1 s → seconds (expect 1)</td>
+    <td>{@p_24@}</td>
+    <td>{@t_5_conv_s@}</td>
+  </tr>
+  <tr>
+    <td>25</td>
+    <td>1 y → seconds (expect > 10⁷)</td>
+    <td>{@p_25@}</td>
+    <td>{@t_5_conv_y@}</td>
+  </tr>
+  <tr>
+    <td colspan="4"><small><strong>Other conversions tested:</strong> ps, ns, us, m, h, d</small></td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 5: Searching and Filtering</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Count</th>
+  </tr>
+  <tr>
+    <td>26</td>
+    <td><code>chem_nuc_with_decay_mode("B-")</code> — All β⁻ emitters</td>
+    <td>{@p_26@}</td>
+    <td>{@length(t_6_beta_minus)@}</td>
+  </tr>
+  <tr>
+    <td>27</td>
+    <td><code>chem_nuc_halflife_range(1e-3, 1e3)</code> — Half-life 1ms–1000s</td>
+    <td>{@p_27@}</td>
+    <td>{@length(t_6_hl_range)@}</td>
+  </tr>
+  <tr>
+    <td>28</td>
+    <td><code>chem_nuc_radioactive_isotopes(6)</code> — All C isotopes</td>
+    <td>{@p_28@}</td>
+    <td>{@length(t_6_radioactive)@}</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 6: Utility Functions</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>29</td>
+    <td><code>chem_nuc_num_levels("^{14}C")</code> — Number of levels</td>
+    <td>{@p_29@}</td>
+    <td>{@t_7_num_levels@}</td>
+  </tr>
+  <tr>
+    <td>30</td>
+    <td><code>chem_nuc_exists("^{14}C")</code> — Check existence (expect true)</td>
+    <td>{@p_30@}</td>
+    <td>{@t_7_exists_true@}</td>
+  </tr>
+  <tr>
+    <td>31</td>
+    <td><code>chem_nuc_exists("^{999}Zz")</code> — Check non-existence (expect false)</td>
+    <td>{@p_31@}</td>
+    <td>{@t_7_exists_false@}</td>
+  </tr>
+  <tr>
+    <td>32</td>
+    <td><code>length(chem_nuc_all_ids())</code> — Total nuclides in database</td>
+    <td>{@p_32@}</td>
+    <td>{@t_7_all_ids@}</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 7: Decay Products</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>33</td>
+    <td><code>chem_nuc_alpha_product("^{210}Po")</code> → Pb-206</td>
+    <td>{@p_33@}</td>
+    <td><code>{@t_8_alpha@}</code></td>
+  </tr>
+  <tr>
+    <td>34</td>
+    <td><code>chem_nuc_beta_minus_product("^{14}C")</code> → N-14</td>
+    <td>{@p_34@}</td>
+    <td><code>{@t_8_beta_minus@}</code></td>
+  </tr>
+  <tr>
+    <td>35</td>
+    <td><code>chem_nuc_beta_plus_product("^{11}C")</code> → B-11</td>
+    <td>{@p_35@}</td>
+    <td><code>{@t_8_beta_plus@}</code></td>
+  </tr>
+  <tr>
+    <td>36</td>
+    <td><code>chem_nuc_decay_product("^{210}Po", "A")</code> via generic function</td>
+    <td>{@p_36@}</td>
+    <td><code>{@t_8_decay_prod_A@}</code></td>
+  </tr>
+  <tr>
+    <td>37</td>
+    <td><code>chem_nuc_decay_product("^{14}C", "B-")</code> via generic function</td>
+    <td>{@p_37@}</td>
+    <td><code>{@t_8_decay_prod_BM@}</code></td>
+  </tr>
+  <tr>
+    <td>38</td>
+    <td><code>chem_nuc_decay_product("^{11}C", "B+")</code> via generic function</td>
+    <td>{@p_38@}</td>
+    <td><code>{@t_8_decay_prod_BP@}</code></td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>GROUP 8: Charge and Ionization</h3>
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+  <tr style="background-color:#f0f0f0;">
+    <th>Test ID</th>
+    <th>Description</th>
+    <th>Result</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>39</td>
+    <td><code>chem_nuc_parse_oxidation_charge("+2")</code> → 2</td>
+    <td>{@p_39@}</td>
+    <td>{@t_9_parse_charge_pos@}</td>
+  </tr>
+  <tr>
+    <td>40</td>
+    <td><code>chem_nuc_parse_oxidation_charge("-1")</code> → -1</td>
+    <td>{@p_40@}</td>
+    <td>{@t_9_parse_charge_neg@}</td>
+  </tr>
+  <tr>
+    <td>41</td>
+    <td><code>chem_nuc_charge_string(2)</code> → "2+"</td>
+    <td>{@p_41@}</td>
+    <td><code>{@t_9_charge_string_pos@}</code></td>
+  </tr>
+  <tr>
+    <td>42</td>
+    <td><code>chem_nuc_charge_string(-1)</code> → "1-"</td>
+    <td>{@p_42@}</td>
+    <td><code>{@t_9_charge_string_neg@}</code></td>
+  </tr>
+  <tr>
+    <td>43</td>
+    <td><code>chem_nuc_typical_charge("^{14}C")</code> — Typical oxidation state</td>
+    <td>{@p_43@}</td>
+    <td>{@t_9_typical_charge@}</td>
+  </tr>
+  <tr>
+    <td>44</td>
+    <td><code>chem_nuc_ionize("^{14}C", 2)</code> — Format as ion</td>
+    <td>{@p_44@}</td>
+    <td>{@t_9_ionize@}</td>
+  </tr>
+  <tr>
+    <td>45</td>
+    <td><code>chem_nuc_ionize_typical("^{14}C")</code> — Typical ionized form</td>
+    <td>{@p_45@}</td>
+    <td>{@t_9_ionize_typical@}</td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>Summary</h3>
+<table border="1" cellpadding="10" cellspacing="0" style="width:100%; font-weight:bold; font-size:1.2em;">
+  <tr style="background-color:#e8f4f8;">
+    <td>Total Tests</td>
+    <td>{@max_score@}</td>
+  </tr>
+  <tr style="background-color:#f0f0f0;">
+    <td>Tests Passed</td>
+    <td>{@total_score@}</td>
+  </tr>
+  <tr style="background-color:#fff8f0;">
+    <td>Overall Score</td>
+    <td>{@score_pct@}%</td>
+  </tr>
+</table>
+
+<p style="margin-top: 20px; font-size:0.9em; color:#666;">
+  <strong>Note:</strong> A PASS indicates the function executed and returned a non-false value (or expected value). 
+  Individual test results are shown in the tables above for detailed diagnostic information.
+</p>
