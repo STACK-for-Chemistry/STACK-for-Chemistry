@@ -317,15 +317,7 @@
 
 /* ---- Internal helpers ---- */
 
-chem_nuc_get_entry(id) := block([i, n, result],
-    n: length(%_NUCLIDE_DATA),
-    result: false,
-    for i: 1 while is(result = false) thru n do (
-        if sequal(%_NUCLIDE_DATA[i][1], id) then
-            result: %_NUCLIDE_DATA[i]
-    ),
-    result
-)$
+chem_nuc_get_entry(id) := assoc(id, %_NUCLIDE_DATA)$
 
 chem_nuc_get_data(id) := block([e],
     e: chem_nuc_get_entry(id),
@@ -344,7 +336,7 @@ chem_nuc_id_from_ZN(z, n) := block([sym],
 chem_nuc_by_Z(z) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[2][1] = z) then
+        if entry[2][1] = z then
             results: cons(entry[1], results)
     ),
     reverse(results)
@@ -353,7 +345,7 @@ chem_nuc_by_Z(z) := block([results],
 chem_nuc_by_N(n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[2][2] = n) then
+        if entry[2][2] = n then
             results: cons(entry[1], results)
     ),
     reverse(results)
@@ -362,7 +354,7 @@ chem_nuc_by_N(n) := block([results],
 chem_nuc_by_A(a) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[2][1] + entry[2][2] = a) then
+        if entry[2][1] + entry[2][2] = a then
             results: cons(entry[1], results)
     ),
     reverse(results)
@@ -371,7 +363,7 @@ chem_nuc_by_A(a) := block([results],
 chem_nuc_by_ZN(z, n) := block([results],
     results: [],
     for entry in %_NUCLIDE_DATA do (
-        if is(entry[2][1] = z) and is(entry[2][2] = n) then
+        if entry[2][1] = z and entry[2][2] = n then
             results: cons(entry[1], results)
     ),
     reverse(results)
@@ -481,7 +473,7 @@ chem_nuc_halflife_range(t_min, t_max) := block([results, hl_s, v, u],
         v: first(entry[2][4]),
         u: first(entry[2][5]),
         hl_s: chem_nuc_halflife_to_seconds(v, u),
-        if not is(hl_s = false) and is(hl_s >= t_min) and is(hl_s <= t_max) then
+        if hl_s # false and hl_s >= t_min and hl_s <= t_max then
             results: cons(entry[1], results)
     ),
     reverse(results)
@@ -494,14 +486,11 @@ chem_nuc_num_levels(id) := block([lvl],
     if is(lvl = false) then 0 else length(lvl)
 )$
 
-chem_nuc_exists(id) := not is(chem_nuc_get_entry(id) = false)$
+chem_nuc_exists(id) := assoc(id, %_NUCLIDE_DATA) # false$
 
-chem_nuc_all_ids() := block([results],
-    results: [],
-    for entry in %_NUCLIDE_DATA do
-        results: cons(entry[1], results),
-    reverse(results)
-)$
+%_NUCLIDE_ALL_IDS : map(first, %_NUCLIDE_DATA)$
+
+chem_nuc_all_ids() := %_NUCLIDE_ALL_IDS$
 
 chem_nuc_gs_dominant_mode(id) := block([modes, ratios, best_mode, best_ratio, i],
     modes:  chem_nuc_gs_decay_modes(id),
@@ -552,7 +541,7 @@ chem_nuc_decay_product(id, mode) := block([],
 
 /* ---- Ionization helpers ---- */
 
-chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, digit_chars],
+chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, value],
     if is(ox = false) or is(ox = null) then return(false),
     clean: ssubst("", " ", ox),
     chars: charlist(clean),
@@ -569,14 +558,14 @@ chem_nuc_parse_oxidation_charge(ox) := block([clean, chars, n, i, sign, digit_ch
         i: i + 1
     ),
 
-    digit_chars: [],
+    value: 0,
     while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
-        digit_chars: cons(chars[i], digit_chars),
+        value: value * 10 + (cint(chars[i]) - 48),
         i: i + 1
     ),
 
-    if is(digit_chars = []) then false
-    else sign * chem_string_to_number(apply(sconcat, reverse(digit_chars)))
+    if is(value = 0) then false
+    else sign * value
 )$
 
 chem_nuc_charge_string(charge) := block([],
