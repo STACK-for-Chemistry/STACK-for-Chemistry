@@ -130,64 +130,53 @@ chem_element_period_maingroup(period_num, maingroup_num) := chem_internal_elemen
 
 /* This function formats an electron configuration string for LaTeX display.
    Converts format like "[Kr] 5s2 4d10 5p6" to "[\mathrm{Kr}] 5\mathrm{s}^{2} 4\mathrm{d}^{10} 5\mathrm{p}^{6}"
-   - Element symbols in brackets are wrapped in \mathrm{}
-   - Orbital letters (s, p, d, f) are wrapped in \mathrm{}
-   - Numbers after orbital letters become superscripts with ^{}
-   - Spaces are added between orbital terms for better readability */
-chem_electron_config_formatter(config_str) := block([chars, result, i, n, in_bracket, is_orbital, need_space],
+   Optimized with cons+reverse to build parts list in O(n) time, then concat once. */
+chem_electron_config_formatter(config_str) := block([chars, parts, i, n, in_bracket, is_orbital, need_space],
     if sequal(config_str, "") then return(""),
     chars: charlist(config_str),
     n: length(chars),
-    result: "",
+    parts: [],
     i: 1,
     in_bracket: false,
     need_space: false,
     
     while i <= n do (
         if sequal(chars[i], "[") then (
-            result: sconcat(result, "[\\mathrm{"),
+            parts: cons("[\\mathrm{", parts),
             in_bracket: true,
             need_space: false,
             i: i + 1
+        ) else if sequal(chars[i], "]") then (
+            parts: cons("}]", parts),
+            in_bracket: false,
+            need_space: true,
+            i: i + 1
+        ) else if sequal(chars[i], " ") then (
+            i: i + 1
         ) else (
-            if sequal(chars[i], "]") then (
-                result: sconcat(result, "}]"),
-                in_bracket: false,
-                need_space: true,
-                i: i + 1
-            ) else (
-                if sequal(chars[i], " ") then (
-                    i: i + 1
-                ) else (
-                    is_orbital: (sequal(chars[i], "s") or sequal(chars[i], "p") or sequal(chars[i], "d") or sequal(chars[i], "f")) and not in_bracket,
-                    if is_orbital then (
-                        if need_space then (
-                            result: sconcat(result, " ")
-                        ),
-                        result: sconcat(result, "\\mathrm{", chars[i], "}"),
-                        need_space: false,
-                        i: i + 1,
-                        if i <= n then (
-                            if cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
-                                result: sconcat(result, "^{"),
-                                while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
-                                    result: sconcat(result, chars[i]),
-                                    i: i + 1
-                                ),
-                                result: sconcat(result, "}"),
-                                need_space: true
-                            )
-                        )
-                    ) else (
-                        result: sconcat(result, chars[i]),
+            is_orbital: (sequal(chars[i], "s") or sequal(chars[i], "p") or sequal(chars[i], "d") or sequal(chars[i], "f")) and not in_bracket,
+            if is_orbital then (
+                if need_space then parts: cons(" ", parts),
+                parts: cons("}", cons(chars[i], cons("\\mathrm{", parts))),
+                need_space: false,
+                i: i + 1,
+                if i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
+                    parts: cons("^{", parts),
+                    while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                        parts: cons(chars[i], parts),
                         i: i + 1
-                    )
+                    ),
+                    parts: cons("}", parts),
+                    need_space: true
                 )
+            ) else (
+                parts: cons(chars[i], parts),
+                i: i + 1
             )
         )
     ),
     
-    return(result)
+    return(apply(concat, reverse(parts)))
 )$
 
 /* This function returns the formatted electron configuration for an element.
