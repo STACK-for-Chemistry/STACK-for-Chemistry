@@ -1,0 +1,38 @@
+/* nuclidetable tests - V2 (minimal PSE-dependent subset) */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/pse.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/nuclidetable.mac");
+
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0$
+not_false_to_score(x) := if is(x = false) then 0 else 1$
+passfail(s) := if is(s = 1) then "PASS" else "FAIL"$
+
+id_c14:"^{14}C"$
+id_po210:"^{210}Po"$
+
+/* Minimal subset of functions that depend on both modules */
+t_id_from_ZN: chem_nuc_id_from_ZN(6,8)$
+t_alpha: chem_nuc_alpha_product(id_po210)$
+t_decay_A: chem_nuc_decay_product(id_po210,"A")$
+t_typical_charge: chem_nuc_typical_charge(id_c14)$
+t_ionize: chem_nuc_ionize(id_c14,2)$
+
+s_1: bool_to_score(sequal(t_id_from_ZN, id_c14));
+s_2: not_false_to_score(t_alpha);
+s_3: not_false_to_score(t_decay_A);
+s_4: not_false_to_score(t_typical_charge);
+s_5: not_false_to_score(t_ionize);
+
+max_score: 5;
+total_score: s_1+s_2+s_3+s_4+s_5;
+score_pct: float(100*total_score/max_score);
+
+p_1: passfail(s_1)$
+p_2: passfail(s_2)$
+p_3: passfail(s_3)$
+p_4: passfail(s_4)$
+p_5: passfail(s_5)$
+
+ta1:10;

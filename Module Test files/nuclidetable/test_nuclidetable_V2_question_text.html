@@ -1,0 +1,65 @@
+<style>
+.nuc-wrap {
+	max-width: 1200px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.nuc-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	margin: 12px 0 20px;
+	background: #ffffff;
+}
+
+.nuc-table th,
+.nuc-table td {
+	border: 1px solid #cfd8dc;
+	padding: 8px 10px;
+	text-align: left;
+	vertical-align: top;
+}
+
+.nuc-table th {
+	background: #eef3f6;
+	font-weight: 600;
+}
+
+.nuc-table tr:nth-child(even) td {
+	background: #fafcfd;
+}
+
+.nuc-output {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	font-family: Consolas, "Liberation Mono", monospace;
+	font-size: 13px;
+}
+</style>
+
+<div class="nuc-wrap">
+<h2>Nuclidetable Module - V2 Minimal PSE Dependency Test</h2>
+<p>This test checks a small subset of functions that require both <code>nuclidetable.mac</code> and <code>pse.mac</code>.</p>
+
+<table class="nuc-table">
+	<tr>
+		<th>Test ID</th>
+		<th>Description</th>
+		<th>Result</th>
+		<th>Output</th>
+	</tr>
+	<tr><td>1</td><td><code>chem_nuc_id_from_ZN(6,8)</code></td><td>{@p_1@}</td><td class="nuc-output"><code>{@t_id_from_ZN@}</code></td></tr>
+	<tr><td>2</td><td><code>chem_nuc_alpha_product("^{210}Po")</code></td><td>{@p_2@}</td><td class="nuc-output"><code>{@t_alpha@}</code></td></tr>
+	<tr><td>3</td><td><code>chem_nuc_decay_product("^{210}Po","A")</code></td><td>{@p_3@}</td><td class="nuc-output"><code>{@t_decay_A@}</code></td></tr>
+	<tr><td>4</td><td><code>chem_nuc_typical_charge("^{14}C")</code></td><td>{@p_4@}</td><td class="nuc-output">{@t_typical_charge@}</td></tr>
+	<tr><td>5</td><td><code>chem_nuc_ionize("^{14}C",2)</code></td><td>{@p_5@}</td><td class="nuc-output"><code>{@t_ionize@}</code></td></tr>
+</table>
+
+<table class="nuc-table" style="max-width: 480px;">
+	<tr><td><strong>Total Tests</strong></td><td>{@max_score@}</td></tr>
+	<tr><td><strong>Tests Passed</strong></td><td>{@total_score@}</td></tr>
+	<tr><td><strong>Overall Score</strong></td><td>{@score_pct@}%</td></tr>
+</table>
+</div>

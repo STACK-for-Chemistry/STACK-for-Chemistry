@@ -574,11 +574,17 @@ chem_nuc_charge_string(charge) := block([],
     else "0"
 )$
 
-chem_nuc_typical_charge(id) := block([d, z, sym, ox],
+chem_nuc_symbol(id) := block([parsed],
+    if is(id = false) or is(id = null) then return(false),
+    parsed: chem_parse_formula(id),
+    if is(parsed = false) or length(parsed) = 0 then false
+    else first(first(parsed))
+)$
+
+chem_nuc_typical_charge(id) := block([d, sym, ox],
     d: chem_nuc_get_data(id),
     if is(d = false) then return(false),
-    z: d[1],
-    sym: chem_element(z),
+    sym: chem_nuc_symbol(id),
     if is(sym = false) then return(false),
     ox: chem_data(sym, "OxidationStates"),
     chem_nuc_parse_oxidation_charge(ox)
@@ -589,7 +595,7 @@ chem_nuc_ionize(id, charge) := block([d, z, n, sym],
     if is(d = false) then return(false),
     z: d[1],
     n: d[2],
-    sym: chem_element(z),
+    sym: chem_nuc_symbol(id),
     if is(sym = false) then return(false),
     sconcat("^{", z + n, "}", sym, "^{", chem_nuc_charge_string(charge), "}")
 )$
