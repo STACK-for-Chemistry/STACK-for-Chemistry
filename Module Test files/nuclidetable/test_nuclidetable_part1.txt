@@ -1,0 +1,110 @@
+/* nuclidetable tests - Part 1 (timeout-safe) */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/nuclidetable.mac");
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b = true) then 1 else 0$
+not_false_to_score(x) := if is(x = false) then 0 else 1$
+passfail(s) := if is(s = 1) then "PASS" else "FAIL"$
+
+id_c14:"^{14}C"$
+
+/* Standalone nuclidetable functions only */
+t_1_entry: chem_nuc_get_entry(id_c14)$
+t_1_data: chem_nuc_get_data(id_c14)$
+t_2_by_Z: chem_nuc_by_Z(6)$
+t_2_by_N: chem_nuc_by_N(2)$
+t_2_by_A: chem_nuc_by_A(14)$
+t_2_by_ZN: chem_nuc_by_ZN(6,8)$
+
+t_3_Z: chem_nuc_Z(id_c14)$
+t_3_N: chem_nuc_N(id_c14)$
+t_3_A: chem_nuc_A(id_c14)$
+t_3_levels: chem_nuc_levels(id_c14)$
+t_3_halflives: chem_nuc_halflives(id_c14)$
+t_3_units: chem_nuc_halflife_units(id_c14)$
+t_3_decay_modes: chem_nuc_decay_modes(id_c14)$
+t_3_branching: chem_nuc_branching(id_c14)$
+
+t_4_gs_hl: chem_nuc_gs_halflife(id_c14)$
+t_4_gs_unit: chem_nuc_gs_halflife_unit(id_c14)$
+t_4_gs_modes: chem_nuc_gs_decay_modes(id_c14)$
+t_4_gs_branch: chem_nuc_gs_branching(id_c14)$
+t_4_gs_hl_s: chem_nuc_gs_halflife_s(id_c14)$
+t_4_gs_dom: chem_nuc_gs_dominant_mode(id_c14)$
+
+t_5_conv_fs: chem_nuc_halflife_to_seconds(1,"fs")$
+t_5_conv_ms: chem_nuc_halflife_to_seconds(1,"ms")$
+t_5_conv_s: chem_nuc_halflife_to_seconds(1,"s")$
+t_5_conv_y: chem_nuc_halflife_to_seconds(1,"y")$
+
+t_6_mode: chem_nuc_with_decay_mode("B-4N")$
+t_6_hl_range: chem_nuc_halflife_range(0.001,2)$
+t_6_radioactive: chem_nuc_radioactive_isotopes(6)$
+
+t_7_num_levels: chem_nuc_num_levels(id_c14)$
+t_7_exists_true: chem_nuc_exists(id_c14)$
+t_7_exists_false: chem_nuc_exists("^{999}Zz")$
+t_7_all_ids: chem_nuc_all_ids()$
+
+t_9_parse_charge_pos: chem_nuc_parse_oxidation_charge("+2")$
+t_9_parse_charge_neg: chem_nuc_parse_oxidation_charge("-1")$
+t_9_charge_string_pos: chem_nuc_charge_string(2)$
+t_9_charge_string_neg: chem_nuc_charge_string(-1)$
+
+s_1: not_false_to_score(t_1_entry);
+s_2: not_false_to_score(t_1_data);
+s_3: bool_to_score(length(t_2_by_Z) > 0);
+s_4: bool_to_score(length(t_2_by_N) > 0);
+s_5: bool_to_score(length(t_2_by_A) > 0);
+s_6: bool_to_score(length(t_2_by_ZN) > 0);
+
+s_8: bool_to_score(t_3_Z = 6);
+s_9: bool_to_score(t_3_N = 8);
+s_10: bool_to_score(t_3_A = 14);
+s_11: not_false_to_score(t_3_levels);
+s_12: not_false_to_score(t_3_halflives);
+s_13: not_false_to_score(t_3_units);
+s_14: not_false_to_score(t_3_decay_modes);
+s_15: not_false_to_score(t_3_branching);
+
+s_16: not_false_to_score(t_4_gs_hl);
+s_17: not_false_to_score(t_4_gs_unit);
+s_18: not_false_to_score(t_4_gs_modes);
+s_19: not_false_to_score(t_4_gs_branch);
+s_20: not_false_to_score(t_4_gs_hl_s);
+s_21: not_false_to_score(t_4_gs_dom);
+
+s_22: bool_to_score(t_5_conv_fs > 0);
+s_23: bool_to_score(t_5_conv_ms = 0.001);
+s_24: bool_to_score(t_5_conv_s = 1);
+s_25: bool_to_score(t_5_conv_y > 1e7);
+
+s_26: bool_to_score(length(t_6_mode) >= 0);
+s_27: bool_to_score(length(t_6_hl_range) >= 0);
+s_28: bool_to_score(length(t_6_radioactive) > 0);
+
+s_29: bool_to_score(t_7_num_levels >= 0);
+s_30: bool_to_score(t_7_exists_true = true);
+s_31: bool_to_score(t_7_exists_false = false);
+s_32: bool_to_score(length(t_7_all_ids) > 0);
+
+s_39: bool_to_score(t_9_parse_charge_pos = 2);
+s_40: bool_to_score(t_9_parse_charge_neg = -1);
+s_41: bool_to_score(sequal(t_9_charge_string_pos, "2+"));
+s_42: bool_to_score(sequal(t_9_charge_string_neg, "1-"));
+
+max_score: 35;
+total_score: s_1+s_2+s_3+s_4+s_5+s_6+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18+s_19+s_20+s_21+s_22+s_23+s_24+s_25+s_26+s_27+s_28+s_29+s_30+s_31+s_32+s_39+s_40+s_41+s_42;
+score_pct: float(100*total_score/max_score);
+
+p_1: passfail(s_1)$  p_2: passfail(s_2)$  p_3: passfail(s_3)$  p_4: passfail(s_4)$  p_5: passfail(s_5)$
+p_6: passfail(s_6)$  p_8: passfail(s_8)$  p_9: passfail(s_9)$  p_10: passfail(s_10)$
+p_11: passfail(s_11)$ p_12: passfail(s_12)$ p_13: passfail(s_13)$ p_14: passfail(s_14)$ p_15: passfail(s_15)$
+p_16: passfail(s_16)$ p_17: passfail(s_17)$ p_18: passfail(s_18)$ p_19: passfail(s_19)$ p_20: passfail(s_20)$
+p_21: passfail(s_21)$ p_22: passfail(s_22)$ p_23: passfail(s_23)$ p_24: passfail(s_24)$ p_25: passfail(s_25)$
+p_26: passfail(s_26)$ p_27: passfail(s_27)$ p_28: passfail(s_28)$ p_29: passfail(s_29)$ p_30: passfail(s_30)$
+p_31: passfail(s_31)$ p_32: passfail(s_32)$ p_39: passfail(s_39)$ p_40: passfail(s_40)$ p_41: passfail(s_41)$
+p_42: passfail(s_42)$
+
+ta1:10;
