@@ -66,8 +66,23 @@
     "2H^+", "H2", "H^+", 2
 ]$
 
+/* Canonicalize mhchem-style strings so lookups are tolerant to formatting variants.
+   Removes spaces, braces and '^' to make keys comparable (e.g. Fe3+ == Fe^{3+}). */
+_electrochem_key(s) := block([chars, i, c, key],
+    chars: charlist(sdowncase(sconcat(s))),
+    key: "",
+    for i: 1 thru length(chars) do (
+        c: chars[i],
+        if sequal(c, " ") or sequal(c, "{") or sequal(c, "}") or sequal(c, "^") then
+            false
+        else
+            key: sconcat(key, c)
+    ),
+    key
+)$
+
 /* Robust string equality helper for mhchem-style strings. */
-_electrochem_str_eq(a, b) := sequal(sconcat(a), sconcat(b))$
+_electrochem_str_eq(a, b) := sequal(_electrochem_key(a), _electrochem_key(b))$
 
 /* Internal lookups */
 _electrochem_find_oxidant(oxidant) := block([i, n],

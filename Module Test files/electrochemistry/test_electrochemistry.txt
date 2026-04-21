@@ -1,5 +1,5 @@
 /* electrochemistry tests */
-stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/electrochemistry.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/electrochemistry.mac?v=20260421");
 stackfltfmt:"~f";
 
 bool_to_score(b) := if is(b) then 1 else 0;
