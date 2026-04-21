@@ -1,0 +1,70 @@
+/* electrochemistry tests */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/electrochemistry.mac");
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+not_null_to_score(x) := if is(x = null) then 0 else 1;
+not_empty_to_score(x) := if sequal(sconcat(x), "") then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+ox_fe:"Fe^{3+}";
+red_fe:"Fe^{2+}";
+ox_zn:"Zn^{2+}";
+red_zn:"Zn";
+
+/* Basic pair extraction */
+t_1: chem_electrochem_E0(ox_fe, red_fe);
+t_2: chem_electrochem_n(ox_fe, red_fe);
+t_3: chem_electrochem_E0(ox_zn, red_zn);
+t_4: chem_electrochem_reductant(ox_fe);
+t_5: chem_electrochem_oxidant(red_fe);
+t_6: chem_electrochem_pair_data(ox_fe, red_fe);
+t_7: chem_electrochem_half_equation(ox_fe, red_fe);
+t_17: chem_electrochem_half_equation_excl_H_H2O("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
+t_18: chem_electrochem_core_pair_data("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
+
+/* Navigation */
+t_8: chem_electrochem_oxidant_array();
+t_9: chem_electrochem_reductant_array();
+t_10: chem_electrochem_pairs_array();
+t_11: chem_electrochem_strong_oxidant_array(1.0);
+t_12: chem_electrochem_strong_reductant_array(-2.0);
+
+/* Cell calculations: Zn|Zn2+ || Fe3+|Fe2+ */
+t_13: chem_electrochem_cell_potential(ox_fe, red_fe, ox_zn, red_zn);
+t_14: chem_electrochem_spontaneous(ox_fe, red_fe, ox_zn, red_zn);
+
+/* Edge and alias */
+t_15: chem_electrochem_E0("X", "Y");
+t_16: chem_electrochem_array();
+
+s_1: bool_to_score(t_1 = 0.77);
+s_2: bool_to_score(t_2 = 1);
+s_3: bool_to_score(t_3 = -0.76);
+s_4: bool_to_score(sequal(t_4, red_fe));
+s_5: bool_to_score(sequal(t_5, ox_fe));
+s_6: bool_to_score(length(t_6) = 4);
+s_7: not_empty_to_score(t_7);
+s_8: bool_to_score(length(t_8) > 0);
+s_9: bool_to_score(length(t_9) > 0);
+s_10: bool_to_score(length(t_10) > 0);
+s_11: bool_to_score(member("F2", t_11));
+s_12: bool_to_score(member("Na", t_12));
+s_13: bool_to_score(float(round(100*t_13))/100 = 1.53);
+s_14: bool_to_score(t_14 = true);
+s_15: bool_to_score(t_15 = null);
+s_16: bool_to_score(length(t_16) = length(t_8));
+s_17: bool_to_score(sequal(t_17, "\\ce{MnO4^- + 5 e^- -> Mn^{2+}}"));
+s_18: bool_to_score(length(t_18) = 2 and sequal(first(t_18), "MnO4^-") and sequal(second(t_18), "Mn^{2+}"));
+
+max_score:18;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18;
+score_pct:round(float(100*total_score/max_score));
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4);
+p_5:passfail(s_5); p_6:passfail(s_6); p_7:passfail(s_7); p_8:passfail(s_8);
+p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
+p_13:passfail(s_13); p_14:passfail(s_14); p_15:passfail(s_15); p_16:passfail(s_16);
+p_17:passfail(s_17); p_18:passfail(s_18);
+
+ta1:10;

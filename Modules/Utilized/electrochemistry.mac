@@ -1,0 +1,220 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2026 Alexander Pitzer
+
+    Electrochemistry helper module based on standard reduction potentials.
+    Data layout is flat for fast index access:
+    [oxidant, reductant, n_e, E0, oxidant, reductant, n_e, E0, ...]
+*/
+
+%_ELECTROCHEM_DATA: [
+    "F2", "2F^-", 2, 2.87,
+    "Ce^{4+}", "Ce^{3+}", 1, 1.61,
+    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", 5, 1.51,
+    "Cl2", "2Cl^-", 2, 1.36,
+    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", 6, 1.33,
+    "O2 + 4H^+", "2H2O", 4, 1.23,
+    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", 2, 1.23,
+    "Br2", "2Br^-", 2, 1.06,
+    "NO3^- + 4H^+", "NO + H2O", 3, 0.96,
+    "Ag^+", "Ag", 1, 0.80,
+    "Fe^{3+}", "Fe^{2+}", 1, 0.77,
+    "O2 + 2H^+", "H2O2", 2, 0.68,
+    "MnO4^- + 2H2O", "MnO2 + 4OH^-", 3, 0.59,
+    "I2", "2I^-", 2, 0.54,
+    "O2 + 2H2O", "4OH^-", 4, 0.40,
+    "[Fe(CN)6]^{3-}", "[Fe(CN)6]^{4-}", 1, 0.370,
+    "Cu^{2+}", "Cu", 2, 0.34,
+    "AgCl", "Ag + Cl^-", 1, 0.222,
+    "2H^+", "H2", 2, 0.00,
+    "Pb^{2+}", "Pb", 2, -0.13,
+    "Sn^{2+}", "Sn", 2, -0.14,
+    "Ni^{2+}", "Ni", 2, -0.28,
+    "Cd^{2+}", "Cd", 2, -0.40,
+    "Fe^{2+}", "Fe", 2, -0.44,
+    "Zn^{2+}", "Zn", 2, -0.76,
+    "2H2O", "H2 + 2OH^-", 2, -0.83,
+    "Al^{3+}", "Al", 3, -1.66,
+    "Mg^{2+}", "Mg", 2, -2.37,
+    "Na^+", "Na", 1, -2.71,
+    "Ca^{2+}", "Ca", 2, -2.87,
+    "Ba^{2+}", "Ba", 2, -2.90,
+    "K^+", "K", 1, -2.93,
+    "Li^+", "Li", 1, -3.05,
+    "Co^{2+}", "Co", 2, -0.28,
+    "Mn^{2+}", "Mn", 2, -1.18,
+    "Cu^+", "Cu", 1, 0.52
+]$
+
+/* Stripped (teaching) mapping: remove H^+ and H2O from selected half-reactions. */
+%_ELECTROCHEM_STRIPPED_DATA: [
+    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", "MnO4^-", "Mn^{2+}",
+    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", "Cr2O7^{2-}", "2Cr^{3+}",
+    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", "MnO2", "Mn^{2+}",
+    "NO3^- + 4H^+", "NO + H2O", "NO3^-", "NO"
+]$
+
+/* Internal lookups */
+_electrochem_find_oxidant(oxidant) := block([i, n],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        if is(%_ELECTROCHEM_DATA[i] = oxidant) then return(i),
+        i: i + 4
+    ),
+    0
+)$
+
+_electrochem_find_reductant(reductant) := block([i, n],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 2,
+    while i <= n do (
+        if is(%_ELECTROCHEM_DATA[i] = reductant) then return(i - 1),
+        i: i + 4
+    ),
+    0
+)$
+
+_electrochem_find_pair(oxidant, reductant) := block([i, n],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        if is(%_ELECTROCHEM_DATA[i] = oxidant) and is(%_ELECTROCHEM_DATA[i + 1] = reductant) then return(i),
+        i: i + 4
+    ),
+    0
+)$
+
+_electrochem_find_stripped_pair(oxidant, reductant) := block([i, n],
+    n: length(%_ELECTROCHEM_STRIPPED_DATA),
+    i: 1,
+    while i <= n do (
+        if is(%_ELECTROCHEM_STRIPPED_DATA[i] = oxidant) and is(%_ELECTROCHEM_STRIPPED_DATA[i + 1] = reductant) then return(i),
+        i: i + 4
+    ),
+    0
+)$
+
+/* Primary getters */
+chem_electrochem_E0(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then null else %_ELECTROCHEM_DATA[idx + 3]
+)$
+
+chem_electrochem_n(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then null else %_ELECTROCHEM_DATA[idx + 2]
+)$
+
+chem_electrochem_reductant(oxidant) := block([idx],
+    idx: _electrochem_find_oxidant(oxidant),
+    if is(idx = 0) then "" else %_ELECTROCHEM_DATA[idx + 1]
+)$
+
+chem_electrochem_oxidant(reductant) := block([idx],
+    idx: _electrochem_find_reductant(reductant),
+    if is(idx = 0) then "" else %_ELECTROCHEM_DATA[idx]
+)$
+
+chem_electrochem_pair_data(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then []
+    else [%_ELECTROCHEM_DATA[idx], %_ELECTROCHEM_DATA[idx + 1], %_ELECTROCHEM_DATA[idx + 2], %_ELECTROCHEM_DATA[idx + 3]]
+)$
+
+chem_electrochem_core_pair_data(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_stripped_pair(oxidant, reductant),
+    if is(idx = 0) then [oxidant, reductant]
+    else [%_ELECTROCHEM_STRIPPED_DATA[idx + 2], %_ELECTROCHEM_STRIPPED_DATA[idx + 3]]
+)$
+
+chem_electrochem_half_equation(oxidant, reductant) := block([idx, n],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then return(""),
+    n: %_ELECTROCHEM_DATA[idx + 2],
+    sconcat("\\ce{", oxidant, " + ", string(n), " e^- -> ", reductant, "}")
+)$
+
+/* Returns a teaching version with H^+ and H2O removed where mapping is available. */
+chem_electrochem_half_equation_excl_H_H2O(oxidant, reductant) := block([idx, n, ox_core, red_core],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then return(""),
+    n: %_ELECTROCHEM_DATA[idx + 2],
+    [ox_core, red_core]: chem_electrochem_core_pair_data(oxidant, reductant),
+    sconcat("\\ce{", ox_core, " + ", string(n), " e^- -> ", red_core, "}")
+)$
+
+/* Navigation arrays */
+chem_electrochem_oxidant_array() := block([result, i, n],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        i: i + 4
+    ),
+    result
+)$
+
+chem_electrochem_reductant_array() := block([result, i, n],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 2,
+    while i <= n do (
+        result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        i: i + 4
+    ),
+    result
+)$
+
+chem_electrochem_pairs_array() := block([result, i, n],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        result: append(result, [[%_ELECTROCHEM_DATA[i], %_ELECTROCHEM_DATA[i + 1]]]),
+        i: i + 4
+    ),
+    result
+)$
+
+chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        E0: %_ELECTROCHEM_DATA[i + 3],
+        if numberp(E0) and is(E0 >= E_min) then result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        i: i + 4
+    ),
+    result
+)$
+
+chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        E0: %_ELECTROCHEM_DATA[i + 3],
+        if numberp(E0) and is(E0 <= E_max) then result: append(result, [%_ELECTROCHEM_DATA[i + 1]]),
+        i: i + 4
+    ),
+    result
+)$
+
+/* Cell voltage using standard reduction potentials:
+   Ecell = E0(cathode reduction) - E0(anode reduction) */
+chem_electrochem_cell_potential(cath_oxidant, cath_reductant, an_oxidant, an_reductant) := block([E_cath, E_an],
+    E_cath: chem_electrochem_E0(cath_oxidant, cath_reductant),
+    E_an: chem_electrochem_E0(an_oxidant, an_reductant),
+    if is(E_cath = null) or is(E_an = null) then null
+    else float(E_cath - E_an)
+)$
+
+chem_electrochem_spontaneous(cath_oxidant, cath_reductant, an_oxidant, an_reductant) := block([Ecell],
+    Ecell: chem_electrochem_cell_potential(cath_oxidant, cath_reductant, an_oxidant, an_reductant),
+    if is(Ecell = null) then false else is(Ecell > 0)
+)$
+
+/* Legacy alias matching existing module style */
+chem_electrochem_array() := chem_electrochem_oxidant_array()$
