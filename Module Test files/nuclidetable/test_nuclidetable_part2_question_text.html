@@ -1,3 +1,72 @@
+<style>
+.nuc-wrap {
+	max-width: 1400px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.nuc-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	margin: 12px 0 24px;
+	background: #ffffff;
+}
+
+.nuc-table th,
+.nuc-table td {
+	border: 1px solid #cfd8dc;
+	padding: 8px 10px;
+	vertical-align: top;
+	text-align: left;
+}
+
+.nuc-table th {
+	background: #eef3f6;
+	font-weight: 600;
+}
+
+.nuc-table tr:nth-child(even) td {
+	background: #fafcfd;
+}
+
+.nuc-id {
+	width: 70px;
+}
+
+.nuc-desc {
+	width: 30%;
+}
+
+.nuc-result {
+	width: 90px;
+	font-weight: 600;
+}
+
+.nuc-output {
+	width: 50%;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	font-family: Consolas, "Liberation Mono", monospace;
+	font-size: 13px;
+}
+
+.nuc-summary {
+	width: 100%;
+	max-width: 520px;
+	border-collapse: collapse;
+	margin-top: 8px;
+	background: #ffffff;
+}
+
+.nuc-summary td {
+	border: 1px solid #cfd8dc;
+	padding: 10px 12px;
+}
+</style>
+
+<div class="nuc-wrap">
 <h2>Nuclidetable Module - Part 2</h2>
 
 <p>This part tests the nuclidetable functions that require both nuclidetable.mac and pse.mac.</p>
@@ -5,30 +74,32 @@
 <hr>
 
 <h3>PSE-Dependent Functions</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+<table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
-		<th>Test ID</th>
-		<th>Description</th>
-		<th>Result</th>
-		<th>Output</th>
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>7</td><td><code>chem_nuc_id_from_ZN(6, 8)</code></td><td>{@p_7@}</td><td><code>{@t_2_id_from_ZN@}</code></td></tr>
-	<tr><td>33</td><td><code>chem_nuc_alpha_product("^{210}Po")</code></td><td>{@p_33@}</td><td><code>{@t_8_alpha@}</code></td></tr>
-	<tr><td>34</td><td><code>chem_nuc_beta_minus_product("^{14}C")</code></td><td>{@p_34@}</td><td><code>{@t_8_beta_minus@}</code></td></tr>
-	<tr><td>35</td><td><code>chem_nuc_beta_plus_product("^{11}C")</code></td><td>{@p_35@}</td><td><code>{@t_8_beta_plus@}</code></td></tr>
-	<tr><td>36</td><td><code>chem_nuc_decay_product("^{210}Po", "A")</code></td><td>{@p_36@}</td><td><code>{@t_8_decay_prod_A@}</code></td></tr>
-	<tr><td>37</td><td><code>chem_nuc_decay_product("^{14}C", "B-")</code></td><td>{@p_37@}</td><td><code>{@t_8_decay_prod_BM@}</code></td></tr>
-	<tr><td>38</td><td><code>chem_nuc_decay_product("^{11}C", "B+")</code></td><td>{@p_38@}</td><td><code>{@t_8_decay_prod_BP@}</code></td></tr>
-	<tr><td>43</td><td><code>chem_nuc_typical_charge("^{14}C")</code></td><td>{@p_43@}</td><td>{@t_9_typical_charge@}</td></tr>
-	<tr><td>44</td><td><code>chem_nuc_ionize("^{14}C", 2)</code></td><td>{@p_44@}</td><td><code>{@t_9_ionize@}</code></td></tr>
-	<tr><td>45</td><td><code>chem_nuc_ionize_typical("^{14}C")</code></td><td>{@p_45@}</td><td><code>{@t_9_ionize_typical@}</code></td></tr>
+	<tr><td>7</td><td><code>chem_nuc_id_from_ZN(6, 8)</code></td><td>{@p_7@}</td><td class="nuc-output"><code>{@t_2_id_from_ZN@}</code></td></tr>
+	<tr><td>33</td><td><code>chem_nuc_alpha_product("^{210}Po")</code></td><td>{@p_33@}</td><td class="nuc-output"><code>{@t_8_alpha@}</code></td></tr>
+	<tr><td>34</td><td><code>chem_nuc_beta_minus_product("^{14}C")</code></td><td>{@p_34@}</td><td class="nuc-output"><code>{@t_8_beta_minus@}</code></td></tr>
+	<tr><td>35</td><td><code>chem_nuc_beta_plus_product("^{11}C")</code></td><td>{@p_35@}</td><td class="nuc-output"><code>{@t_8_beta_plus@}</code></td></tr>
+	<tr><td>36</td><td><code>chem_nuc_decay_product("^{210}Po", "A")</code></td><td>{@p_36@}</td><td class="nuc-output"><code>{@t_8_decay_prod_A@}</code></td></tr>
+	<tr><td>37</td><td><code>chem_nuc_decay_product("^{14}C", "B-")</code></td><td>{@p_37@}</td><td class="nuc-output"><code>{@t_8_decay_prod_BM@}</code></td></tr>
+	<tr><td>38</td><td><code>chem_nuc_decay_product("^{11}C", "B+")</code></td><td>{@p_38@}</td><td class="nuc-output"><code>{@t_8_decay_prod_BP@}</code></td></tr>
+	<tr><td>43</td><td><code>chem_nuc_typical_charge("^{14}C")</code></td><td>{@p_43@}</td><td class="nuc-output">{@t_9_typical_charge@}</td></tr>
+	<tr><td>44</td><td><code>chem_nuc_ionize("^{14}C", 2)</code></td><td>{@p_44@}</td><td class="nuc-output"><code>{@t_9_ionize@}</code></td></tr>
+	<tr><td>45</td><td><code>chem_nuc_ionize_typical("^{14}C")</code></td><td>{@p_45@}</td><td class="nuc-output"><code>{@t_9_ionize_typical@}</code></td></tr>
 </table>
 
 <hr>
 
 <h3>Summary</h3>
-<table border="1" cellpadding="10" cellspacing="0" style="width:100%; font-weight:bold;">
+<table class="nuc-summary">
 	<tr><td>Total Tests</td><td>{@max_score@}</td></tr>
 	<tr><td>Tests Passed</td><td>{@total_score@}</td></tr>
 	<tr><td>Overall Score</td><td>{@score_pct@}%</td></tr>
 </table>
+
+</div>

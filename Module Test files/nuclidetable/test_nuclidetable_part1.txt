@@ -3,7 +3,7 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 stack_unit_si_declare(true);
 stackfltfmt:"~f";
 
-bool_to_score(b) := if is(b = true) then 1 else 0$
+bool_to_score(b) := if is(b) then 1 else 0$
 not_false_to_score(x) := if is(x = false) then 0 else 1$
 passfail(s) := if is(s = 1) then "PASS" else "FAIL"$
 
@@ -85,8 +85,8 @@ s_27: bool_to_score(length(t_6_hl_range) >= 0);
 s_28: bool_to_score(length(t_6_radioactive) > 0);
 
 s_29: bool_to_score(t_7_num_levels >= 0);
-s_30: bool_to_score(t_7_exists_true = true);
-s_31: bool_to_score(t_7_exists_false = false);
+s_30: not_false_to_score(t_7_exists_true);
+s_31: bool_to_score(not t_7_exists_false);
 s_32: bool_to_score(length(t_7_all_ids) > 0);
 
 s_39: bool_to_score(t_9_parse_charge_pos = 2);

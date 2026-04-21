@@ -1,3 +1,72 @@
+<style>
+.nuc-wrap {
+	max-width: 1400px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.nuc-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	margin: 12px 0 24px;
+	background: #ffffff;
+}
+
+.nuc-table th,
+.nuc-table td {
+	border: 1px solid #cfd8dc;
+	padding: 8px 10px;
+	vertical-align: top;
+	text-align: left;
+}
+
+.nuc-table th {
+	background: #eef3f6;
+	font-weight: 600;
+}
+
+.nuc-table tr:nth-child(even) td {
+	background: #fafcfd;
+}
+
+.nuc-id {
+	width: 70px;
+}
+
+.nuc-desc {
+	width: 30%;
+}
+
+.nuc-result {
+	width: 90px;
+	font-weight: 600;
+}
+
+.nuc-output {
+	width: 50%;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	font-family: Consolas, "Liberation Mono", monospace;
+	font-size: 13px;
+}
+
+.nuc-summary {
+	width: 100%;
+	max-width: 520px;
+	border-collapse: collapse;
+	margin-top: 8px;
+	background: #ffffff;
+}
+
+.nuc-summary td {
+	border: 1px solid #cfd8dc;
+	padding: 10px 12px;
+}
+</style>
+
+<div class="nuc-wrap">
 <h2>Nuclidetable Module - Part 1</h2>
 
 <p>This part tests the nuclidetable functions that work without loading pse.mac.</p>
@@ -5,91 +74,93 @@
 <hr>
 
 <h3>Core Retrieval and Basic Lookups</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+<table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
-		<th>Test ID</th>
-		<th>Description</th>
-		<th>Result</th>
-		<th>Output</th>
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>1</td><td><code>chem_nuc_get_entry("^{14}C")</code></td><td>{@p_1@}</td><td><code>{@t_1_entry@}</code></td></tr>
-	<tr><td>2</td><td><code>chem_nuc_get_data("^{14}C")</code></td><td>{@p_2@}</td><td><code>{@t_1_data@}</code></td></tr>
-	<tr><td>3</td><td><code>chem_nuc_by_Z(6)</code></td><td>{@p_3@}</td><td>{@t_2_by_Z@}</td></tr>
-	<tr><td>4</td><td><code>chem_nuc_by_N(2)</code></td><td>{@p_4@}</td><td>{@t_2_by_N@}</td></tr>
-	<tr><td>5</td><td><code>chem_nuc_by_A(14)</code></td><td>{@p_5@}</td><td>{@t_2_by_A@}</td></tr>
-	<tr><td>6</td><td><code>chem_nuc_by_ZN(6, 8)</code></td><td>{@p_6@}</td><td>{@t_2_by_ZN@}</td></tr>
+	<tr><td>1</td><td><code>chem_nuc_get_entry("^{14}C")</code></td><td>{@p_1@}</td><td class="nuc-output"><code>{@t_1_entry@}</code></td></tr>
+	<tr><td>2</td><td><code>chem_nuc_get_data("^{14}C")</code></td><td>{@p_2@}</td><td class="nuc-output"><code>{@t_1_data@}</code></td></tr>
+	<tr><td>3</td><td><code>chem_nuc_by_Z(6)</code></td><td>{@p_3@}</td><td class="nuc-output">{@t_2_by_Z@}</td></tr>
+	<tr><td>4</td><td><code>chem_nuc_by_N(2)</code></td><td>{@p_4@}</td><td class="nuc-output">{@t_2_by_N@}</td></tr>
+	<tr><td>5</td><td><code>chem_nuc_by_A(14)</code></td><td>{@p_5@}</td><td class="nuc-output">{@t_2_by_A@}</td></tr>
+	<tr><td>6</td><td><code>chem_nuc_by_ZN(6, 8)</code></td><td>{@p_6@}</td><td class="nuc-output">{@t_2_by_ZN@}</td></tr>
 </table>
 
 <hr>
 
 <h3>Field Extraction</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+<table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
-		<th>Test ID</th>
-		<th>Description</th>
-		<th>Result</th>
-		<th>Output</th>
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>8</td><td><code>chem_nuc_Z("^{14}C") = 6</code></td><td>{@p_8@}</td><td>{@t_3_Z@}</td></tr>
-	<tr><td>9</td><td><code>chem_nuc_N("^{14}C") = 8</code></td><td>{@p_9@}</td><td>{@t_3_N@}</td></tr>
-	<tr><td>10</td><td><code>chem_nuc_A("^{14}C") = 14</code></td><td>{@p_10@}</td><td>{@t_3_A@}</td></tr>
-	<tr><td>11</td><td><code>chem_nuc_levels("^{14}C")</code></td><td>{@p_11@}</td><td>{@t_3_levels@}</td></tr>
-	<tr><td>12</td><td><code>chem_nuc_halflives("^{14}C")</code></td><td>{@p_12@}</td><td>{@t_3_halflives@}</td></tr>
-	<tr><td>13</td><td><code>chem_nuc_halflife_units("^{14}C")</code></td><td>{@p_13@}</td><td>{@t_3_units@}</td></tr>
-	<tr><td>14</td><td><code>chem_nuc_decay_modes("^{14}C")</code></td><td>{@p_14@}</td><td>{@t_3_decay_modes@}</td></tr>
-	<tr><td>15</td><td><code>chem_nuc_branching("^{14}C")</code></td><td>{@p_15@}</td><td>{@t_3_branching@}</td></tr>
+	<tr><td>8</td><td><code>chem_nuc_Z("^{14}C") = 6</code></td><td>{@p_8@}</td><td class="nuc-output">{@t_3_Z@}</td></tr>
+	<tr><td>9</td><td><code>chem_nuc_N("^{14}C") = 8</code></td><td>{@p_9@}</td><td class="nuc-output">{@t_3_N@}</td></tr>
+	<tr><td>10</td><td><code>chem_nuc_A("^{14}C") = 14</code></td><td>{@p_10@}</td><td class="nuc-output">{@t_3_A@}</td></tr>
+	<tr><td>11</td><td><code>chem_nuc_levels("^{14}C")</code></td><td>{@p_11@}</td><td class="nuc-output">{@t_3_levels@}</td></tr>
+	<tr><td>12</td><td><code>chem_nuc_halflives("^{14}C")</code></td><td>{@p_12@}</td><td class="nuc-output">{@t_3_halflives@}</td></tr>
+	<tr><td>13</td><td><code>chem_nuc_halflife_units("^{14}C")</code></td><td>{@p_13@}</td><td class="nuc-output">{@t_3_units@}</td></tr>
+	<tr><td>14</td><td><code>chem_nuc_decay_modes("^{14}C")</code></td><td>{@p_14@}</td><td class="nuc-output">{@t_3_decay_modes@}</td></tr>
+	<tr><td>15</td><td><code>chem_nuc_branching("^{14}C")</code></td><td>{@p_15@}</td><td class="nuc-output">{@t_3_branching@}</td></tr>
 </table>
 
 <hr>
 
 <h3>Ground-State Functions</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+<table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
-		<th>Test ID</th>
-		<th>Description</th>
-		<th>Result</th>
-		<th>Output</th>
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>16</td><td><code>chem_nuc_gs_halflife("^{14}C")</code></td><td>{@p_16@}</td><td>{@t_4_gs_hl@}</td></tr>
-	<tr><td>17</td><td><code>chem_nuc_gs_halflife_unit("^{14}C")</code></td><td>{@p_17@}</td><td><code>{@t_4_gs_unit@}</code></td></tr>
-	<tr><td>18</td><td><code>chem_nuc_gs_decay_modes("^{14}C")</code></td><td>{@p_18@}</td><td>{@t_4_gs_modes@}</td></tr>
-	<tr><td>19</td><td><code>chem_nuc_gs_branching("^{14}C")</code></td><td>{@p_19@}</td><td>{@t_4_gs_branch@}</td></tr>
-	<tr><td>20</td><td><code>chem_nuc_gs_halflife_s("^{14}C")</code></td><td>{@p_20@}</td><td>{@t_4_gs_hl_s@}</td></tr>
-	<tr><td>21</td><td><code>chem_nuc_gs_dominant_mode("^{14}C")</code></td><td>{@p_21@}</td><td><code>{@t_4_gs_dom@}</code></td></tr>
+	<tr><td>16</td><td><code>chem_nuc_gs_halflife("^{14}C")</code></td><td>{@p_16@}</td><td class="nuc-output">{@t_4_gs_hl@}</td></tr>
+	<tr><td>17</td><td><code>chem_nuc_gs_halflife_unit("^{14}C")</code></td><td>{@p_17@}</td><td class="nuc-output"><code>{@t_4_gs_unit@}</code></td></tr>
+	<tr><td>18</td><td><code>chem_nuc_gs_decay_modes("^{14}C")</code></td><td>{@p_18@}</td><td class="nuc-output">{@t_4_gs_modes@}</td></tr>
+	<tr><td>19</td><td><code>chem_nuc_gs_branching("^{14}C")</code></td><td>{@p_19@}</td><td class="nuc-output">{@t_4_gs_branch@}</td></tr>
+	<tr><td>20</td><td><code>chem_nuc_gs_halflife_s("^{14}C")</code></td><td>{@p_20@}</td><td class="nuc-output">{@t_4_gs_hl_s@}</td></tr>
+	<tr><td>21</td><td><code>chem_nuc_gs_dominant_mode("^{14}C")</code></td><td>{@p_21@}</td><td class="nuc-output"><code>{@t_4_gs_dom@}</code></td></tr>
 </table>
 
 <hr>
 
 <h3>Conversions, Search, and Utilities</h3>
-<table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+<table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
-		<th>Test ID</th>
-		<th>Description</th>
-		<th>Result</th>
-		<th>Output</th>
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>22</td><td><code>chem_nuc_halflife_to_seconds(1, "fs")</code></td><td>{@p_22@}</td><td>{@t_5_conv_fs@}</td></tr>
-	<tr><td>23</td><td><code>chem_nuc_halflife_to_seconds(1, "ms") = 0.001</code></td><td>{@p_23@}</td><td>{@t_5_conv_ms@}</td></tr>
-	<tr><td>24</td><td><code>chem_nuc_halflife_to_seconds(1, "s") = 1</code></td><td>{@p_24@}</td><td>{@t_5_conv_s@}</td></tr>
-	<tr><td>25</td><td><code>chem_nuc_halflife_to_seconds(1, "y") &gt; 10^7</code></td><td>{@p_25@}</td><td>{@t_5_conv_y@}</td></tr>
-	<tr><td>26</td><td><code>chem_nuc_with_decay_mode("B-4N")</code></td><td>{@p_26@}</td><td>{@t_6_mode@}</td></tr>
-	<tr><td>27</td><td><code>chem_nuc_halflife_range(0.001, 2)</code></td><td>{@p_27@}</td><td>{@t_6_hl_range@}</td></tr>
-	<tr><td>28</td><td><code>chem_nuc_radioactive_isotopes(6)</code></td><td>{@p_28@}</td><td>{@t_6_radioactive@}</td></tr>
-	<tr><td>29</td><td><code>chem_nuc_num_levels("^{14}C")</code></td><td>{@p_29@}</td><td>{@t_7_num_levels@}</td></tr>
-	<tr><td>30</td><td><code>chem_nuc_exists("^{14}C")</code></td><td>{@p_30@}</td><td>{@t_7_exists_true@}</td></tr>
-	<tr><td>31</td><td><code>chem_nuc_exists("^{999}Zz") = false</code></td><td>{@p_31@}</td><td>{@t_7_exists_false@}</td></tr>
-	<tr><td>32</td><td><code>length(chem_nuc_all_ids())</code></td><td>{@p_32@}</td><td>{@length(t_7_all_ids)@}</td></tr>
-	<tr><td>39</td><td><code>chem_nuc_parse_oxidation_charge("+2") = 2</code></td><td>{@p_39@}</td><td>{@t_9_parse_charge_pos@}</td></tr>
-	<tr><td>40</td><td><code>chem_nuc_parse_oxidation_charge("-1") = -1</code></td><td>{@p_40@}</td><td>{@t_9_parse_charge_neg@}</td></tr>
-	<tr><td>41</td><td><code>chem_nuc_charge_string(2) = "2+"</code></td><td>{@p_41@}</td><td><code>{@t_9_charge_string_pos@}</code></td></tr>
-	<tr><td>42</td><td><code>chem_nuc_charge_string(-1) = "1-"</code></td><td>{@p_42@}</td><td><code>{@t_9_charge_string_neg@}</code></td></tr>
+	<tr><td>22</td><td><code>chem_nuc_halflife_to_seconds(1, "fs")</code></td><td>{@p_22@}</td><td class="nuc-output">{@t_5_conv_fs@}</td></tr>
+	<tr><td>23</td><td><code>chem_nuc_halflife_to_seconds(1, "ms") = 0.001</code></td><td>{@p_23@}</td><td class="nuc-output">{@t_5_conv_ms@}</td></tr>
+	<tr><td>24</td><td><code>chem_nuc_halflife_to_seconds(1, "s") = 1</code></td><td>{@p_24@}</td><td class="nuc-output">{@t_5_conv_s@}</td></tr>
+	<tr><td>25</td><td><code>chem_nuc_halflife_to_seconds(1, "y") &gt; 10^7</code></td><td>{@p_25@}</td><td class="nuc-output">{@t_5_conv_y@}</td></tr>
+	<tr><td>26</td><td><code>chem_nuc_with_decay_mode("B-4N")</code></td><td>{@p_26@}</td><td class="nuc-output">{@t_6_mode@}</td></tr>
+	<tr><td>27</td><td><code>chem_nuc_halflife_range(0.001, 2)</code></td><td>{@p_27@}</td><td class="nuc-output">{@t_6_hl_range@}</td></tr>
+	<tr><td>28</td><td><code>chem_nuc_radioactive_isotopes(6)</code></td><td>{@p_28@}</td><td class="nuc-output">{@t_6_radioactive@}</td></tr>
+	<tr><td>29</td><td><code>chem_nuc_num_levels("^{14}C")</code></td><td>{@p_29@}</td><td class="nuc-output">{@t_7_num_levels@}</td></tr>
+	<tr><td>30</td><td><code>chem_nuc_exists("^{14}C")</code> (expect non-false)</td><td>{@p_30@}</td><td class="nuc-output">{@t_7_exists_true@}</td></tr>
+	<tr><td>31</td><td><code>chem_nuc_exists("^{999}Zz")</code> (expect false)</td><td>{@p_31@}</td><td class="nuc-output">{@t_7_exists_false@}</td></tr>
+	<tr><td>32</td><td><code>length(chem_nuc_all_ids())</code></td><td>{@p_32@}</td><td class="nuc-output">{@length(t_7_all_ids)@}</td></tr>
+	<tr><td>39</td><td><code>chem_nuc_parse_oxidation_charge("+2") = 2</code></td><td>{@p_39@}</td><td class="nuc-output">{@t_9_parse_charge_pos@}</td></tr>
+	<tr><td>40</td><td><code>chem_nuc_parse_oxidation_charge("-1") = -1</code></td><td>{@p_40@}</td><td class="nuc-output">{@t_9_parse_charge_neg@}</td></tr>
+	<tr><td>41</td><td><code>chem_nuc_charge_string(2) = "2+"</code></td><td>{@p_41@}</td><td class="nuc-output"><code>{@t_9_charge_string_pos@}</code></td></tr>
+	<tr><td>42</td><td><code>chem_nuc_charge_string(-1) = "1-"</code></td><td>{@p_42@}</td><td class="nuc-output"><code>{@t_9_charge_string_neg@}</code></td></tr>
 </table>
 
 <hr>
 
 <h3>Summary</h3>
-<table border="1" cellpadding="10" cellspacing="0" style="width:100%; font-weight:bold;">
+<table class="nuc-summary">
 	<tr><td>Total Tests</td><td>{@max_score@}</td></tr>
 	<tr><td>Tests Passed</td><td>{@total_score@}</td></tr>
 	<tr><td>Overall Score</td><td>{@score_pct@}%</td></tr>
 </table>
+
+</div>

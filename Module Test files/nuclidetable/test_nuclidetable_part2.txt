@@ -4,7 +4,7 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 stack_unit_si_declare(true);
 stackfltfmt:"~f";
 
-bool_to_score(b) := if is(b = true) then 1 else 0$
+bool_to_score(b) := if is(b) then 1 else 0$
 not_false_to_score(x) := if is(x = false) then 0 else 1$
 passfail(s) := if is(s = 1) then "PASS" else "FAIL"$
 
