@@ -33,15 +33,15 @@ The goal of this project is to develop new chemistry functions and comprehensive
 
 ### Module Loading and Dependencies
 
-**All modules are independent** and can be loaded in any order. One optional dependency exists for advanced functionality:
+Most modules are independent and can be loaded in any order. Two modules expose optional cross-module functionality:
 
 | Module | Status | Notes |
 |--------|--------|-------|
 | `pse.mac` | ✅ Independent | Periodic table data and molar mass calculations |
 | `acidbase.mac` | ✅ Independent | Acid-base chemistry with flat database |
 | `reactions.mac` | ✅ Independent | Chemical reactions database |
-| `nuclidetable.mac` | ✅ Independent | Nuclide data (raw data structure only) |
-| `thermodynamictables.mac` | ✅ Independent* | *`*_by_name` functions require `reactions.mac` |
+| `nuclidetable.mac` | ✅ Independent* | Core nuclide lookups are standalone; ID generation, decay-product helpers, and ionization helpers also require `pse.mac` |
+| `thermodynamictables.mac` | ✅ Independent* | Core thermodynamic data is standalone; `*_by_name` functions require `reactions.mac` |
 
 **Quick Start:**
 ```maxima
@@ -56,6 +56,11 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 stack_include_contrib("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
 stack_include_contrib("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
 /* Then use: chem_reaction_enthalpy_by_name("CombustionMethane") */
+
+/* For PSE-backed nuclide helpers, load both: */
+stack_include_contrib("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include_contrib("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
+/* Then use: chem_nuc_id_from_ZN(6, 8) or chem_nuc_ionize("^{14}C", 2) */
 ```
 
 **Important Note on Forbidden Functions:**

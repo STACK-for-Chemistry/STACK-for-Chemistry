@@ -119,13 +119,13 @@ Understanding the dependencies between modules is crucial for correct functional
 
 ### Independent Modules
 
-These modules have **no dependencies** and can be loaded independently:
+These modules have **no required dependencies** and can be loaded independently for their core functionality:
 
 1. **Periodic Table Module (`pse.mac`)** — Completely standalone
 2. **Acid-Base Chemistry Module (`acidbase.mac`)** — Completely standalone
 3. **Solubility Module (`solubility.mac`)** — Completely standalone
 4. **Reactions Module (`reactions.mac`)** — Completely standalone
-5. **Nuclide Database Module (`nuclidetable.mac`)** — Completely standalone
+5. **Nuclide Database Module (`nuclidetable.mac`)** — Standalone for raw data lookups and searches
 6. **Numeric Operations Module (`numericops.mac`)** — Completely standalone
 
 ### Dependent Modules
@@ -133,6 +133,10 @@ These modules have **no dependencies** and can be loaded independently:
 7. **Thermodynamic Tables Module (`thermodynamictables.mac`)
    - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
    - **Requires `reactions.mac`**: For reaction-based thermodynamic calculations (functions with `_by_name` suffix)
+
+8. **Nuclide Table Advanced Helpers (`nuclidetable.mac` + `pse.mac`)
+   - **Standalone for core functions**: Raw nuclide entry access, search helpers, half-life utilities, and charge-string parsing
+   - **Requires `pse.mac`**: For `chem_nuc_id_from_ZN`, decay-product helpers derived from element identity, and ionization/typical-charge helpers
 
 ### Loading Order Guidelines
 
@@ -172,6 +176,8 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 | `chem_reaction_enthalpy()` | `thermodynamictables.mac` | Manual thermo calculations |
 | `chem_reaction_data()`, `chem_reaction_equation()` | `reactions.mac` | Reaction data |
 | `chem_reaction_enthalpy_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
+| `chem_nuc_get_entry()`, `chem_nuc_by_Z()`, `chem_nuc_gs_halflife()` | `nuclidetable.mac` | Core nuclide data access |
+| `chem_nuc_id_from_ZN()`, `chem_nuc_alpha_product()`, `chem_nuc_ionize()` | `nuclidetable.mac` + `pse.mac` | PSE-backed nuclide helpers |
 | `chem_num_significant_digits()`, `chem_num_significant_digits_arr()` | `numericops.mac` | Significant-digits analysis |
 
 ---

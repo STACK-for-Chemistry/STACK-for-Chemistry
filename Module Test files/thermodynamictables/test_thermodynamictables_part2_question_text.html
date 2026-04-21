@@ -67,7 +67,8 @@
 </style>
 
 <div class="nuc-wrap">
-<h2>Numericops Module Tests</h2>
+<h2>Thermodynamic Tables Tests - Part 2</h2>
+<p>These tests require both <code>reactions.mac</code> and <code>thermodynamictables.mac</code>.</p>
 
 <table class="nuc-table">
 	<tr style="background-color:#f0f0f0;">
@@ -76,12 +77,11 @@
 		<th class="nuc-result">Result</th>
 		<th class="nuc-output">Output</th>
 	</tr>
-	<tr><td>1</td><td><code>chem_num_significant_digits("1.230e-4")</code></td><td>{@p_1@}</td><td class="nuc-output">{@t_1@}</td></tr>
-	<tr><td>2</td><td><code>chem_num_significant_digits("0.00450")</code></td><td>{@p_2@}</td><td class="nuc-output">{@t_2@}</td></tr>
-	<tr><td>3</td><td><code>chem_num_significant_digits("42")</code></td><td>{@p_3@}</td><td class="nuc-output">{@t_3@}</td></tr>
-	<tr><td>4</td><td><code>chem_num_significant_digits_arr([...])</code></td><td>{@p_4@}</td><td class="nuc-output">{@t_4@}</td></tr>
-	<tr><td>5</td><td><code>chem_num_significant_digits("abc")</code></td><td>{@p_5@}</td><td class="nuc-output">{@t_5@}</td></tr>
-	<tr><td>6</td><td><code>chem_num_significant_digits_arr(["1.20","abc"])</code></td><td>{@p_6@}</td><td class="nuc-output">{@t_6@}</td></tr>
+	<tr><td>1</td><td><code>chem_reaction_enthalpy_by_name("CombustionMethane")</code></td><td>{@p_1@}</td><td class="nuc-output">{@t_1@}</td></tr>
+	<tr><td>2</td><td><code>chem_reaction_entropy_by_name("CombustionMethane")</code></td><td>{@p_2@}</td><td class="nuc-output">{@t_2@}</td></tr>
+	<tr><td>3</td><td><code>chem_reaction_gibbs_by_name("CombustionMethane")</code></td><td>{@p_3@}</td><td class="nuc-output">{@t_3@}</td></tr>
+	<tr><td>4</td><td><code>chem_reaction_enthalpy_by_name("SynthesisWater")</code></td><td>{@p_4@}</td><td class="nuc-output">{@t_4@}</td></tr>
+	<tr><td>5</td><td><code>chem_reaction_gibbs_by_name("DecompositionCaCO3")</code></td><td>{@p_5@}</td><td class="nuc-output">{@t_5@}</td></tr>
 </table>
 
 <table class="nuc-summary">

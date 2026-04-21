@@ -38,7 +38,7 @@ s_12: bool_to_score(member(rxn_comb, t_12));
 
 max_score:12;
 total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12;
-score_pct:float(100*total_score/max_score);
+score_pct:round(float(100*total_score/max_score));
 
 p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5); p_6:passfail(s_6);
 p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);

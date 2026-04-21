@@ -41,7 +41,7 @@ s_45: not_false_to_score(t_9_ionize_typical);
 
 max_score: 10;
 total_score: s_7+s_33+s_34+s_35+s_36+s_37+s_38+s_43+s_44+s_45;
-score_pct: float(100*total_score/max_score);
+score_pct: round(float(100*total_score/max_score));
 
 p_7: passfail(s_7);  p_33: passfail(s_33); p_34: passfail(s_34); p_35: passfail(s_35); p_36: passfail(s_36);
 p_37: passfail(s_37); p_38: passfail(s_38); p_43: passfail(s_43); p_44: passfail(s_44); p_45: passfail(s_45);

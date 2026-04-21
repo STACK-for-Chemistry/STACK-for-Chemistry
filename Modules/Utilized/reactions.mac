@@ -883,3 +883,18 @@ chem_reaction_decomposition_array() := block([filtered],
         not is(ssearch("Decomposition", first(x)) = false))),
     return(map(first, filtered))
 )$
+
+/* Returns an array of reaction names whose reactant side has exactly n_reactants
+   distinct species and whose product side has exactly n_products distinct species.
+   Example: chem_reaction_filter_by_species(2,1) returns all A + B -> C reactions,
+   which includes "SynthesisWater" (2 H2 + O2 -> 2 H2O). */
+chem_reaction_filter_by_species(n_reactants, n_products) := block([result, i, entry],
+    result: [],
+    for i: 1 thru length(%_REACTIONS_DATA) do (
+        entry: %_REACTIONS_DATA[i],
+        if length(first(second(entry))) = n_reactants and
+           length(second(second(entry))) = n_products then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
