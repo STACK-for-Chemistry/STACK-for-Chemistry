@@ -115,30 +115,79 @@ This enables the `mhchem` LaTeX package, which allows you to use `\ce{...}` comm
 
 ## Module Dependencies
 
-Understanding the dependencies between modules is crucial for correct functionality. Here's a breakdown of how the modules relate to each other:
+Understanding the dependencies between modules is crucial for correct functionality. Here's a comprehensive breakdown of how the 7 modules relate to each other:
 
-### Independent Modules
+### Completely Independent Modules
 
-These modules have **no required dependencies** and can be loaded independently for their core functionality:
+These modules have **zero dependencies** and can be loaded and used independently:
 
-1. **Periodic Table Module (`pse.mac`)** — Completely standalone
-2. **Acid-Base Chemistry Module (`acidbase.mac`)** — Completely standalone
-3. **Solubility Module (`solubility.mac`)** — Completely standalone
-4. **Reactions Module (`reactions.mac`)** — Completely standalone
-5. **Nuclide Database Module (`nuclidetable.mac`)** — Standalone for raw data lookups and searches
-6. **Numeric Operations Module (`numericops.mac`)** — Completely standalone
+1. **Periodic Table Module (`pse.mac`)** — 23 functions
+   - All functions work standalone
+   - Example use: `chem_data()`, `chem_electron_config()`, `chem_molar_mass()`, `chem_parse_formula()`
 
-### Dependent Modules
+2. **Acid-Base Chemistry Module (`acidbase.mac`)** — 39 functions  
+   - All functions work standalone
+   - Example use: `chem_acidbase_pKa()`, `chem_acidbase_Ka()`, `chem_acid_array()`, `chem_titration_pH()`
 
-7. **Thermodynamic Tables Module (`thermodynamictables.mac`)
-   - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
-   - **Requires `reactions.mac`**: For reaction-based thermodynamic calculations (functions with `_by_name` suffix)
+3. **Solubility Module (`solubility.mac`)** — 29 functions
+   - All functions work standalone
+   - Example use: `chem_sol_Ksp()`, `chem_sol_molar_solubility()`, `chem_sol_precipitation_check()`
 
-8. **Nuclide Table Advanced Helpers (`nuclidetable.mac` + `pse.mac`)
-   - **Standalone for core functions**: Raw nuclide entry access, search helpers, half-life utilities, and charge-string parsing
-   - **Requires `pse.mac`**: For `chem_nuc_id_from_ZN`, decay-product helpers derived from element identity, and ionization/typical-charge helpers
+4. **Reactions Module (`reactions.mac`)** — 10 functions
+   - All functions work standalone
+   - Example use: `chem_reaction_data()`, `chem_reaction_reactants()`, `chem_reaction_array()`
 
-### Loading Order Guidelines
+5. **Numeric Operations Module (`numericops.mac`)** — 2 functions
+   - All functions work standalone
+   - Example use: `chem_num_significant_digits()`, `chem_num_significant_digits_arr()`
+
+### Modules with Optional Dependencies
+
+6. **Thermodynamic Tables Module (`thermodynamictables.mac`)** — 27 functions total
+   - **24 functions are completely independent**: Data retrieval, filtering, tag-based navigation, and manual thermodynamic calculations
+   - **3 functions require `reactions.mac`**: `chem_reaction_enthalpy_by_name()`, `chem_reaction_entropy_by_name()`, `chem_reaction_gibbs_by_name()`
+   - See [Thermodynamic Tables Function Breakdown](#thermodynamic-tables-function-breakdown) below
+
+7. **Nuclide Database Module (`nuclidetable.mac`)** — 38 functions total
+   - **28 functions are completely independent**: Raw data lookups, entry retrieval, search utilities, half-life conversions, charge/oxidation parsing
+   - **10 functions require `pse.mac`**: ID generation from Z/N, decay product calculations, ionization/charge helpers
+   - See [Nuclide Database Function Breakdown](#nuclide-database-function-breakdown) below
+
+---
+
+### Thermodynamic Tables Function Breakdown
+
+**Independent Functions (24 total):**
+Data retrieval functions, tag-based filtering, and manual thermodynamic calculations that work without external modules:
+- Data access: `chem_thermo_data()`, `chem_thermo_data_units()`, `chem_thermo_data_all()`, `chem_thermo_data_all_any()`, `chem_thermo_states()`
+- Tag filtering: `chem_thermo_filter_by_tag()`, `chem_thermo_filter_by_tags_all()`, `chem_thermo_filter_by_tags_any()`, `chem_thermo_substances_by_tag()`, `chem_thermo_substances_by_tags_all()`, `chem_thermo_substances_by_tags_any()`, `chem_thermo_get_tags()`, `chem_thermo_get_tags_state()`, `chem_thermo_random_by_tags_all()`, `chem_thermo_data_by_tag()`, `chem_thermo_data_by_tag_state()`
+- Navigation: `chem_thermo_substance_array()`, `chem_thermo_substance_state_array()`
+- Manual calculations: `chem_reaction_enthalpy()`, `chem_reaction_entropy()`, `chem_reaction_gibbs()`, `chem_gibbs_from_enthalpy_entropy()`, `chem_equilibrium_constant()`
+
+**Dependent Functions (3 total) — Require `reactions.mac`:**
+- `chem_reaction_enthalpy_by_name()` — Calculate ΔH° for named reactions in reactions.mac
+- `chem_reaction_entropy_by_name()` — Calculate ΔS° for named reactions in reactions.mac
+- `chem_reaction_gibbs_by_name()` — Calculate ΔG° for named reactions in reactions.mac
+
+---
+
+### Nuclide Database Function Breakdown
+
+**Independent Functions (28 total):**
+Core data access, searching, utilities that work without PSE:
+- Data access: `chem_nuc_get_entry()`, `chem_nuc_get_data()`, `chem_nuc_by_Z()`, `chem_nuc_by_N()`, `chem_nuc_by_A()`, `chem_nuc_by_ZN()`
+- Field extraction: `chem_nuc_Z()`, `chem_nuc_N()`, `chem_nuc_A()`, `chem_nuc_levels()`, `chem_nuc_halflives()`, `chem_nuc_halflife_units()`, `chem_nuc_decay_modes()`, `chem_nuc_branching()`
+- Ground-state utilities: `chem_nuc_gs_halflife()`, `chem_nuc_gs_halflife_unit()`, `chem_nuc_gs_decay_modes()`, `chem_nuc_gs_branching()`, `chem_nuc_gs_halflife_s()`, `chem_nuc_gs_dominant_mode()`
+- Half-life conversion: `chem_nuc_halflife_to_seconds()`
+- Navigation/filtering: `chem_nuc_with_decay_mode()`, `chem_nuc_halflife_range()`, `chem_nuc_radioactive_isotopes()`, `chem_nuc_num_levels()`, `chem_nuc_exists()`, `chem_nuc_all_ids()`
+- Charge/oxidation utilities: `chem_nuc_parse_oxidation_charge()`, `chem_nuc_charge_string()`
+
+**Dependent Functions (10 total) — Require `pse.mac`:**
+- ID generation: `chem_nuc_id_from_ZN()` — Generate nuclide ID from atomic number and neutron count
+- Direct element lookups: `chem_nuc_symbol()` — Get element symbol for nuclide
+- Decay products: `chem_nuc_alpha_product()`, `chem_nuc_beta_minus_product()`, `chem_nuc_beta_plus_product()`, `chem_nuc_decay_product()` — Determine decay products using element properties
+- Ionization/charge: `chem_nuc_typical_charge()`, `chem_nuc_ionize()`, `chem_nuc_ionize_typical()` — Use PSE element properties for charge calculations
+
 
 #### Option 1: Load All Modules (Recommended for Full Functionality)
 
@@ -2170,34 +2219,36 @@ The thermodynamic tables module provides access to standard thermodynamic data a
 
 ### Quick Reference (Thermodynamics)
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `chem_thermo_data(sub, prop, state)` | Get specific property | `chem_thermo_data("H2O", "DeltaHf", "l")` → `-285.83` |
-| `chem_thermo_data_units(sub, prop, state)` | Property with units | `chem_thermo_data_units("H2O", "S", "l")` |
-| `chem_thermo_data_all(sub, state)` | All data for substance/state | `chem_thermo_data_all("NaCl", "s")` |
-| `chem_thermo_data_all_any(sub)` | All data (first match) | `chem_thermo_data_all_any("H2O")` |
-| `chem_thermo_states(sub)` | Available states | `chem_thermo_states("H2O")` → `["l", "g"]` |
-| `chem_thermo_substance_array()` | All substances | `rand(chem_thermo_substance_array())` |
-| `chem_thermo_substance_state_array(state)` | Substances by state | `chem_thermo_substance_state_array("g")` |
-| `chem_thermo_filter_by_tag(tag)` | Filter entries by tag | `chem_thermo_filter_by_tag("salt")` |
-| `chem_thermo_filter_by_tags_all(tags)` | Filter by ALL tags (AND) | `chem_thermo_filter_by_tags_all(["organic", "acid"])` |
-| `chem_thermo_filter_by_tags_any(tags)` | Filter by ANY tag (OR) | `chem_thermo_filter_by_tags_any(["acid", "base"])` |
-| `chem_thermo_substances_by_tag(tag)` | Formulas by tag | `chem_thermo_substances_by_tag("oxide")` |
-| `chem_thermo_substances_by_tags_all(tags)` | Formulas with ALL tags | `chem_thermo_substances_by_tags_all(["salt", "chloride"])` |
-| `chem_thermo_substances_by_tags_any(tags)` | Formulas with ANY tag | `chem_thermo_substances_by_tags_any(["aldehyde", "ketone"])` |
-| `chem_thermo_get_tags(sub)` | Get tags for substance | `chem_thermo_get_tags("NaCl")` → `["salt", ...]` |
-| `chem_thermo_get_tags_state(sub, state)` | Tags for substance/state | `chem_thermo_get_tags_state("H2O", "l")` |
-| `chem_thermo_random_by_tags_all(tags)` | All substances with tags | `rand(chem_thermo_random_by_tags_all(["organic"]))` |
-| `chem_thermo_data_by_tag(tag)` | Full data by tag | `chem_thermo_data_by_tag("acid")` |
-| `chem_thermo_data_by_tag_state(tag, state)` | Full data by tag and state | `chem_thermo_data_by_tag_state("ion", "aq")` |
-| `chem_reaction_enthalpy(prod, react)` | Calculate ΔH° | See examples |
-| `chem_reaction_entropy(prod, react)` | Calculate ΔS° | See examples |
-| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples |
-| `chem_reaction_enthalpy_by_name(rxn)` | ΔH° by reaction name | Requires `reactions.mac` |
-| `chem_reaction_entropy_by_name(rxn)` | ΔS° by reaction name | Requires `reactions.mac` |
-| `chem_reaction_gibbs_by_name(rxn)` | ΔG° by reaction name | Requires `reactions.mac` |
-| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` |
-| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` |
+**Note:** Functions marked with ✦ require `reactions.mac` in addition to `thermodynamictables.mac`.
+
+| Function | Description | Example | Dependency |
+|----------|-------------|---------|------------|
+| `chem_thermo_data(sub, prop, state)` | Get specific property | `chem_thermo_data("H2O", "DeltaHf", "l")` → `-285.83` | Standalone |
+| `chem_thermo_data_units(sub, prop, state)` | Property with units | `chem_thermo_data_units("H2O", "S", "l")` | Standalone |
+| `chem_thermo_data_all(sub, state)` | All data for substance/state | `chem_thermo_data_all("NaCl", "s")` | Standalone |
+| `chem_thermo_data_all_any(sub)` | All data (first match) | `chem_thermo_data_all_any("H2O")` | Standalone |
+| `chem_thermo_states(sub)` | Available states | `chem_thermo_states("H2O")` → `["l", "g"]` | Standalone |
+| `chem_thermo_substance_array()` | All substances | `rand(chem_thermo_substance_array())` | Standalone |
+| `chem_thermo_substance_state_array(state)` | Substances by state | `chem_thermo_substance_state_array("g")` | Standalone |
+| `chem_thermo_filter_by_tag(tag)` | Filter entries by tag | `chem_thermo_filter_by_tag("salt")` | Standalone |
+| `chem_thermo_filter_by_tags_all(tags)` | Filter by ALL tags (AND) | `chem_thermo_filter_by_tags_all(["organic", "acid"])` | Standalone |
+| `chem_thermo_filter_by_tags_any(tags)` | Filter by ANY tag (OR) | `chem_thermo_filter_by_tags_any(["acid", "base"])` | Standalone |
+| `chem_thermo_substances_by_tag(tag)` | Formulas by tag | `chem_thermo_substances_by_tag("oxide")` | Standalone |
+| `chem_thermo_substances_by_tags_all(tags)` | Formulas with ALL tags | `chem_thermo_substances_by_tags_all(["salt", "chloride"])` | Standalone |
+| `chem_thermo_substances_by_tags_any(tags)` | Formulas with ANY tag | `chem_thermo_substances_by_tags_any(["aldehyde", "ketone"])` | Standalone |
+| `chem_thermo_get_tags(sub)` | Get tags for substance | `chem_thermo_get_tags("NaCl")` → `["salt", ...]` | Standalone |
+| `chem_thermo_get_tags_state(sub, state)` | Tags for substance/state | `chem_thermo_get_tags_state("H2O", "l")` | Standalone |
+| `chem_thermo_random_by_tags_all(tags)` | All substances with tags | `rand(chem_thermo_random_by_tags_all(["organic"]))` | Standalone |
+| `chem_thermo_data_by_tag(tag)` | Full data by tag | `chem_thermo_data_by_tag("acid")` | Standalone |
+| `chem_thermo_data_by_tag_state(tag, state)` | Full data by tag and state | `chem_thermo_data_by_tag_state("ion", "aq")` | Standalone |
+| `chem_reaction_enthalpy(prod, react)` | Calculate ΔH° | See examples | Standalone |
+| `chem_reaction_entropy(prod, react)` | Calculate ΔS° | See examples | Standalone |
+| `chem_reaction_gibbs(prod, react)` | Calculate ΔG° | See examples | Standalone |
+| `chem_gibbs_from_enthalpy_entropy(h, s, T)` | ΔG from ΔH, ΔS | `chem_gibbs_from_enthalpy_entropy(-890, -242, 298)` | Standalone |
+| `chem_equilibrium_constant(g, T)` | K from ΔG° | `chem_equilibrium_constant(-50, 298)` | Standalone |
+| `chem_reaction_enthalpy_by_name(rxn)` ✦ | ΔH° by reaction name | Requires `reactions.mac` | **reactions.mac** |
+| `chem_reaction_entropy_by_name(rxn)` ✦ | ΔS° by reaction name | Requires `reactions.mac` | **reactions.mac** |
+| `chem_reaction_gibbs_by_name(rxn)` ✦ | ΔG° by reaction name | Requires `reactions.mac` | **reactions.mac** |
 
 ### Database Structure
 
@@ -2648,7 +2699,7 @@ aqueous: chem_thermo_substance_state_array("aq");
 
 ---
 
-### Thermodynamic Calculation Functions
+### Thermodynamic Calculation Functions (Independent)
 
 #### `chem_reaction_enthalpy(products_list, reactants_list)`
 
@@ -2687,24 +2738,6 @@ delta_h: chem_reaction_enthalpy(products, reactants);
 
 ---
 
-#### `chem_reaction_enthalpy_by_name(reaction_name)`
-
-**Description:** Calculates ΔH° for a reaction by name (requires `reactions.mac`).
-
----
-
-#### `chem_reaction_entropy_by_name(reaction_name)`
-
-**Description:** Calculates ΔS° for a reaction by name (requires `reactions.mac`).
-
----
-
-#### `chem_reaction_gibbs_by_name(reaction_name)`
-
-**Description:** Calculates ΔG° for a reaction by name (requires `reactions.mac`).
-
----
-
 #### `chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, temp)`
 
 **Description:** Calculates ΔG from ΔH and ΔS: ΔG = ΔH − TΔS
@@ -2727,6 +2760,55 @@ delta_h: chem_reaction_enthalpy(products, reactants);
 - `temp` (number): Temperature in K
 
 **Returns:** Equilibrium constant K
+
+---
+
+### Thermodynamic Calculation Functions (Require reactions.mac)
+
+#### `chem_reaction_enthalpy_by_name(reaction_name)`
+
+**Description:** Calculates standard reaction enthalpy for a named reaction in the reactions database.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction (e.g., "CombustionMethane")
+
+**Returns:** Reaction enthalpy in kJ/mol, or `false` if reaction not found
+
+**Requires:** `reactions.mac`
+
+**Example:**
+```maxima
+delta_h: chem_reaction_enthalpy_by_name("CombustionMethane");
+/* Returns -890.4 kJ/mol */
+
+delta_h: chem_reaction_enthalpy_by_name("SynthesisAmmonia");
+```
+
+---
+
+#### `chem_reaction_entropy_by_name(reaction_name)`
+
+**Description:** Calculates standard reaction entropy for a named reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** Reaction entropy in J/(mol·K), or `false` if reaction not found
+
+**Requires:** `reactions.mac`
+
+---
+
+#### `chem_reaction_gibbs_by_name(reaction_name)`
+
+**Description:** Calculates standard Gibbs free energy for a named reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** Reaction Gibbs free energy in kJ/mol, or `false` if reaction not found
+
+**Requires:** `reactions.mac`
 
 ---
 
@@ -2777,6 +2859,7 @@ The reactions module provides a database of common chemical reactions with compl
 | `chem_reaction_formation_array()` | Formation reactions | `rand(chem_reaction_formation_array())` |
 | `chem_reaction_synthesis_array()` | Synthesis reactions | `rand(chem_reaction_synthesis_array())` |
 | `chem_reaction_decomposition_array()` | Decomposition reactions | `rand(chem_reaction_decomposition_array())` |
+| `chem_reaction_filter_by_species(n_reactants, n_products)` | Filter by stoichiometry | `chem_reaction_filter_by_species(2, 1)` |
 
 ### Reaction Data Retrieval Functions
 
@@ -2926,6 +3009,31 @@ decomposition_reactions: chem_reaction_decomposition_array();
 
 ---
 
+#### `chem_reaction_filter_by_species(n_reactants, n_products)`
+
+**Description:** Filters reactions by stoichiometry (number of reactant and product species).
+
+**Parameters:**
+- `n_reactants` (integer): Number of reactant species
+- `n_products` (integer): Number of product species
+
+**Returns:** List of matching reaction names, or empty list if no matches
+
+**Example:**
+```maxima
+/* Get all A + B -> C reactions (2 reactants, 1 product) */
+two_one_rxns: chem_reaction_filter_by_species(2, 1);
+/* Returns ["CombustionMethane", "CombustionEthane", ...] */
+
+/* Get all A + B -> C + D reactions (2 reactants, 2 products) */
+two_two_rxns: chem_reaction_filter_by_species(2, 2);
+
+/* Get all A -> B + C reactions (1 reactant, 2 products) */
+one_two_rxns: chem_reaction_filter_by_species(1, 2);
+```
+
+---
+
 ### Available Reactions
 
 **Combustion:** CombustionMethane, CombustionEthane, CombustionPropane, CombustionGlucose, CombustionEthanol
@@ -2944,61 +3052,98 @@ decomposition_reactions: chem_reaction_decomposition_array();
 
 ## Nuclide Database Module
 
-The nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties.
+The nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties for all known nuclides.
 
 ### Quick Reference (Nuclides)
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `nucl_data_all(nuclide_id)` | All nuclear data | `nucl_data_all("^{14}C")` |
-| `nucl_data_Z(nuclide_id)` | Atomic number | `nucl_data_Z("^{14}C")` → `6` |
-| `nucl_data_N(nuclide_id)` | Neutron number | `nucl_data_N("^{14}C")` → `8` |
-| `nucl_mass_number(nuclide_id)` | Mass number (A = Z + N) | `nucl_mass_number("^{14}C")` → `14` |
-| `nucl_halflife(nuclide_id)` | Half-life with units | `nucl_halflife("^{14}C")` → `stackunits(5686, "y")` |
-| `nucl_decay_modes(nuclide_id)` | Decay modes | `nucl_decay_modes("^{14}C")` → `["B-"]` |
-| `nucl_branching_ratios(nuclide_id)` | Branching ratios (%) | `nucl_branching_ratios("^{14}C")` → `[100]` |
-| `nucl_array()` | All nuclide IDs | `rand(nucl_array())` |
-| `nucl_array_radioactive()` | Radioactive nuclides | `rand(nucl_array_radioactive())` |
-| `nucl_array_alpha()` | Pure alpha emitters | `rand(nucl_array_alpha())` |
-| `nucl_array_betaminus()` | Pure β⁻ emitters | `rand(nucl_array_betaminus())` |
-| `nucl_array_betaplus()` | Pure β⁺ emitters | `rand(nucl_array_betaplus())` |
-| `nucl_array_ec()` | Pure EC nuclides | `rand(nucl_array_ec())` |
-| `nucl_display(nuclide_id)` | Format for LaTeX | `nucl_display("^{14}C")` → `"\\ce{^{14}C}"` |
+**Note:** Functions marked with ✦ require `pse.mac` in addition to `nuclidetable.mac`.
+
+| Function | Description | Example | Dependency |
+|----------|-------------|---------|------------|
+| `chem_nuc_get_entry(id)` | Complete nuclide entry | `chem_nuc_get_entry("^{14}C")` | Standalone |
+| `chem_nuc_get_data(id)` | Raw data array | `chem_nuc_get_data("^{14}C")` | Standalone |
+| `chem_nuc_Z(id)` | Atomic number | `chem_nuc_Z("^{14}C")` → `6` | Standalone |
+| `chem_nuc_N(id)` | Neutron number | `chem_nuc_N("^{14}C")` → `8` | Standalone |
+| `chem_nuc_A(id)` | Mass number (A = Z + N) | `chem_nuc_A("^{14}C")` → `14` | Standalone |
+| `chem_nuc_levels(id)` | Excited state energies | `chem_nuc_levels("^{14}C")` | Standalone |
+| `chem_nuc_halflives(id)` | Half-life values | `chem_nuc_halflives("^{14}C")` | Standalone |
+| `chem_nuc_halflife_units(id)` | Half-life units | `chem_nuc_halflife_units("^{14}C")` | Standalone |
+| `chem_nuc_decay_modes(id)` | Decay modes | `chem_nuc_decay_modes("^{14}C")` → `["B-"]` | Standalone |
+| `chem_nuc_branching(id)` | Branching ratios (%) | `chem_nuc_branching("^{14}C")` | Standalone |
+| `chem_nuc_gs_halflife(id)` | Ground-state half-life | `chem_nuc_gs_halflife("^{14}C")` | Standalone |
+| `chem_nuc_gs_halflife_unit(id)` | Ground-state half-life unit | `chem_nuc_gs_halflife_unit("^{14}C")` | Standalone |
+| `chem_nuc_gs_decay_modes(id)` | Ground-state decay modes | `chem_nuc_gs_decay_modes("^{14}C")` | Standalone |
+| `chem_nuc_gs_branching(id)` | Ground-state branching | `chem_nuc_gs_branching("^{14}C")` | Standalone |
+| `chem_nuc_gs_halflife_s(id)` | Ground-state half-life in seconds | `chem_nuc_gs_halflife_s("^{14}C")` | Standalone |
+| `chem_nuc_gs_dominant_mode(id)` | Dominant decay mode | `chem_nuc_gs_dominant_mode("^{14}C")` | Standalone |
+| `chem_nuc_halflife_to_seconds(val, unit)` | Convert half-life to seconds | `chem_nuc_halflife_to_seconds(5730, "y")` | Standalone |
+| `chem_nuc_by_Z(z)` | All nuclides with atomic number Z | `chem_nuc_by_Z(6)` → isotopes of carbon | Standalone |
+| `chem_nuc_by_N(n)` | All nuclides with N neutrons | `chem_nuc_by_N(8)` | Standalone |
+| `chem_nuc_by_A(a)` | All nuclides with mass number A | `chem_nuc_by_A(14)` | Standalone |
+| `chem_nuc_by_ZN(z, n)` | Nuclide with specific Z and N | `chem_nuc_by_ZN(6, 8)` | Standalone |
+| `chem_nuc_with_decay_mode(mode)` | Nuclides with decay mode | `chem_nuc_with_decay_mode("B-")` | Standalone |
+| `chem_nuc_halflife_range(min, max)` | Nuclides in half-life range | `chem_nuc_halflife_range(0.001, 2)` | Standalone |
+| `chem_nuc_radioactive_isotopes(z)` | Radioactive isotopes of element | `chem_nuc_radioactive_isotopes(6)` | Standalone |
+| `chem_nuc_num_levels(id)` | Number of known energy levels | `chem_nuc_num_levels("^{14}C")` | Standalone |
+| `chem_nuc_exists(id)` | Check if nuclide exists | `chem_nuc_exists("^{14}C")` → `true` | Standalone |
+| `chem_nuc_all_ids()` | All nuclide IDs | `rand(chem_nuc_all_ids())` | Standalone |
+| `chem_nuc_parse_oxidation_charge(str)` | Parse oxidation charge | `chem_nuc_parse_oxidation_charge("+2")` → `2` | Standalone |
+| `chem_nuc_charge_string(charge)` | Format charge as string | `chem_nuc_charge_string(2)` → `"2+"` | Standalone |
+| `chem_nuc_id_from_ZN(z, n)` ✦ | Generate ID from Z and N | `chem_nuc_id_from_ZN(6, 8)` → `"^{14}C"` | **pse.mac** |
+| `chem_nuc_symbol(id)` ✦ | Get element symbol | `chem_nuc_symbol("^{14}C")` → `"C"` | **pse.mac** |
+| `chem_nuc_typical_charge(id)` ✦ | Typical oxidation charge | `chem_nuc_typical_charge("^{14}C")` → `4` | **pse.mac** |
+| `chem_nuc_alpha_product(id)` ✦ | Product of alpha decay | `chem_nuc_alpha_product("^{210}Po")` | **pse.mac** |
+| `chem_nuc_beta_minus_product(id)` ✦ | Product of β⁻ decay | `chem_nuc_beta_minus_product("^{14}C")` | **pse.mac** |
+| `chem_nuc_beta_plus_product(id)` ✦ | Product of β⁺ decay | `chem_nuc_beta_plus_product("^{11}C")` | **pse.mac** |
+| `chem_nuc_decay_product(id, mode)` ✦ | Product for decay mode | `chem_nuc_decay_product("^{14}C", "B-")` | **pse.mac** |
+| `chem_nuc_ionize(id, charge)` ✦ | Generate ion formula | `chem_nuc_ionize("^{14}C", 2)` → ion formula | **pse.mac** |
+| `chem_nuc_ionize_typical(id)` ✦ | Ion with typical charge | `chem_nuc_ionize_typical("^{14}C")` → ion formula | **pse.mac** |
 
 ### Data Structure
 
-The nuclide database contains the following information for each nuclide:
-- **Nuclide ID**: String identifier (e.g., "^{185}Tl")
+Each nuclide entry contains:
+- **Nuclide ID**: String identifier (e.g., "^{14}C")
 - **Z**: Atomic number (number of protons)
 - **N**: Neutron number
-- **Level Energies**: Array of excited state energies in MeV
-- **Half-lives**: Array of half-life values
-- **Half-life Units**: Array of units
-- **Decay Modes**: Nested array of decay modes for each level
-- **Branching Ratios**: Nested array of branching ratios (percentages)
+- **Levels**: Array of excited state energies in MeV
+- **Halflives**: Array of half-life values
+- **HalfLife Units**: Array of unit strings (e.g., ["y", "d", "s"])
+- **Decay Modes**: Nested array of decay mode labels
+- **Branching**: Nested array of branching ratios (0-100)
 
 ---
 
-### Core Data Retrieval Functions
+### Core Data Retrieval Functions (Independent)
 
-#### `nucl_data_all(nuclide_id)`
+#### `chem_nuc_get_entry(nuclide_id)`
 
-**Description:** Returns all nuclear data for a given nuclide.
+**Description:** Returns the complete database entry for a nuclide.
 
 **Parameters:**
-- `nuclide_id` (string): Nuclide identifier (e.g., "^{14}C")
+- `nuclide_id` (string): Nuclide identifier (e.g., "^{14}C", "^{210}Po")
 
-**Returns:** List of all nuclear data fields, or `false` if not found
+**Returns:** Complete entry [Z, N, levels, halflives, units, modes, branching] or `false` if not found
 
 **Example:**
 ```maxima
-data: nucl_data_all("^{14}C");
-/* Returns: [6, 8, [0], [5686], ["y"], [["B-"]], [[100]]] */
+entry: chem_nuc_get_entry("^{14}C");
+/* Returns [6, 8, [0], [5730], ["y"], [["B-"]], [[100]]] */
 ```
 
 ---
 
-#### `nucl_data_Z(nuclide_id)`
+#### `chem_nuc_get_data(nuclide_id)`
+
+**Description:** Returns raw data array for a nuclide.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Raw data array or `false` if not found
+
+---
+
+#### `chem_nuc_Z(nuclide_id)`
 
 **Description:** Returns the atomic number (Z).
 
@@ -3009,14 +3154,15 @@ data: nucl_data_all("^{14}C");
 
 **Example:**
 ```maxima
-z: nucl_data_Z("^{14}C");  /* Returns 6 */
+z: chem_nuc_Z("^{14}C");  /* Returns 6 */
+z: chem_nuc_Z("^{210}Po");  /* Returns 84 */
 ```
 
 ---
 
-#### `nucl_data_N(nuclide_id)`
+#### `chem_nuc_N(nuclide_id)`
 
-**Description:** Returns the neutron number.
+**Description:** Returns the neutron number (N).
 
 **Parameters:**
 - `nuclide_id` (string): Nuclide identifier
@@ -3025,12 +3171,13 @@ z: nucl_data_Z("^{14}C");  /* Returns 6 */
 
 **Example:**
 ```maxima
-n: nucl_data_N("^{14}C");  /* Returns 8 */
+n: chem_nuc_N("^{14}C");  /* Returns 8 */
+n: chem_nuc_N("^{12}C");  /* Returns 6 */
 ```
 
 ---
 
-#### `nucl_mass_number(nuclide_id)`
+#### `chem_nuc_A(nuclide_id)`
 
 **Description:** Returns the mass number (A = Z + N).
 
@@ -3041,198 +3188,596 @@ n: nucl_data_N("^{14}C");  /* Returns 8 */
 
 **Example:**
 ```maxima
-a: nucl_mass_number("^{14}C");  /* Returns 14 */
+a: chem_nuc_A("^{14}C");  /* Returns 14 */
+a: chem_nuc_A("^{210}Po");  /* Returns 210 */
 ```
 
 ---
 
-### Decay Information Functions
+#### `chem_nuc_levels(nuclide_id)`
 
-#### `nucl_halflife(nuclide_id)`
-
-**Description:** Returns the half-life of the ground state with units.
+**Description:** Returns array of known excited state energies (in MeV).
 
 **Parameters:**
 - `nuclide_id` (string): Nuclide identifier
 
-**Returns:** Half-life as a `stackunits` object, or `false` if not found
-
-**Example:**
-```maxima
-hl: nucl_halflife("^{14}C");     /* Returns: stackunits(5686, "y") */
-hl: nucl_halflife("^{210}Po");   /* Returns: stackunits(138.378, "d") */
-```
+**Returns:** Array of energy values, or `false` if not found
 
 ---
 
-#### `nucl_decay_modes(nuclide_id)`
+#### `chem_nuc_halflives(nuclide_id)`
 
-**Description:** Returns the decay modes for the ground state.
+**Description:** Returns array of half-life values for each energy level (ground state at index 0).
 
 **Parameters:**
 - `nuclide_id` (string): Nuclide identifier
 
-**Returns:** List of decay modes, or `false` if not found
+**Returns:** Array of half-life numbers, or `false` if not found
 
 **Example:**
 ```maxima
-modes: nucl_decay_modes("^{14}C");      /* Returns: ["B-"] */
-modes: nucl_decay_modes("^{40}K");      /* Returns: ["B-", "B+"] */
+hls: chem_nuc_halflives("^{14}C");
+/* Returns [5730, ...] (ground state at index 0) */
 ```
 
 ---
 
-#### `nucl_branching_ratios(nuclide_id)`
+#### `chem_nuc_halflife_units(nuclide_id)`
 
-**Description:** Returns the branching ratios (in percent) for ground state decay modes.
+**Description:** Returns array of units for each half-life value.
 
 **Parameters:**
 - `nuclide_id` (string): Nuclide identifier
 
-**Returns:** List of branching ratios, or `false` if not found
+**Returns:** Array of unit strings ("y", "d", "s", "ms", etc.), or `false` if not found
 
 **Example:**
 ```maxima
-br: nucl_branching_ratios("^{14}C");   /* Returns: [100] */
-br: nucl_branching_ratios("^{40}K");   /* Returns: [89.28, 10.72] */
+units: chem_nuc_halflife_units("^{14}C");
+/* Returns ["y", ...] */
 ```
 
 ---
 
-### Navigation and Filtering Functions
+#### `chem_nuc_decay_modes(nuclide_id)`
 
-#### `nucl_array()`
+**Description:** Returns array of decay mode arrays (one per energy level).
 
-**Description:** Returns an array of all nuclide IDs.
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Nested array of decay modes, or `false` if not found
+
+**Example:**
+```maxima
+modes: chem_nuc_decay_modes("^{14}C");
+/* Returns [["B-"], ...] for ground state and excited states */
+```
+
+---
+
+#### `chem_nuc_branching(nuclide_id)`
+
+**Description:** Returns array of branching ratio arrays (percentages, 0-100).
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Nested array of branching ratios, or `false` if not found
+
+---
+
+### Ground-State Convenience Functions (Independent)
+
+#### `chem_nuc_gs_halflife(nuclide_id)`
+
+**Description:** Returns the ground-state half-life (first element of halflives array).
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Half-life value, or `false` if not found
+
+---
+
+#### `chem_nuc_gs_halflife_unit(nuclide_id)`
+
+**Description:** Returns the unit for ground-state half-life.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Unit string, or `false` if not found
+
+---
+
+#### `chem_nuc_gs_halflife_s(nuclide_id)`
+
+**Description:** Returns ground-state half-life converted to seconds.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Half-life in seconds, or `false` if not found
+
+**Example:**
+```maxima
+hl_s: chem_nuc_gs_halflife_s("^{14}C");
+/* Converts 5730 years to seconds */
+```
+
+---
+
+#### `chem_nuc_gs_decay_modes(nuclide_id)`
+
+**Description:** Returns decay modes for the ground state.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Array of decay mode strings, or `false` if not found
+
+**Example:**
+```maxima
+modes: chem_nuc_gs_decay_modes("^{14}C");
+/* Returns ["B-"] */
+
+modes: chem_nuc_gs_decay_modes("^{40}K");
+/* Returns ["B-", "B+"] */
+```
+
+---
+
+#### `chem_nuc_gs_branching(nuclide_id)`
+
+**Description:** Returns branching ratios (%) for ground-state decay modes.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Array of branching ratio values, or `false` if not found
+
+**Example:**
+```maxima
+br: chem_nuc_gs_branching("^{14}C");
+/* Returns [100] (100% B-) */
+```
+
+---
+
+#### `chem_nuc_gs_dominant_mode(nuclide_id)`
+
+**Description:** Returns the dominant decay mode for the ground state.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Decay mode string, or `false` if not found
+
+---
+
+### Half-Life Unit Conversion (Independent)
+
+#### `chem_nuc_halflife_to_seconds(value, unit)`
+
+**Description:** Converts a half-life value from given unit to seconds.
+
+**Parameters:**
+- `value` (number): Half-life value
+- `unit` (string): Unit ("fs", "ps", "ns", "us", "ms", "s", "m", "h", "d", "y")
+
+**Returns:** Half-life in seconds, or `false` if unit not recognized
+
+**Example:**
+```maxima
+hl_s: chem_nuc_halflife_to_seconds(5730, "y");
+/* Converts 5730 years to seconds */
+
+hl_s: chem_nuc_halflife_to_seconds(138.376, "d");
+/* Converts 138.376 days to seconds */
+```
+
+---
+
+### Navigation and Filtering Functions (Independent)
+
+#### `chem_nuc_by_Z(atomic_number)`
+
+**Description:** Returns all nuclide IDs with a given atomic number (isotopes of an element).
+
+**Parameters:**
+- `atomic_number` (integer): Atomic number (Z)
+
+**Returns:** List of nuclide IDs, or empty list if none found
+
+**Example:**
+```maxima
+carbon_isotopes: chem_nuc_by_Z(6);
+/* Returns ["^{1}C", "^{2}C", ..., "^{22}C"] */
+```
+
+---
+
+#### `chem_nuc_by_N(neutron_number)`
+
+**Description:** Returns all nuclide IDs with a given neutron count.
+
+**Parameters:**
+- `neutron_number` (integer): Neutron number (N)
 
 **Returns:** List of nuclide IDs
 
 **Example:**
 ```maxima
-nuclides: nucl_array();
-/* Returns ["^{1}H", "^{2}H", "^{3}H", ..., "^{238}U"] */
+isones: chem_nuc_by_N(8);
+/* Returns all nuclides with 8 neutrons */
 ```
 
 ---
 
-#### `nucl_array_radioactive()`
+#### `chem_nuc_by_A(mass_number)`
 
-**Description:** Returns all radioactive nuclide IDs.
+**Description:** Returns all nuclide IDs with a given mass number (isobars).
+
+**Parameters:**
+- `mass_number` (integer): Mass number (A)
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+isobars: chem_nuc_by_A(14);
+/* Returns all nuclides with A=14: ^{14}B, ^{14}C, ^{14}N, ^{14}O, ... */
+```
+
+---
+
+#### `chem_nuc_by_ZN(atomic_number, neutron_number)`
+
+**Description:** Returns the nuclide ID for specific Z and N values.
+
+**Parameters:**
+- `atomic_number` (integer): Atomic number
+- `neutron_number` (integer): Neutron number
+
+**Returns:** Nuclide ID string, or `false` if not found
+
+**Example:**
+```maxima
+nuc: chem_nuc_by_ZN(6, 8);  /* Returns "^{14}C" */
+nuc: chem_nuc_by_ZN(92, 146);  /* Returns "^{238}U" */
+```
+
+---
+
+#### `chem_nuc_with_decay_mode(decay_mode)`
+
+**Description:** Returns all nuclides with a specific decay mode.
+
+**Parameters:**
+- `decay_mode` (string): Decay mode ("A", "B-", "B+", "EC", "IT", "SF", "N", "P", "2B-", "B-N", etc.)
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+alpha_emitters: chem_nuc_with_decay_mode("A");
+/* Returns ["^{210}Po", "^{211}At", ...] */
+
+beta_minus: chem_nuc_with_decay_mode("B-");
+```
+
+---
+
+#### `chem_nuc_halflife_range(min_hl, max_hl)`
+
+**Description:** Returns all nuclides with ground-state half-lives in a given range (in seconds).
+
+**Parameters:**
+- `min_hl` (number): Minimum half-life in seconds
+- `max_hl` (number): Maximum half-life in seconds
+
+**Returns:** List of nuclide IDs
+
+**Example:**
+```maxima
+/* Find nuclides with half-life between 0.001 and 2 seconds */
+nucs: chem_nuc_halflife_range(0.001, 2);
+```
+
+---
+
+#### `chem_nuc_radioactive_isotopes(atomic_number)`
+
+**Description:** Returns all radioactive isotopes of an element.
+
+**Parameters:**
+- `atomic_number` (integer): Atomic number
 
 **Returns:** List of radioactive nuclide IDs
 
 **Example:**
 ```maxima
-radioactive: nucl_array_radioactive();
-/* Returns ["^{3}H", "^{14}C", "^{40}K", ..., "^{238}U"] */
+radioactive_C: chem_nuc_radioactive_isotopes(6);
+/* Returns all radioactive isotopes of carbon */
 ```
 
 ---
 
-#### `nucl_array_alpha()`
+#### `chem_nuc_num_levels(nuclide_id)`
 
-**Description:** Returns nuclide IDs with pure alpha decay (100%).
-
-**Returns:** List of nuclide IDs
-
-**Example:**
-```maxima
-alpha_emitters: nucl_array_alpha();
-/* Returns ["^{210}Po", "^{238}U", ...] */
-```
-
----
-
-#### `nucl_array_betaminus()`
-
-**Description:** Returns nuclide IDs with pure beta-minus decay.
-
-**Returns:** List of nuclide IDs
-
-**Example:**
-```maxima
-beta_minus_emitters: nucl_array_betaminus();
-/* Returns ["^{14}C", "^{32}P", ...] */
-```
-
----
-
-#### `nucl_array_betaplus()`
-
-**Description:** Returns nuclide IDs with pure beta-plus decay.
-
-**Returns:** List of nuclide IDs
-
-**Example:**
-```maxima
-beta_plus_emitters: nucl_array_betaplus();
-/* Returns ["^{11}C", "^{18}F", ...] */
-```
-
----
-
-#### `nucl_array_ec()`
-
-**Description:** Returns nuclide IDs with pure electron capture.
-
-**Returns:** List of nuclide IDs
-
-**Example:**
-```maxima
-ec_nuclides: nucl_array_ec();
-/* Returns ["^{7}Be", "^{37}Ar", ...] */
-```
-
----
-
-### Utility Functions
-
-#### `nucl_display(nuclide_id)`
-
-**Description:** Formats a nuclide name for LaTeX display.
+**Description:** Returns the number of known energy levels for a nuclide.
 
 **Parameters:**
 - `nuclide_id` (string): Nuclide identifier
 
-**Returns:** LaTeX-formatted string
+**Returns:** Number of levels (integer), or `false` if not found
+
+---
+
+#### `chem_nuc_exists(nuclide_id)`
+
+**Description:** Checks if a nuclide exists in the database.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** `true` if exists, `false` otherwise
 
 **Example:**
 ```maxima
-disp: nucl_display("^{14}C");  /* Returns: "\\ce{^{14}C}" */
+b1: chem_nuc_exists("^{14}C");   /* Returns true */
+b2: chem_nuc_exists("^{999}Zz");  /* Returns false */
+```
+
+---
+
+#### `chem_nuc_all_ids()`
+
+**Description:** Returns an array of all nuclide IDs in the database.
+
+**Returns:** List of all nuclide ID strings
+
+**Example:**
+```maxima
+all_nucs: chem_nuc_all_ids();
+/* Returns ["^{1}H", "^{2}H", ..., "^{238}U"] */
+
+random_nuc: rand(chem_nuc_all_ids());
+```
+
+---
+
+### Charge and Oxidation State Functions (Independent)
+
+#### `chem_nuc_parse_oxidation_charge(charge_str)`
+
+**Description:** Parses a charge string and returns the numerical charge.
+
+**Parameters:**
+- `charge_str` (string): Charge notation (e.g., "+2", "-1", "2+", "1-")
+
+**Returns:** Numerical charge (integer), or `false` if malformed
+
+**Example:**
+```maxima
+chg1: chem_nuc_parse_oxidation_charge("+2");   /* Returns 2 */
+chg2: chem_nuc_parse_oxidation_charge("2+");   /* Returns 2 */
+chg3: chem_nuc_parse_oxidation_charge("-1");   /* Returns -1 */
+chg4: chem_nuc_parse_oxidation_charge("1-");   /* Returns -1 */
+```
+
+---
+
+#### `chem_nuc_charge_string(charge)`
+
+**Description:** Formats a numerical charge as a string (e.g., 2 → "2+").
+
+**Parameters:**
+- `charge` (integer): Numerical charge
+
+**Returns:** Formatted charge string
+
+**Example:**
+```maxima
+str1: chem_nuc_charge_string(2);   /* Returns "2+" */
+str2: chem_nuc_charge_string(-1);  /* Returns "1-" */
+str3: chem_nuc_charge_string(0);   /* Returns "" (neutral) */
+```
+
+---
+
+### Dependent Functions (Require pse.mac)
+
+#### `chem_nuc_id_from_ZN(atomic_number, neutron_number)`
+
+**Description:** Generates a nuclide ID from atomic number and neutron count using element symbols from `pse.mac`.
+
+**Parameters:**
+- `atomic_number` (integer): Atomic number (Z)
+- `neutron_number` (integer): Neutron number (N)
+
+**Returns:** Nuclide ID string (e.g., "^{14}C"), or `false` if element not found
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+nuc: chem_nuc_id_from_ZN(6, 8);  /* Returns "^{14}C" */
+nuc: chem_nuc_id_from_ZN(92, 146);  /* Returns "^{238}U" */
+```
+
+---
+
+#### `chem_nuc_symbol(nuclide_id)`
+
+**Description:** Returns the element symbol for a nuclide.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Element symbol (e.g., "C", "U"), or `false` if not found
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+sym: chem_nuc_symbol("^{14}C");  /* Returns "C" */
+sym: chem_nuc_symbol("^{210}Po");  /* Returns "Po" */
+```
+
+---
+
+#### `chem_nuc_typical_charge(nuclide_id)`
+
+**Description:** Returns the typical oxidation state for the element of a nuclide.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Typical charge (integer), or `false` if not found
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+chg: chem_nuc_typical_charge("^{14}C");  /* Returns 4 (carbon's typical charge) */
+chg: chem_nuc_typical_charge("^{23}Na");  /* Returns 1 (sodium's typical charge) */
+```
+
+---
+
+#### `chem_nuc_alpha_product(nuclide_id)`
+
+**Description:** Returns the nuclide ID resulting from alpha decay.
+
+**Parameters:**
+- `nuclide_id` (string): Parent nuclide identifier
+
+**Returns:** Product nuclide ID, or `false` if decay not possible
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+product: chem_nuc_alpha_product("^{210}Po");
+/* Returns "^{206}Pb" (210Po → 206Pb + 4He) */
+```
+
+---
+
+#### `chem_nuc_beta_minus_product(nuclide_id)`
+
+**Description:** Returns the nuclide ID resulting from beta-minus decay.
+
+**Parameters:**
+- `nuclide_id` (string): Parent nuclide identifier
+
+**Returns:** Product nuclide ID, or `false` if decay not possible
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+product: chem_nuc_beta_minus_product("^{14}C");
+/* Returns "^{14}N" (14C → 14N + e⁻ + ν̄) */
+```
+
+---
+
+#### `chem_nuc_beta_plus_product(nuclide_id)`
+
+**Description:** Returns the nuclide ID resulting from beta-plus decay.
+
+**Parameters:**
+- `nuclide_id` (string): Parent nuclide identifier
+
+**Returns:** Product nuclide ID, or `false` if decay not possible
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+product: chem_nuc_beta_plus_product("^{11}C");
+/* Returns "^{11}B" (11C → 11B + e⁺ + ν) */
+```
+
+---
+
+#### `chem_nuc_decay_product(nuclide_id, decay_mode)`
+
+**Description:** Returns the nuclide ID resulting from a specific decay mode.
+
+**Parameters:**
+- `nuclide_id` (string): Parent nuclide identifier
+- `decay_mode` (string): Decay mode ("A", "B-", "B+", etc.)
+
+**Returns:** Product nuclide ID, or `false` if decay mode not applicable
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+product: chem_nuc_decay_product("^{210}Po", "A");
+/* Returns "^{206}Pb" */
+
+product: chem_nuc_decay_product("^{14}C", "B-");
+/* Returns "^{14}N" */
+```
+
+---
+
+#### `chem_nuc_ionize(nuclide_id, charge)`
+
+**Description:** Generates an ion formula string for a nuclide with a given charge.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+- `charge` (integer): Charge value
+
+**Returns:** Formatted ion string, or `false` if element not found
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+ion: chem_nuc_ionize("^{14}C", 4);
+/* Returns formatted C^4+ ion string */
+```
+
+---
+
+#### `chem_nuc_ionize_typical(nuclide_id)`
+
+**Description:** Generates an ion formula string using the element's typical charge.
+
+**Parameters:**
+- `nuclide_id` (string): Nuclide identifier
+
+**Returns:** Formatted ion string, or `false` if element not found
+
+**Requires:** `pse.mac`
+
+**Example:**
+```maxima
+ion: chem_nuc_ionize_typical("^{23}Na");
+/* Returns formatted Na+ ion string (typical charge is +1) */
 ```
 
 ---
 
 ### Decay Mode Notation
 
-- **A**: Alpha decay (α)
-- **B-**: Beta-minus decay (β⁻)
-- **B+**: Beta-plus decay (β⁺)
-- **EC**: Electron capture
-- **IT**: Isomeric transition
+- **A**: Alpha decay (α, 2 protons + 2 neutrons)
+- **B-**: Beta-minus decay (β⁻, neutron → proton + electron)
+- **B+**: Beta-plus decay (β⁺, proton → neutron + positron)
+- **EC**: Electron capture (nucleus captures orbital electron)
+- **IT**: Isomeric transition (excited state → ground state)
 - **SF**: Spontaneous fission
 - **N**: Neutron emission
 - **P**: Proton emission
-- **2B-**: Double beta decay
+- **2B-**: Double beta-minus decay
 - **B-N**: Beta-delayed neutron emission
-
----
-
-### Practical Examples
-
-#### Carbon Dating
-
-```maxima
-halflife_C14: nucl_halflife("^{14}C");
-decay_mode: nucl_decay_modes("^{14}C");
-```
-
-#### Random Radioactive Isotope
-
-```maxima
-random_isotope: rand(nucl_array_radioactive());
-isotope_display: nucl_display(random_isotope);
-```
 
 ---
 
