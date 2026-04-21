@@ -54,12 +54,27 @@
     "NO3^- + 4H^+", "NO + H2O", "NO3^-", "NO"
 ]$
 
+/* Explicit H+ metadata table (no string parsing needed).
+   Layout: [oxidant, reductant, hplus_species, hplus_count, ...] */
+%_ELECTROCHEM_HPLUS_DATA: [
+    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", "MnO4^-", 8,
+    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", "Cr2O7^{2-}", 14,
+    "O2 + 4H^+", "2H2O", "O2", 4,
+    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", "MnO2", 4,
+    "NO3^- + 4H^+", "NO + H2O", "NO3^-", 4,
+    "O2 + 2H^+", "H2O2", "O2", 2,
+    "2H^+", "H2", "H^+", 2
+]$
+
+/* Robust string equality helper for mhchem-style strings. */
+_electrochem_str_eq(a, b) := sequal(sconcat(a), sconcat(b))$
+
 /* Internal lookups */
 _electrochem_find_oxidant(oxidant) := block([i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 1,
     while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = oxidant) then return(i),
+        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], oxidant) then return(i),
         i: i + 4
     ),
     0
@@ -69,7 +84,7 @@ _electrochem_find_reductant(reductant) := block([i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 2,
     while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = reductant) then return(i - 1),
+        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], reductant) then return(i - 1),
         i: i + 4
     ),
     0
@@ -79,7 +94,7 @@ _electrochem_find_pair(oxidant, reductant) := block([i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 1,
     while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = oxidant) and is(%_ELECTROCHEM_DATA[i + 1] = reductant) then return(i),
+        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_DATA[i + 1], reductant) then return(i),
         i: i + 4
     ),
     0
@@ -89,7 +104,17 @@ _electrochem_find_stripped_pair(oxidant, reductant) := block([i, n],
     n: length(%_ELECTROCHEM_STRIPPED_DATA),
     i: 1,
     while i <= n do (
-        if is(%_ELECTROCHEM_STRIPPED_DATA[i] = oxidant) and is(%_ELECTROCHEM_STRIPPED_DATA[i + 1] = reductant) then return(i),
+        if _electrochem_str_eq(%_ELECTROCHEM_STRIPPED_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_STRIPPED_DATA[i + 1], reductant) then return(i),
+        i: i + 4
+    ),
+    0
+)$
+
+_electrochem_find_hplus_pair(oxidant, reductant) := block([i, n],
+    n: length(%_ELECTROCHEM_HPLUS_DATA),
+    i: 1,
+    while i <= n do (
+        if _electrochem_str_eq(%_ELECTROCHEM_HPLUS_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_HPLUS_DATA[i + 1], reductant) then return(i),
         i: i + 4
     ),
     0
@@ -126,6 +151,18 @@ chem_electrochem_core_pair_data(oxidant, reductant) := block([idx],
     idx: _electrochem_find_stripped_pair(oxidant, reductant),
     if is(idx = 0) then [oxidant, reductant]
     else [%_ELECTROCHEM_STRIPPED_DATA[idx + 2], %_ELECTROCHEM_STRIPPED_DATA[idx + 3]]
+)$
+
+/* Returns the species that reacts with H+ for a given pair, or empty string if none. */
+chem_electrochem_Hplus_species(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_hplus_pair(oxidant, reductant),
+    if is(idx = 0) then "" else %_ELECTROCHEM_HPLUS_DATA[idx + 2]
+)$
+
+/* Returns how many H+ are involved for a given pair (0 if none). */
+chem_electrochem_Hplus_count(oxidant, reductant) := block([idx],
+    idx: _electrochem_find_hplus_pair(oxidant, reductant),
+    if is(idx = 0) then 0 else %_ELECTROCHEM_HPLUS_DATA[idx + 3]
 )$
 
 chem_electrochem_half_equation(oxidant, reductant) := block([idx, n],

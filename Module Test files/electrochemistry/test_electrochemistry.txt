@@ -22,6 +22,9 @@ t_6: chem_electrochem_pair_data(ox_fe, red_fe);
 t_7: chem_electrochem_half_equation(ox_fe, red_fe);
 t_17: chem_electrochem_half_equation_excl_H_H2O("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
 t_18: chem_electrochem_core_pair_data("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
+t_19: chem_electrochem_Hplus_species("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
+t_20: chem_electrochem_Hplus_count("MnO4^- + 8H^+", "Mn^{2+} + 4H2O");
+t_21: chem_electrochem_Hplus_count(ox_fe, red_fe);
 
 /* Navigation */
 t_8: chem_electrochem_oxidant_array();
@@ -56,9 +59,12 @@ s_15: bool_to_score(t_15 = null);
 s_16: bool_to_score(length(t_16) = length(t_8));
 s_17: bool_to_score(sequal(t_17, "\\ce{MnO4^- + 5 e^- -> Mn^{2+}}"));
 s_18: bool_to_score(length(t_18) = 2 and sequal(first(t_18), "MnO4^-") and sequal(second(t_18), "Mn^{2+}"));
+s_19: bool_to_score(sequal(t_19, "MnO4^-"));
+s_20: bool_to_score(t_20 = 8);
+s_21: bool_to_score(t_21 = 0);
 
-max_score:18;
-total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18;
+max_score:21;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18+s_19+s_20+s_21;
 score_pct:round(float(100*total_score/max_score));
 
 p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4);
@@ -66,5 +72,6 @@ p_5:passfail(s_5); p_6:passfail(s_6); p_7:passfail(s_7); p_8:passfail(s_8);
 p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
 p_13:passfail(s_13); p_14:passfail(s_14); p_15:passfail(s_15); p_16:passfail(s_16);
 p_17:passfail(s_17); p_18:passfail(s_18);
+p_19:passfail(s_19); p_20:passfail(s_20); p_21:passfail(s_21);
 
 ta1:10;
