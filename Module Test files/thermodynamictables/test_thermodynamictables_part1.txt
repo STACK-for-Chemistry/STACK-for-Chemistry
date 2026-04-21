@@ -1,0 +1,70 @@
+/* thermodynamictables tests - Part 1 */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/thermodynamictables.mac");
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+not_false_to_score(x) := if is(x = false) then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+products_comb:[["CO2","g",1],["H2O","l",2]];
+reactants_comb:[["CH4","g",1],["O2","g",2]];
+
+t_1: chem_thermo_data_all("H2O","l");
+t_2: chem_thermo_data_all_any("H2O");
+t_3: chem_thermo_data("H2O","DeltaHf","l");
+t_4: chem_thermo_data_units("H2O","DeltaHf","l");
+t_5: chem_reaction_enthalpy(products_comb,reactants_comb);
+t_6: chem_reaction_entropy(products_comb,reactants_comb);
+t_7: chem_reaction_gibbs(products_comb,reactants_comb);
+t_8: chem_gibbs_from_enthalpy_entropy(-100,50,298.15);
+t_9: chem_equilibrium_constant(-10,298.15);
+t_10: chem_thermo_substance_array();
+t_11: chem_thermo_substance_state_array("g");
+t_12: chem_thermo_states("H2O");
+t_13: chem_thermo_filter_by_tag("oxide");
+t_14: chem_thermo_filter_by_tags_all(["molecule","oxide"]);
+t_15: chem_thermo_filter_by_tags_any(["hydrocarbon","salt"]);
+t_16: chem_thermo_substances_by_tag("oxide");
+t_17: chem_thermo_substances_by_tags_all(["molecule","oxide"]);
+t_18: chem_thermo_substances_by_tags_any(["hydrocarbon","salt"]);
+t_19: chem_thermo_get_tags("NaCl");
+t_20: chem_thermo_get_tags_state("H2O","l");
+t_21: chem_thermo_random_by_tags_all(["oxide"]);
+t_22: chem_thermo_data_by_tag("oxide");
+t_23: chem_thermo_data_by_tag_state("oxide","g");
+
+s_1: not_false_to_score(t_1);
+s_2: not_false_to_score(t_2);
+s_3: bool_to_score(t_3 = -285.83);
+s_4: not_false_to_score(t_4);
+s_5: not_false_to_score(t_5);
+s_6: not_false_to_score(t_6);
+s_7: not_false_to_score(t_7);
+s_8: not_false_to_score(t_8);
+s_9: bool_to_score(t_9 > 0);
+s_10: bool_to_score(length(t_10) > 0);
+s_11: bool_to_score(length(t_11) > 0);
+s_12: bool_to_score(length(t_12) > 1);
+s_13: bool_to_score(length(t_13) > 0);
+s_14: bool_to_score(length(t_14) > 0);
+s_15: bool_to_score(length(t_15) > 0);
+s_16: bool_to_score(member("CO2",t_16));
+s_17: bool_to_score(length(t_17) > 0);
+s_18: bool_to_score(length(t_18) > 0);
+s_19: not_false_to_score(t_19);
+s_20: not_false_to_score(t_20);
+s_21: bool_to_score(length(t_21) > 0);
+s_22: bool_to_score(length(t_22) > 0);
+s_23: bool_to_score(length(t_23) > 0);
+
+max_score:23;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18+s_19+s_20+s_21+s_22+s_23;
+score_pct:float(100*total_score/max_score);
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5); p_6:passfail(s_6);
+p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
+p_13:passfail(s_13); p_14:passfail(s_14); p_15:passfail(s_15); p_16:passfail(s_16); p_17:passfail(s_17); p_18:passfail(s_18);
+p_19:passfail(s_19); p_20:passfail(s_20); p_21:passfail(s_21); p_22:passfail(s_22); p_23:passfail(s_23);
+
+ta1:10;

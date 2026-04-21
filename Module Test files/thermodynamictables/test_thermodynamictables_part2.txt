@@ -1,0 +1,28 @@
+/* thermodynamictables tests - Part 2 (with reactions) */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/reactions.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/thermodynamictables.mac");
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+not_false_to_score(x) := if is(x = false) then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+t_1: chem_reaction_enthalpy_by_name("CombustionMethane");
+t_2: chem_reaction_entropy_by_name("CombustionMethane");
+t_3: chem_reaction_gibbs_by_name("CombustionMethane");
+t_4: chem_reaction_enthalpy_by_name("SynthesisWater");
+t_5: chem_reaction_gibbs_by_name("DecompositionCaCO3");
+
+s_1: not_false_to_score(t_1);
+s_2: not_false_to_score(t_2);
+s_3: not_false_to_score(t_3);
+s_4: not_false_to_score(t_4);
+s_5: not_false_to_score(t_5);
+
+max_score:5;
+total_score:s_1+s_2+s_3+s_4+s_5;
+score_pct:float(100*total_score/max_score);
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5);
+
+ta1:10;

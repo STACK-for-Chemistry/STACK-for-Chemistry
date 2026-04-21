@@ -4,27 +4,27 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 stack_unit_si_declare(true);
 stackfltfmt:"~f";
 
-bool_to_score(b) := if is(b) then 1 else 0$
-not_false_to_score(x) := if is(x = false) then 0 else 1$
-passfail(s) := if is(s = 1) then "PASS" else "FAIL"$
+bool_to_score(b) := if is(b) then 1 else 0;
+not_false_to_score(x) := if is(x = false) then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
 
-id_c14:"^{14}C"$
-id_c11:"^{11}C"$
-id_po210:"^{210}Po"$
+id_c14:"^{14}C";
+id_c11:"^{11}C";
+id_po210:"^{210}Po";
 
 /* Functions that require both nuclidetable.mac and pse.mac */
-t_2_id_from_ZN: chem_nuc_id_from_ZN(6,8)$
+t_2_id_from_ZN: chem_nuc_id_from_ZN(6,8);
 
-t_8_alpha: chem_nuc_alpha_product(id_po210)$
-t_8_beta_minus: chem_nuc_beta_minus_product(id_c14)$
-t_8_beta_plus: chem_nuc_beta_plus_product(id_c11)$
-t_8_decay_prod_A: chem_nuc_decay_product(id_po210,"A")$
-t_8_decay_prod_BM: chem_nuc_decay_product(id_c14,"B-")$
-t_8_decay_prod_BP: chem_nuc_decay_product(id_c11,"B+")$
+t_8_alpha: chem_nuc_alpha_product(id_po210);
+t_8_beta_minus: chem_nuc_beta_minus_product(id_c14);
+t_8_beta_plus: chem_nuc_beta_plus_product(id_c11);
+t_8_decay_prod_A: chem_nuc_decay_product(id_po210,"A");
+t_8_decay_prod_BM: chem_nuc_decay_product(id_c14,"B-");
+t_8_decay_prod_BP: chem_nuc_decay_product(id_c11,"B+");
 
-t_9_typical_charge: chem_nuc_typical_charge(id_c14)$
-t_9_ionize: chem_nuc_ionize(id_c14,2)$
-t_9_ionize_typical: chem_nuc_ionize_typical(id_c14)$
+t_9_typical_charge: chem_nuc_typical_charge(id_c14);
+t_9_ionize: chem_nuc_ionize(id_c14,2);
+t_9_ionize_typical: chem_nuc_ionize_typical(id_c14);
 
 s_7: bool_to_score(sequal(t_2_id_from_ZN, id_c14));
 
@@ -43,7 +43,7 @@ max_score: 10;
 total_score: s_7+s_33+s_34+s_35+s_36+s_37+s_38+s_43+s_44+s_45;
 score_pct: float(100*total_score/max_score);
 
-p_7: passfail(s_7)$  p_33: passfail(s_33)$ p_34: passfail(s_34)$ p_35: passfail(s_35)$ p_36: passfail(s_36)$
-p_37: passfail(s_37)$ p_38: passfail(s_38)$ p_43: passfail(s_43)$ p_44: passfail(s_44)$ p_45: passfail(s_45)$
+p_7: passfail(s_7);  p_33: passfail(s_33); p_34: passfail(s_34); p_35: passfail(s_35); p_36: passfail(s_36);
+p_37: passfail(s_37); p_38: passfail(s_38); p_43: passfail(s_43); p_44: passfail(s_44); p_45: passfail(s_45);
 
 ta1:10;

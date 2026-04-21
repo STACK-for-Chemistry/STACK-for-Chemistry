@@ -1,0 +1,83 @@
+/* solubility tests */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/solubility.mac");
+stack_unit_si_declare(true);
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+not_null_to_score(x) := if is(x = null) then 0 else 1;
+not_empty_to_score(x) := if sequal(sconcat(x), "") then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+salt:"AgCl";
+
+t_1: chem_sol_Ksp(salt);
+t_2: chem_sol_pKsp(salt);
+t_3: chem_sol_cation(salt);
+t_4: chem_sol_cation_count(salt);
+t_5: chem_sol_anion(salt);
+t_6: chem_sol_anion_count(salt);
+t_7: chem_sol_ion_counts(salt);
+t_8: chem_sol_total_ion_count(salt);
+t_9: chem_sol_entry(salt);
+t_10: chem_sol_solubility_expression(salt);
+t_11: chem_sol_molar_solubility(salt);
+t_12: chem_sol_molar_solubility_common_ion(salt,0.01,"cation");
+t_13: chem_sol_array();
+t_14: chem_sol_array_by_cation("Ag^+");
+t_15: chem_sol_array_by_anion("Cl^-");
+t_16: chem_sol_cation_array();
+t_17: chem_sol_anion_array();
+t_18: chem_sol_array_sorted_Ksp();
+t_19: chem_sol_array_Ksp_range(1.0e-12,1.0e-6);
+t_20: chem_sol_array_by_cation_count(1);
+t_21: chem_sol_array_by_anion_count(1);
+t_22: chem_sol_array_by_total_ions(2);
+t_23: chem_sol_ion_product(0.001,0.001,salt);
+t_24: chem_sol_precipitation_check(0.001,0.001,salt);
+t_25: chem_sol_max_concentration(0.01,salt,"cation");
+t_26: chem_sol_dissolution_equation(salt);
+t_27: chem_sol_Ksp_expression(salt);
+t_28: chem_sol_Ksp_activity_expression(salt);
+t_29: chem_sol_Ksp_activity_expression_simplified(salt);
+
+s_1: not_null_to_score(t_1);
+s_2: bool_to_score(t_2 = 9.75);
+s_3: bool_to_score(sequal(t_3,"Ag^+"));
+s_4: bool_to_score(t_4 = 1);
+s_5: bool_to_score(sequal(t_5,"Cl^-"));
+s_6: bool_to_score(t_6 = 1);
+s_7: bool_to_score(length(t_7) = 2);
+s_8: bool_to_score(t_8 = 2);
+s_9: not_null_to_score(t_9);
+s_10: not_empty_to_score(t_10);
+s_11: not_null_to_score(t_11);
+s_12: not_null_to_score(t_12);
+s_13: bool_to_score(length(t_13) > 0);
+s_14: bool_to_score(member(salt,t_14));
+s_15: bool_to_score(member(salt,t_15));
+s_16: bool_to_score(length(t_16) > 0);
+s_17: bool_to_score(length(t_17) > 0);
+s_18: bool_to_score(length(t_18) > 0);
+s_19: bool_to_score(length(t_19) > 0);
+s_20: bool_to_score(member(salt,t_20));
+s_21: bool_to_score(member(salt,t_21));
+s_22: bool_to_score(member(salt,t_22));
+s_23: not_null_to_score(t_23);
+s_24: not_empty_to_score(t_24);
+s_25: not_null_to_score(t_25);
+s_26: not_empty_to_score(t_26);
+s_27: not_empty_to_score(t_27);
+s_28: not_empty_to_score(t_28);
+s_29: not_empty_to_score(t_29);
+
+max_score:29;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12+s_13+s_14+s_15+s_16+s_17+s_18+s_19+s_20+s_21+s_22+s_23+s_24+s_25+s_26+s_27+s_28+s_29;
+score_pct:float(100*total_score/max_score);
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5); p_6:passfail(s_6);
+p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
+p_13:passfail(s_13); p_14:passfail(s_14); p_15:passfail(s_15); p_16:passfail(s_16); p_17:passfail(s_17); p_18:passfail(s_18);
+p_19:passfail(s_19); p_20:passfail(s_20); p_21:passfail(s_21); p_22:passfail(s_22); p_23:passfail(s_23); p_24:passfail(s_24);
+p_25:passfail(s_25); p_26:passfail(s_26); p_27:passfail(s_27); p_28:passfail(s_28); p_29:passfail(s_29);
+
+ta1:10;

@@ -1,0 +1,46 @@
+/* reactions tests */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/reactions.mac");
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+not_false_to_score(x) := if is(x = false) then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+rxn_comb:"CombustionMethane";
+rxn_synth:"SynthesisWater";
+rxn_decomp:"DecompositionCaCO3";
+
+t_1: chem_reaction_data(rxn_comb);
+t_2: chem_reaction_reactants(rxn_comb);
+t_3: chem_reaction_products(rxn_comb);
+t_4: chem_reaction_equation(rxn_comb);
+t_5: chem_reaction_array();
+t_6: chem_reaction_combustion_array();
+t_7: chem_reaction_formation_array();
+t_8: chem_reaction_synthesis_array();
+t_9: chem_reaction_decomposition_array();
+t_10: chem_reaction_filter_by_species(2,1);
+t_11: chem_reaction_filter_by_species(1,2);
+t_12: chem_reaction_filter_by_species(2,2);
+
+s_1: not_false_to_score(t_1);
+s_2: bool_to_score(length(t_2) = 2);
+s_3: bool_to_score(length(t_3) = 2);
+s_4: not_false_to_score(t_4);
+s_5: bool_to_score(length(t_5) > 0);
+s_6: bool_to_score(member(rxn_comb, t_6));
+s_7: bool_to_score(length(t_7) > 0);
+s_8: bool_to_score(member(rxn_synth, t_8));
+s_9: bool_to_score(member(rxn_decomp, t_9));
+s_10: bool_to_score(member(rxn_synth, t_10));
+s_11: bool_to_score(member(rxn_decomp, t_11));
+s_12: bool_to_score(member(rxn_comb, t_12));
+
+max_score:12;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12;
+score_pct:float(100*total_score/max_score);
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5); p_6:passfail(s_6);
+p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
+
+ta1:10;
