@@ -1,0 +1,39 @@
+/* pse_masses tests */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Tests/pse_masses.mac");
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+false_to_score(x) := if is(x = false) then 1 else 0;
+not_false_to_score(x) := if is(x = false) then 0 else 1;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+t_1: chem_atomic_mass("O");
+t_2: chem_atomic_mass("Xx");
+t_3: chem_atomic_mass_units("Na");
+t_4: chem_molar_mass_element("Cl");
+t_5: chem_molar_mass_element_units("H");
+t_6: chem_string_to_number("204");
+t_7: chem_parse_formula("H2SO4");
+t_8: chem_molar_mass("H2O");
+t_9: chem_molar_mass("NaCl");
+t_10: chem_molar_mass("Xy2");
+
+s_1: bool_to_score(t_1 = 16.00);
+s_2: false_to_score(t_2);
+s_3: not_false_to_score(t_3);
+s_4: bool_to_score(t_4 = 35.45);
+s_5: not_false_to_score(t_5);
+s_6: bool_to_score(t_6 = 204);
+s_7: bool_to_score(member(["H",2], t_7) and member(["S",1], t_7) and member(["O",4], t_7));
+s_8: bool_to_score(t_8 = stackunits(18.02, g*mol^(-1)));
+s_9: bool_to_score(t_9 = stackunits(58.44, g*mol^(-1)));
+s_10: false_to_score(t_10);
+
+max_score:10;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10;
+score_pct:round(float(100*total_score/max_score));
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5);
+p_6:passfail(s_6); p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10);
+
+ta1:10;

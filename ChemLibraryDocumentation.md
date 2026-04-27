@@ -57,7 +57,11 @@
    - [Significant Digits Functions](#significant-digits-functions)
    - [Input Parsing Rules](#input-parsing-rules)
    - [Practical Examples](#practical-examples-numeric-operations)
-10. [Usage Examples](#usage-examples)
+10. [PSE Masses Module](#pse-masses-module)
+   - [Quick Reference](#quick-reference-pse-masses)
+   - [Core Functions](#core-functions-pse-masses)
+   - [Function Ownership and Compatibility](#function-ownership-and-compatibility)
+11. [Usage Examples](#usage-examples)
 
 ---
 
@@ -70,6 +74,9 @@ To use the chemistry library in your STACK question, include the following lines
 ```maxima
 /* Load periodic table module */
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+
+/* Load molar-mass and formula-parsing module */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse_masses.mac");
 
 /* Load acid-base chemistry module */
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
@@ -115,40 +122,44 @@ This enables the `mhchem` LaTeX package, which allows you to use `\ce{...}` comm
 
 ## Module Dependencies
 
-Understanding the dependencies between modules is crucial for correct functionality. Here's a comprehensive breakdown of how the 7 modules relate to each other:
+Understanding the dependencies between modules is crucial for correct functionality. Here's a comprehensive breakdown of how the 8 modules relate to each other:
 
 ### Completely Independent Modules
 
 These modules have **zero dependencies** and can be loaded and used independently:
 
-1. **Periodic Table Module (`pse.mac`)** — 23 functions
+1. **Periodic Table Module (`pse.mac`)** — periodic-table properties, navigation, electron configuration, constants
    - All functions work standalone
-   - Example use: `chem_data()`, `chem_electron_config()`, `chem_molar_mass()`, `chem_parse_formula()`
+   - Example use: `chem_data()`, `chem_electron_config()`, `chem_display()`, `chem_const_value()`
 
-2. **Acid-Base Chemistry Module (`acidbase.mac`)** — 39 functions  
+2. **PSE Masses Module (`pse_masses.mac`)** — 7 public functions
+   - All functions work standalone
+   - Example use: `chem_atomic_mass()`, `chem_molar_mass()`, `chem_parse_formula()`
+
+3. **Acid-Base Chemistry Module (`acidbase.mac`)** — 39 functions  
    - All functions work standalone
    - Example use: `chem_acidbase_pKa()`, `chem_acidbase_Ka()`, `chem_acid_array()`, `chem_titration_pH()`
 
-3. **Solubility Module (`solubility.mac`)** — 29 functions
+4. **Solubility Module (`solubility.mac`)** — 29 functions
    - All functions work standalone
    - Example use: `chem_sol_Ksp()`, `chem_sol_molar_solubility()`, `chem_sol_precipitation_check()`
 
-4. **Reactions Module (`reactions.mac`)** — 10 functions
+5. **Reactions Module (`reactions.mac`)** — 10 functions
    - All functions work standalone
    - Example use: `chem_reaction_data()`, `chem_reaction_reactants()`, `chem_reaction_array()`
 
-5. **Numeric Operations Module (`numericops.mac`)** — 2 functions
+6. **Numeric Operations Module (`numericops.mac`)** — 2 functions
    - All functions work standalone
    - Example use: `chem_num_significant_digits()`, `chem_num_significant_digits_arr()`
 
 ### Modules with Optional Dependencies
 
-6. **Thermodynamic Tables Module (`thermodynamictables.mac`)** — 27 functions total
+7. **Thermodynamic Tables Module (`thermodynamictables.mac`)** — 27 functions total
    - **24 functions are completely independent**: Data retrieval, filtering, tag-based navigation, and manual thermodynamic calculations
    - **3 functions require `reactions.mac`**: `chem_reaction_enthalpy_by_name()`, `chem_reaction_entropy_by_name()`, `chem_reaction_gibbs_by_name()`
    - See [Thermodynamic Tables Function Breakdown](#thermodynamic-tables-function-breakdown) below
 
-7. **Nuclide Database Module (`nuclidetable.mac`)** — 38 functions total
+8. **Nuclide Database Module (`nuclidetable.mac`)** — 38 functions total
    - **28 functions are completely independent**: Raw data lookups, entry retrieval, search utilities, half-life conversions, charge/oxidation parsing
    - **10 functions require `pse.mac`**: ID generation from Z/N, decay product calculations, ionization/charge helpers
    - See [Nuclide Database Function Breakdown](#nuclide-database-function-breakdown) below
@@ -193,6 +204,7 @@ Core data access, searching, utilities that work without PSE:
 
 ```maxima
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse_masses.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/solubility.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
@@ -214,8 +226,9 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 |----------|------------------|-------|
 | `chem_data()`, `chem_element()` | `pse.mac` | Periodic table data |
 | `chem_electron_config()` | `pse.mac` | Electron configurations |
-| `chem_molar_mass()` | `pse.mac` | Molar mass calculations |
-| `chem_parse_formula()` | `pse.mac` | Formula parsing |
+| `chem_atomic_mass()`, `chem_atomic_mass_units()` | `pse_masses.mac` | Element molar masses |
+| `chem_molar_mass()` | `pse_masses.mac` (primary), `pse.mac` (legacy) | Molecular molar mass calculations |
+| `chem_parse_formula()` | `pse_masses.mac` (primary), `pse.mac` (legacy) | Formula parsing |
 | `chem_display()` | `pse.mac` | Formula display |
 | `chem_acidbase_pKa()`, `chem_acidbase_Ka()` | `acidbase.mac` | Acid-base data |
 | `chem_titration_pH()` | `acidbase.mac` | Titration calculations |
@@ -233,7 +246,9 @@ stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-C
 
 ## Periodic Table Module
 
-The periodic table module provides comprehensive data for all 118 elements, including atomic properties, electron configurations, molar mass calculations, and physical constants.
+The periodic table module provides comprehensive data for all 118 elements, including atomic properties, electron configurations, navigation helpers, formula rendering, and physical constants.
+
+**Note:** Molar-mass and formula-parsing functions are now documented primarily in the [PSE Masses Module](#pse-masses-module). They remain available in `pse.mac` for backward compatibility.
 
 ### Quick Reference (Periodic Table)
 
@@ -253,8 +268,6 @@ The periodic table module provides comprehensive data for all 118 elements, incl
 | `chem_element_period_maingroup(p, mg)` | Element at position | `chem_element_period_maingroup(3, 7)` → `"Cl"` |
 | `chem_electron_config(element)` | Formatted e⁻ config | `chem_electron_config("Fe")` → LaTeX string |
 | `chem_electron_config_formatter(str)` | Format config string | `chem_electron_config_formatter("[Ar] 4s2")` |
-| `chem_molar_mass(formula)` | Calculate molar mass | `chem_molar_mass("H2SO4")` → `stackunits(98.09, g*mol^(-1))` |
-| `chem_parse_formula(formula)` | Parse formula | `chem_parse_formula("H2O")` → `[["H", 2], ["O", 1]]` |
 | `chem_display(substance)` | Wrap in `\ce{...}` | `chem_display("H2SO4")` → `"\\ce{H2SO4}"` |
 | `chem_const_value(name)` | Get constant value | `chem_const_value("R")` → `8.314462618` |
 | `chem_const_units(name)` | Get constant with units | `chem_const_units("NA")` → `stackunits(6.022e23, mol^(-1))` |
@@ -543,6 +556,9 @@ formatted: chem_electron_config_formatter("[Kr] 5s2 4d10 5p6");
 ---
 
 ### Molar Mass and Formula Parsing Functions
+
+These functions are provided as a compatibility layer in `pse.mac`.
+For new questions, load and use `pse_masses.mac` (see [PSE Masses Module](#pse-masses-module)).
 
 #### `chem_molar_mass(formula)`
 
@@ -1792,25 +1808,7 @@ expr: chem_sol_solubility_expression("Ca3(PO4)2");
 
 ### Molar Solubility Calculation Functions
 
-#### `chem_molar_mass(formula)`
-
-**Description:** Calculates the molar mass of a molecule from its chemical formula string. Returns the result with units (g/mol).
-
-**Parameters:**
-- `formula` (string): Chemical formula (e.g., `"H2SO4"`, `"Ca(OH)2"`)
-
-**Returns:** Molar mass with units via `stackunits(value, g*mol^(-1))`, or `false` if an element is not found
-
-**Example:**
-```maxima
-mass: chem_molar_mass("H2O");       /* Returns stackunits(18.02, g*mol^(-1)) */
-mass: chem_molar_mass("H2SO4");     /* Returns stackunits(98.09, g*mol^(-1)) */
-mass: chem_molar_mass("NaCl");      /* Returns stackunits(58.44, g*mol^(-1)) */
-```
-
-**Note:** This function parses the formula by detecting uppercase letters (element start), optional lowercase letters (second character), and digits (count). It does **not** handle parentheses like `(OH)2` — use the expanded formula `O2H2` instead, or input the element counts directly.
-
----
+Molar-mass helpers are part of `pse_masses.mac` (primary) and `pse.mac` (legacy compatibility). See [PSE Masses Module](#pse-masses-module).
 
 #### `chem_sol_molar_solubility(salt)`
 
@@ -3894,6 +3892,71 @@ sig_b: chem_num_significant_digits("4.50E-3");    /* Returns 3 */
 
 ---
 
+## PSE Masses Module
+
+The PSE masses module provides compact element-mass lookups and lightweight formula parsing/molar-mass helpers.
+It is intended as the primary module for molar-mass workflows.
+
+### Quick Reference (PSE Masses)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_atomic_mass(element)` | Atomic molar mass (g/mol) | `chem_atomic_mass("O")` → `16.00` |
+| `chem_atomic_mass_units(element)` | Atomic molar mass with units | `chem_atomic_mass_units("Na")` → `stackunits(22.99, g*mol^(-1))` |
+| `chem_molar_mass_element(element)` | Alias for element molar mass | `chem_molar_mass_element("Cl")` → `35.45` |
+| `chem_molar_mass_element_units(element)` | Alias with units | `chem_molar_mass_element_units("H")` → `stackunits(1.01, g*mol^(-1))` |
+| `chem_string_to_number(str)` | Convert digit string to integer | `chem_string_to_number("204")` → `204` |
+| `chem_parse_formula(formula)` | Parse formula into `[element,count]` pairs | `chem_parse_formula("H2SO4")` → `[["H",2],["S",1],["O",4]]` |
+| `chem_molar_mass(formula)` | Molecular molar mass with units | `chem_molar_mass("NaCl")` → `stackunits(58.44, g*mol^(-1))` |
+
+### Core Functions (PSE Masses)
+
+#### `chem_atomic_mass(element)`
+
+**Description:** Returns the molar mass of one element in g/mol.
+
+**Parameters:**
+- `element` (string): Element symbol (e.g., `"H"`, `"Na"`, `"Cl"`)
+
+**Returns:** Numeric molar mass, or `false` if not found
+
+#### `chem_atomic_mass_units(element)`
+
+**Description:** Returns element molar mass with units as `stackunits(value, g*mol^(-1))`.
+
+**Parameters:**
+- `element` (string): Element symbol
+
+**Returns:** `stackunits(...)`, or `false` if not found
+
+#### `chem_parse_formula(formula)`
+
+**Description:** Parses a simple chemical formula string into `[element, count]` pairs.
+
+**Parameters:**
+- `formula` (string): Chemical formula without nested group expansion requirements
+
+**Returns:** List of pairs like `[["H",2],["O",1]]`
+
+**Note:** Parentheses are not expanded. For grouped formulas, provide expanded stoichiometry.
+
+#### `chem_molar_mass(formula)`
+
+**Description:** Computes molecular molar mass by summing parsed element counts.
+
+**Parameters:**
+- `formula` (string): Chemical formula
+
+**Returns:** `stackunits(value, g*mol^(-1))`, or `false` if any element is unknown
+
+### Function Ownership and Compatibility
+
+- Primary module for molar-mass and formula parsing: `pse_masses.mac`
+- Legacy compatibility in periodic-table module: `pse.mac` still includes `chem_string_to_number()`, `chem_parse_formula()`, and `chem_molar_mass()`
+- Recommended for new questions: load `pse_masses.mac`; load `pse.mac` separately when you need periodic-table properties/navigation/constants
+
+---
+
 ## Usage Examples
 
 ### Example 1: Random Element Properties
@@ -3909,6 +3972,7 @@ config: chem_electron_config(element);
 ### Example 2: Molar Mass Calculation
 
 ```maxima
+/* Requires pse_masses.mac (recommended) or legacy pse.mac compatibility */
 mass_h2o: chem_molar_mass("H2O");
 mass_h2so4: chem_molar_mass("H2SO4");
 mass_nacl: chem_molar_mass("NaCl");
