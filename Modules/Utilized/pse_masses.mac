@@ -1,0 +1,225 @@
+/*  Author Chris Sangwin
+    University of Edinburgh
+    Copyright (C) 2025 Chris Sangwin
+
+    Modified by Alexander Pitzer
+    ETH Zurich
+    Further modified by GitHub Copilot
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Chemistry molar mass functions for STACK                    */
+/*                                                              */
+/*  V1.0 April 2026                                             */
+/*                                                              */
+/****************************************************************/
+
+/* Atomic molar masses in g/mol keyed by element symbol. */
+%_CHEM_MASS_DATA: [
+    ["H", 1.01],
+    ["He", 4.00],
+    ["Li", 6.94],
+    ["Be", 9.01],
+    ["B", 10.81],
+    ["C", 12.01],
+    ["N", 14.01],
+    ["O", 16.00],
+    ["F", 19.00],
+    ["Ne", 20.18],
+    ["Na", 22.99],
+    ["Mg", 24.31],
+    ["Al", 26.98],
+    ["Si", 28.09],
+    ["P", 30.97],
+    ["S", 32.07],
+    ["Cl", 35.45],
+    ["Ar", 39.95],
+    ["K", 39.10],
+    ["Ca", 40.08],
+    ["Sc", 44.96],
+    ["Ti", 47.87],
+    ["V", 50.94],
+    ["Cr", 52.00],
+    ["Mn", 54.94],
+    ["Fe", 55.85],
+    ["Co", 58.93],
+    ["Ni", 58.69],
+    ["Cu", 63.55],
+    ["Zn", 65.38],
+    ["Ga", 69.72],
+    ["Ge", 72.64],
+    ["As", 74.92],
+    ["Se", 78.96],
+    ["Br", 79.90],
+    ["Kr", 83.80],
+    ["Rb", 85.47],
+    ["Sr", 87.62],
+    ["Y", 88.91],
+    ["Zr", 91.22],
+    ["Nb", 92.91],
+    ["Mo", 95.94],
+    ["Tc", 98],
+    ["Ru", 101.07],
+    ["Rh", 102.91],
+    ["Pd", 106.42],
+    ["Ag", 107.87],
+    ["Cd", 112.41],
+    ["In", 114.82],
+    ["Sn", 118.71],
+    ["Sb", 121.76],
+    ["Te", 127.60],
+    ["I", 126.90],
+    ["Xe", 131.29],
+    ["Cs", 132.91],
+    ["Ba", 137.33],
+    ["La", 138.91],
+    ["Ce", 140.12],
+    ["Pr", 140.91],
+    ["Nd", 144.24],
+    ["Pm", 145],
+    ["Sm", 150.36],
+    ["Eu", 151.96],
+    ["Gd", 157.25],
+    ["Tb", 158.93],
+    ["Dy", 162.50],
+    ["Ho", 164.93],
+    ["Er", 167.26],
+    ["Tm", 168.93],
+    ["Yb", 173.04],
+    ["Lu", 174.97],
+    ["Hf", 178.49],
+    ["Ta", 180.85],
+    ["W", 183.84],
+    ["Re", 186.21],
+    ["Os", 190.23],
+    ["Ir", 192.22],
+    ["Pt", 195.08],
+    ["Au", 196.97],
+    ["Hg", 200.59],
+    ["Tl", 204.38],
+    ["Pb", 207.20],
+    ["Bi", 208.98],
+    ["Po", 209],
+    ["At", 210],
+    ["Rn", 222],
+    ["Fr", 223],
+    ["Ra", 226],
+    ["Ac", 227],
+    ["Th", 232.04],
+    ["Pa", 231.04],
+    ["U", 238.03],
+    ["Np", 237],
+    ["Pu", 244],
+    ["Am", 243],
+    ["Cm", 247],
+    ["Bk", 247],
+    ["Cf", 251],
+    ["Es", 252],
+    ["Fm", 257],
+    ["Md", 258],
+    ["No", 259],
+    ["Lr", 262],
+    ["Rf", 261],
+    ["Db", 262],
+    ["Sg", 266],
+    ["Bh", 264],
+    ["Hs", 277],
+    ["Mt", 268],
+    ["Ds", 281],
+    ["Rg", 272],
+    ["Cn", 285],
+    ["Nh", 286],
+    ["Fl", 289],
+    ["Mc", 288],
+    ["Lv", 292],
+    ["Ts", 294],
+    ["Og", 294]
+]$
+
+/* Returns the molar mass of an element in g/mol. */
+chem_atomic_mass(element) := assoc(element, %_CHEM_MASS_DATA)$
+
+/* Returns the molar mass of an element with units attached. */
+chem_atomic_mass_units(element) := block([mass],
+    mass: chem_atomic_mass(element),
+    if is(mass = false) then false else stackunits(mass, g*mol^(-1))
+)$
+
+/* Element-wise alias matching the molecular molar-mass naming. */
+chem_molar_mass_element(element) := chem_atomic_mass(element)$
+
+/* Element-wise alias matching the molecular molar-mass naming. */
+chem_molar_mass_element_units(element) := chem_atomic_mass_units(element)$
+
+/* Manual digit-to-number conversion without forbidden functions. */
+chem_string_to_number(str) := block([chars, result, i, digit_val],
+    if sequal(str, "") then return(0),
+    chars: charlist(str),
+    result: 0,
+    for i:1 thru length(chars) do (
+        digit_val: cint(chars[i]) - 48,
+        result: result * 10 + digit_val
+    ),
+    result
+)$
+
+/* Parses a simple chemical formula into [element, count] pairs.
+   Parentheses are not expanded here; repeated elements are summed in chem_molar_mass. */
+chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, num_val],
+    chars: charlist(formula),
+    n: length(chars),
+    i: 1,
+    result: [],
+
+    while i <= n do (
+        if cgreaterp(chars[i], "@") and clessp(chars[i], "[") then (
+            current_element: chars[i],
+            i: i + 1,
+
+            if i <= n and cgreaterp(chars[i], "`") and clessp(chars[i], "{") then (
+                current_element: sconcat(current_element, chars[i]),
+                i: i + 1
+            ),
+
+            current_count: "",
+            while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                current_count: sconcat(current_count, chars[i]),
+                i: i + 1
+            ),
+
+            if sequal(current_count, "") then num_val: 1
+            else num_val: chem_string_to_number(current_count),
+
+            result: cons([current_element, num_val], result)
+        ) else (
+            i: i + 1
+        )
+    ),
+
+    reverse(result)
+)$
+
+/* Calculates the molar mass of a molecule from a formula string.
+   Example: chem_molar_mass("H2SO4") returns stackunits(98.09, g*mol^(-1)). */
+chem_molar_mass(formula) := block([parsed, total_mass, pair, elem_mass],
+    parsed: chem_parse_formula(formula),
+    total_mass: 0,
+
+    for pair in parsed do (
+        elem_mass: chem_atomic_mass(first(pair)),
+        if is(elem_mass = false) then return(false),
+        total_mass: total_mass + elem_mass * second(pair)
+    ),
+
+    stackunits(total_mass, g*mol^(-1))
+)$
