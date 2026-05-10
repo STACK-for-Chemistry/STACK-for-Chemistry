@@ -132,9 +132,9 @@ These modules have **zero dependencies** and can be loaded and used independentl
    - All functions work standalone
    - Example use: `chem_data()`, `chem_electron_config()`, `chem_display()`, `chem_const_value()`
 
-2. **PSE Masses Module (`pse_masses.mac`)** — 7 public functions
+2. **PSE Masses Module (`pse_masses.mac`)** — 9 public functions
    - All functions work standalone
-   - Example use: `chem_atomic_mass()`, `chem_molar_mass()`, `chem_parse_formula()`
+   - Example use: `chem_atomic_mass()`, `chem_atomic_number()`, `chem_molar_mass()`, `chem_parse_formula()`, `chem_display()`
 
 3. **Acid-Base Chemistry Module (`acidbase.mac`)** — 39 functions  
    - All functions work standalone
@@ -3894,8 +3894,8 @@ sig_b: chem_num_significant_digits("4.50E-3");    /* Returns 3 */
 
 ## PSE Masses Module
 
-The PSE masses module provides compact element-mass lookups and lightweight formula parsing/molar-mass helpers.
-It is intended as the primary module for molar-mass workflows.
+The PSE masses module provides compact element data (atomic mass and atomic number) lookups and lightweight formula parsing/molar-mass helpers.
+It is intended as the primary module for molar-mass workflows and element number retrieval.
 
 ### Quick Reference (PSE Masses)
 
@@ -3903,11 +3903,13 @@ It is intended as the primary module for molar-mass workflows.
 |----------|-------------|---------|
 | `chem_atomic_mass(element)` | Atomic molar mass (g/mol) | `chem_atomic_mass("O")` → `16.00` |
 | `chem_atomic_mass_units(element)` | Atomic molar mass with units | `chem_atomic_mass_units("Na")` → `stackunits(22.99, g*mol^(-1))` |
+| `chem_atomic_number(element)` | Atomic number (Z) | `chem_atomic_number("Fe")` → `26` |
 | `chem_molar_mass_element(element)` | Alias for element molar mass | `chem_molar_mass_element("Cl")` → `35.45` |
 | `chem_molar_mass_element_units(element)` | Alias with units | `chem_molar_mass_element_units("H")` → `stackunits(1.01, g*mol^(-1))` |
 | `chem_string_to_number(str)` | Convert digit string to integer | `chem_string_to_number("204")` → `204` |
 | `chem_parse_formula(formula)` | Parse formula into `[element,count]` pairs | `chem_parse_formula("H2SO4")` → `[["H",2],["S",1],["O",4]]` |
 | `chem_molar_mass(formula)` | Molecular molar mass with units | `chem_molar_mass("NaCl")` → `stackunits(58.44, g*mol^(-1))` |
+| `chem_display(substance)` | Wrap formula in `\ce{...}` for mhchem | `chem_display("H2SO4")` → `"\\ce{H2SO4}"` |
 
 ### Core Functions (PSE Masses)
 
@@ -3929,6 +3931,21 @@ It is intended as the primary module for molar-mass workflows.
 
 **Returns:** `stackunits(...)`, or `false` if not found
 
+#### `chem_atomic_number(element)`
+
+**Description:** Returns the atomic number (Z) of an element.
+
+**Parameters:**
+- `element` (string): Element symbol (e.g., `"H"`, `"Fe"`, `"U"`)
+
+**Returns:** Integer atomic number (1–118), or `false` if not found
+
+**Example:**
+```maxima
+z_carbon: chem_atomic_number("C");  /* Returns 6 */
+z_iron: chem_atomic_number("Fe");   /* Returns 26 */
+```
+
 #### `chem_parse_formula(formula)`
 
 **Description:** Parses a simple chemical formula string into `[element, count]` pairs.
@@ -3949,11 +3966,39 @@ It is intended as the primary module for molar-mass workflows.
 
 **Returns:** `stackunits(value, g*mol^(-1))`, or `false` if any element is unknown
 
+#### `chem_display(substance)`
+
+**Description:** Wraps a chemical formula or substance name in `\ce{...}` for LaTeX/mhchem rendering.
+Used in question text to properly display chemical formulas with proper formatting, subscripts, and charges.
+
+**Parameters:**
+- `substance` (string): Chemical formula or substance identifier (e.g., `"H2SO4"`, `"CaCO3"`, `"H+"`).
+
+**Returns:** String formatted as `"\\ce{substance}"`
+
+**Example:**
+```maxima
+formula_display: chem_display("H2SO4");
+acid_display: chem_display("HCl");
+/* Use in question: <p>The acid {@acid_display@} is strong.</p> */
+```
+
+### Data Structure
+
+The module uses a single, unified data structure:
+- **`%_CHEM_ELEMENT_DATA`**: Array of element entries with format `[symbol, molar_mass, atomic_number]`
+  - Symbol: String (e.g., `"H"`, `"Fe"`, `"Og"`)
+  - Molar mass: Numeric value in g/mol
+  - Atomic number: Integer Z (1–118)
+
+All element lookups use `assoc()` on this structure, then extract mass via `second()` or atomic number via `third()`.
+
 ### Function Ownership and Compatibility
 
-- Primary module for molar-mass and formula parsing: `pse_masses.mac`
+- Primary module for molar-mass, atomic-number, and formula parsing: `pse_masses.mac`
 - Legacy compatibility in periodic-table module: `pse.mac` still includes `chem_string_to_number()`, `chem_parse_formula()`, and `chem_molar_mass()`
 - Recommended for new questions: load `pse_masses.mac`; load `pse.mac` separately when you need periodic-table properties/navigation/constants
+- `chem_display()` function is available in both `pse_masses.mac` and `pse.mac` for chemical formula rendering
 
 ---
 

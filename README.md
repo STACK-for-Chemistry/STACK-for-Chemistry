@@ -8,6 +8,7 @@ This repository contains chemistry functions and databases for the STACK questio
 - [Modules](#modules)
   - [Module Loading and Dependencies](#module-loading-and-dependencies)
   - [Periodic Table Module (`pse.mac`)](#periodic-table-module-psemac)
+  - [PSE Masses Module (`pse_masses.mac`)](#pse-masses-module-pse_massesmac)
   - [Acid-Base Chemistry Module (`acidbase.mac`)](#acid-base-chemistry-module-acidbasemac)
   - [Thermodynamic Tables Module (`thermodynamictables.mac`)](#thermodynamic-tables-module-thermodynamictablesmac)
   - [Chemical Reactions Module (`reactions.mac`)](#chemical-reactions-module-reactionsmac)
@@ -138,6 +139,46 @@ formula_display: chem_display("H2SO4");  /* Returns "\\ce{H2SO4}" */
 config_Fe: chem_electron_config("Fe");  
 /* Returns "[\mathrm{Ar}] 4\mathrm{s}^{2} 3\mathrm{d}^{6}" for LaTeX display */
 ```
+
+### PSE Masses Module (`pse_masses.mac`)
+
+A lightweight module for accessing atomic masses, atomic numbers, and performing molecular weight calculations. This module is optimized for applications that primarily need mass and atomic number data without the full periodic table information.
+
+**Core Functions:**
+- `chem_atomic_mass(element)` - Get atomic molar mass in g/mol
+- `chem_atomic_mass_units(element)` - Get atomic mass with units
+- `chem_atomic_number(element)` - Get atomic number (Z)
+- `chem_parse_formula(formula)` - Parse chemical formula into element-count pairs
+- `chem_molar_mass(formula)` - Calculate molecular molar mass from formula
+- `chem_string_to_number(str)` - Convert digit string to integer
+- `chem_display(substance)` - Wrap formula in `\ce{...}` for LaTeX rendering
+
+#### Examples:
+```maxima
+/* Get atomic mass of an element */
+mass_Fe: chem_atomic_mass("Fe");  /* Returns 55.85 */
+
+/* Get atomic mass with units */
+mass_O_units: chem_atomic_mass_units("O");  /* Returns 16.00*g*mol^(-1) */
+
+/* Get atomic number (Z) of an element */
+z_carbon: chem_atomic_number("C");   /* Returns 6 */
+z_iron: chem_atomic_number("Fe");    /* Returns 26 */
+
+/* Parse a chemical formula into element-count pairs */
+parsed: chem_parse_formula("H2SO4");  /* Returns [["H", 2], ["S", 1], ["O", 4]] */
+
+/* Calculate molar mass of a compound */
+M_water: chem_molar_mass("H2O");           /* Returns 18.02*g*mol^(-1) */
+M_sulfuric: chem_molar_mass("H2SO4");      /* Returns 98.08*g*mol^(-1) */
+M_glucose: chem_molar_mass("C6H12O6");     /* Returns 180.18*g*mol^(-1) */
+
+/* Wrap formula for LaTeX display */
+formula_display: chem_display("H2SO4");    /* Returns "\\ce{H2SO4}" */
+```
+
+**Data Structure:**
+The module uses a single unified array `%_CHEM_ELEMENT_DATA` containing all element data: `[symbol, molar_mass, atomic_number]` for each of the 118 elements.
 
 ### Acid-Base Chemistry Module (`acidbase.mac`)
 
