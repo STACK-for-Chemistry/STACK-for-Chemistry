@@ -47,8 +47,23 @@
     "Cu+", "Cu", 1, 0.52
 ]$
 
+/* Normalize common notation variants used in question strings. */
+_electrochem_normalize_species(s) := block([x],
+    x: s,
+    x: ssubst("H+", "H^+", x),
+    x: ssubst("OH-", "OH^-", x),
+    x
+)$
+
+/* Robust substring detection helper (returns true/false, never throws). */
+_electrochem_contains(haystack, needle) := block([p],
+    p: errcatch(sposition(needle, haystack)),
+    if is(length(p) = 0) then false else is(first(p) # false)
+)$
+
 /* Helper: find index of oxidant (returns position of oxidant, or 0 if not found) */
 _electrochem_find_oxidant(oxidant) := block([i, n, result],
+    oxidant: _electrochem_normalize_species(oxidant),
     n: length(%_ELECTROCHEM_DATA),
     result: 0,
     i: 1,
@@ -61,6 +76,7 @@ _electrochem_find_oxidant(oxidant) := block([i, n, result],
 
 /* Helper: find index of reductant (returns starting position of entry, or 0 if not found) */
 _electrochem_find_reductant(reductant) := block([i, n, result],
+    reductant: _electrochem_normalize_species(reductant),
     n: length(%_ELECTROCHEM_DATA),
     result: 0,
     i: 2,
@@ -73,6 +89,8 @@ _electrochem_find_reductant(reductant) := block([i, n, result],
 
 /* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found) */
 _electrochem_find_pair(oxidant, reductant) := block([i, n, result],
+    oxidant: _electrochem_normalize_species(oxidant),
+    reductant: _electrochem_normalize_species(reductant),
     n: length(%_ELECTROCHEM_DATA),
     result: 0,
     i: 1,
@@ -125,6 +143,8 @@ chem_electrochem_half_equation(oxidant, reductant) := block([idx, n],
 /* Remove H+ and H2O terms and simplify a half-equation to core redox species. */
 chem_electrochem_core_pair_data(oxidant, reductant) := block(
     [ox, red],
+    oxidant: _electrochem_normalize_species(oxidant),
+    reductant: _electrochem_normalize_species(reductant),
     ox: ssubst("", " + 8H+", oxidant),
     ox: ssubst("", " + 14H+", ox),
     ox: ssubst("", " + 4H+", ox),
@@ -160,19 +180,21 @@ chem_electrochem_half_equation_excl_H_H2O(oxidant, reductant) := block([idx, n, 
 /* Return the oxidant-side species containing H+, if present, else empty string. */
 chem_electrochem_Hplus_species(oxidant, reductant) := block(
     [pair],
+    oxidant: _electrochem_normalize_species(oxidant),
     pair: chem_electrochem_core_pair_data(oxidant, reductant),
-    if is(sposition("H+", oxidant) # false) then first(pair) else ""
+    if _electrochem_contains(oxidant, "H+") then first(pair) else ""
 )$
 
 /* Return stoichiometric coefficient of H+ in oxidant string (0 if absent). */
 chem_electrochem_Hplus_count(oxidant, reductant) := block(
     [x],
+    oxidant: _electrochem_normalize_species(oxidant),
     x: ssubst("", " ", oxidant),
-    if is(sposition("14H+", x) # false) then return(14),
-    if is(sposition("8H+", x) # false) then return(8),
-    if is(sposition("4H+", x) # false) then return(4),
-    if is(sposition("2H+", x) # false) then return(2),
-    if is(sposition("H+", x) # false) then return(1),
+    if _electrochem_contains(x, "14H+") then return(14),
+    if _electrochem_contains(x, "8H+") then return(8),
+    if _electrochem_contains(x, "4H+") then return(4),
+    if _electrochem_contains(x, "2H+") then return(2),
+    if _electrochem_contains(x, "H+") then return(1),
     0
 )$
 
