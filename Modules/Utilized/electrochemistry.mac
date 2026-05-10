@@ -122,6 +122,60 @@ chem_electrochem_half_equation(oxidant, reductant) := block([idx, n],
     sconcat("\\ce{", oxidant, " + ", string(n), " e^- -> ", reductant, "}")
 )$
 
+/* Remove H+ and H2O terms and simplify a half-equation to core redox species. */
+chem_electrochem_core_pair_data(oxidant, reductant) := block(
+    [ox, red],
+    ox: ssubst("", " + 8H+", oxidant),
+    ox: ssubst("", " + 14H+", ox),
+    ox: ssubst("", " + 4H+", ox),
+    ox: ssubst("", " + 2H+", ox),
+    ox: ssubst("", "H+ + ", ox),
+    ox: ssubst("", " + H+", ox),
+    ox: ssubst("", " + 2H2O", ox),
+    ox: ssubst("", " + 4H2O", ox),
+    ox: ssubst("", " + 7H2O", ox),
+    ox: ssubst("", "2H2O + ", ox),
+    red: ssubst("", " + 8H+", reductant),
+    red: ssubst("", " + 14H+", red),
+    red: ssubst("", " + 4H+", red),
+    red: ssubst("", " + 2H+", red),
+    red: ssubst("", "H+ + ", red),
+    red: ssubst("", " + H+", red),
+    red: ssubst("", " + 2H2O", red),
+    red: ssubst("", " + 4H2O", red),
+    red: ssubst("", " + 7H2O", red),
+    red: ssubst("", "2H2O + ", red),
+    [ox, red]
+)$
+
+/* Half-equation display using only core species, excluding H+ and H2O terms. */
+chem_electrochem_half_equation_excl_H_H2O(oxidant, reductant) := block([idx, n, core],
+    idx: _electrochem_find_pair(oxidant, reductant),
+    if is(idx = 0) then return(""),
+    n: %_ELECTROCHEM_DATA[idx + 2],
+    core: chem_electrochem_core_pair_data(oxidant, reductant),
+    sconcat("\\ce{", first(core), " + ", string(n), " e^- -> ", second(core), "}")
+)$
+
+/* Return the oxidant-side species containing H+, if present, else empty string. */
+chem_electrochem_Hplus_species(oxidant, reductant) := block(
+    [pair],
+    pair: chem_electrochem_core_pair_data(oxidant, reductant),
+    if is(sposition("H+", oxidant) # false) then first(pair) else ""
+)$
+
+/* Return stoichiometric coefficient of H+ in oxidant string (0 if absent). */
+chem_electrochem_Hplus_count(oxidant, reductant) := block(
+    [x],
+    x: ssubst("", " ", oxidant),
+    if is(sposition("14H+", x) # false) then return(14),
+    if is(sposition("8H+", x) # false) then return(8),
+    if is(sposition("4H+", x) # false) then return(4),
+    if is(sposition("2H+", x) # false) then return(2),
+    if is(sposition("H+", x) # false) then return(1),
+    0
+)$
+
 /* Navigation arrays */
 chem_electrochem_oxidant_array() := block([result, i, n],
     result: [],
