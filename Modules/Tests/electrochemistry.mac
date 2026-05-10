@@ -3,197 +3,123 @@
     Copyright (C) 2026 Alexander Pitzer
 
     Electrochemistry helper module based on standard reduction potentials.
+    Restructured to follow acid-base module pattern with direct string equality.
     Data layout is flat for fast index access:
     [oxidant, reductant, n_e, E0, oxidant, reductant, n_e, E0, ...]
 */
 
 %_ELECTROCHEM_DATA: [
-    "F2", "2F^-", 2, 2.87,
+    "F2", "2F-", 2, 2.87,
     "Ce^{4+}", "Ce^{3+}", 1, 1.61,
-    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", 5, 1.51,
-    "Cl2", "2Cl^-", 2, 1.36,
-    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", 6, 1.33,
-    "O2 + 4H^+", "2H2O", 4, 1.23,
-    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", 2, 1.23,
-    "Br2", "2Br^-", 2, 1.06,
-    "NO3^- + 4H^+", "NO + H2O", 3, 0.96,
-    "Ag^+", "Ag", 1, 0.80,
+    "MnO4^- + 8H+", "Mn^{2+} + 4H2O", 5, 1.51,
+    "Cl2", "2Cl-", 2, 1.36,
+    "Cr2O7^{2-} + 14H+", "2Cr^{3+} + 7H2O", 6, 1.33,
+    "O2 + 4H+", "2H2O", 4, 1.23,
+    "MnO2 + 4H+", "Mn^{2+} + 2H2O", 2, 1.23,
+    "Br2", "2Br-", 2, 1.06,
+    "NO3^- + 4H+", "NO + 2H2O", 3, 0.96,
+    "Ag+", "Ag", 1, 0.80,
     "Fe^{3+}", "Fe^{2+}", 1, 0.77,
-    "O2 + 2H^+", "H2O2", 2, 0.68,
-    "MnO4^- + 2H2O", "MnO2 + 4OH^-", 3, 0.59,
-    "I2", "2I^-", 2, 0.54,
-    "O2 + 2H2O", "4OH^-", 4, 0.40,
+    "O2 + 2H+", "H2O2", 2, 0.68,
+    "MnO4^- + 2H2O", "MnO2 + 4OH-", 3, 0.59,
+    "I2", "2I-", 2, 0.54,
+    "O2 + 2H2O", "4OH-", 4, 0.40,
     "[Fe(CN)6]^{3-}", "[Fe(CN)6]^{4-}", 1, 0.370,
     "Cu^{2+}", "Cu", 2, 0.34,
-    "AgCl", "Ag + Cl^-", 1, 0.222,
-    "2H^+", "H2", 2, 0.00,
+    "AgCl", "Ag + Cl-", 1, 0.222,
+    "H+", "0.5H2", 2, 0.00,
     "Pb^{2+}", "Pb", 2, -0.13,
     "Sn^{2+}", "Sn", 2, -0.14,
     "Ni^{2+}", "Ni", 2, -0.28,
     "Cd^{2+}", "Cd", 2, -0.40,
     "Fe^{2+}", "Fe", 2, -0.44,
     "Zn^{2+}", "Zn", 2, -0.76,
-    "2H2O", "H2 + 2OH^-", 2, -0.83,
+    "2H2O", "H2 + 2OH-", 2, -0.83,
     "Al^{3+}", "Al", 3, -1.66,
     "Mg^{2+}", "Mg", 2, -2.37,
-    "Na^+", "Na", 1, -2.71,
+    "Na+", "Na", 1, -2.71,
     "Ca^{2+}", "Ca", 2, -2.87,
     "Ba^{2+}", "Ba", 2, -2.90,
-    "K^+", "K", 1, -2.93,
-    "Li^+", "Li", 1, -3.05,
+    "K+", "K", 1, -2.93,
+    "Li+", "Li", 1, -3.05,
     "Co^{2+}", "Co", 2, -0.28,
     "Mn^{2+}", "Mn", 2, -1.18,
-    "Cu^+", "Cu", 1, 0.52
+    "Cu+", "Cu", 1, 0.52
 ]$
 
-/* Stripped (teaching) mapping: remove H^+ and H2O from selected half-reactions. */
-%_ELECTROCHEM_STRIPPED_DATA: [
-    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", "MnO4^-", "Mn^{2+}",
-    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", "Cr2O7^{2-}", "2Cr^{3+}",
-    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", "MnO2", "Mn^{2+}",
-    "NO3^- + 4H^+", "NO + H2O", "NO3^-", "NO"
-]$
-
-/* Explicit H+ metadata table (no string parsing needed).
-   Layout: [oxidant, reductant, hplus_species, hplus_count, ...] */
-%_ELECTROCHEM_HPLUS_DATA: [
-    "MnO4^- + 8H^+", "Mn^{2+} + 4H2O", "MnO4^-", 8,
-    "Cr2O7^{2-} + 14H^+", "2Cr^{3+} + 7H2O", "Cr2O7^{2-}", 14,
-    "O2 + 4H^+", "2H2O", "O2", 4,
-    "MnO2 + 4H^+", "Mn^{2+} + 2H2O", "MnO2", 4,
-    "NO3^- + 4H^+", "NO + H2O", "NO3^-", 4,
-    "O2 + 2H^+", "H2O2", "O2", 2,
-    "2H^+", "H2", "H^+", 2
-]$
-
-/* Canonicalize mhchem-style strings so lookups are tolerant to formatting variants.
-   Removes spaces, braces and '^' to make keys comparable (e.g. Fe3+ == Fe^{3+}). */
-_electrochem_key(s) := block([chars, i, c, key],
-    chars: charlist(sdowncase(sconcat(s))),
-    key: "",
-    for i: 1 thru length(chars) do (
-        c: chars[i],
-        if sequal(c, " ") or sequal(c, "{") or sequal(c, "}") or sequal(c, "^") then
-            false
-        else
-            key: sconcat(key, c)
-    ),
-    key
-)$
-
-/* Robust string equality helper for mhchem-style strings. */
-_electrochem_str_eq(a, b) := sequal(_electrochem_key(a), _electrochem_key(b))$
-
-/* Internal lookups */
-_electrochem_find_oxidant(oxidant) := block([i, n],
+/* Helper: find index of oxidant (returns position of oxidant, or 0 if not found) */
+_electrochem_find_oxidant(oxidant) := block([i, n, result],
     n: length(%_ELECTROCHEM_DATA),
+    result: 0,
     i: 1,
     while i <= n do (
-        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], oxidant) then return(i),
+        if is(%_ELECTROCHEM_DATA[i] = oxidant) then (result: i, return(result)),
         i: i + 4
     ),
-    0
+    result
 )$
 
-_electrochem_find_reductant(reductant) := block([i, n],
+/* Helper: find index of reductant (returns starting position of entry, or 0 if not found) */
+_electrochem_find_reductant(reductant) := block([i, n, result],
     n: length(%_ELECTROCHEM_DATA),
+    result: 0,
     i: 2,
     while i <= n do (
-        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], reductant) then return(i - 1),
+        if is(%_ELECTROCHEM_DATA[i] = reductant) then (result: i - 1, return(result)),
         i: i + 4
     ),
-    0
+    result
 )$
 
-_electrochem_find_pair(oxidant, reductant) := block([i, n],
+/* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found) */
+_electrochem_find_pair(oxidant, reductant) := block([i, n, result],
     n: length(%_ELECTROCHEM_DATA),
+    result: 0,
     i: 1,
     while i <= n do (
-        if _electrochem_str_eq(%_ELECTROCHEM_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_DATA[i + 1], reductant) then return(i),
+        if is(%_ELECTROCHEM_DATA[i] = oxidant) and is(%_ELECTROCHEM_DATA[i + 1] = reductant) then (result: i, return(result)),
         i: i + 4
     ),
-    0
+    result
 )$
 
-_electrochem_find_stripped_pair(oxidant, reductant) := block([i, n],
-    n: length(%_ELECTROCHEM_STRIPPED_DATA),
-    i: 1,
-    while i <= n do (
-        if _electrochem_str_eq(%_ELECTROCHEM_STRIPPED_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_STRIPPED_DATA[i + 1], reductant) then return(i),
-        i: i + 4
-    ),
-    0
-)$
-
-_electrochem_find_hplus_pair(oxidant, reductant) := block([i, n],
-    n: length(%_ELECTROCHEM_HPLUS_DATA),
-    i: 1,
-    while i <= n do (
-        if _electrochem_str_eq(%_ELECTROCHEM_HPLUS_DATA[i], oxidant) and _electrochem_str_eq(%_ELECTROCHEM_HPLUS_DATA[i + 1], reductant) then return(i),
-        i: i + 4
-    ),
-    0
-)$
-
-/* Primary getters */
+/* Get E0 for an oxidant/reductant pair - returns null if not found */
 chem_electrochem_E0(oxidant, reductant) := block([idx],
     idx: _electrochem_find_pair(oxidant, reductant),
     if is(idx = 0) then null else %_ELECTROCHEM_DATA[idx + 3]
 )$
 
+/* Get number of electrons transferred for a pair - returns null if not found */
 chem_electrochem_n(oxidant, reductant) := block([idx],
     idx: _electrochem_find_pair(oxidant, reductant),
     if is(idx = 0) then null else %_ELECTROCHEM_DATA[idx + 2]
 )$
 
+/* Get reductant for a given oxidant - returns empty string if not found */
 chem_electrochem_reductant(oxidant) := block([idx],
     idx: _electrochem_find_oxidant(oxidant),
     if is(idx = 0) then "" else %_ELECTROCHEM_DATA[idx + 1]
 )$
 
+/* Get oxidant for a given reductant - returns empty string if not found */
 chem_electrochem_oxidant(reductant) := block([idx],
     idx: _electrochem_find_reductant(reductant),
     if is(idx = 0) then "" else %_ELECTROCHEM_DATA[idx]
 )$
 
+/* Get complete pair data: [oxidant, reductant, n_e, E0] - returns empty list if not found */
 chem_electrochem_pair_data(oxidant, reductant) := block([idx],
     idx: _electrochem_find_pair(oxidant, reductant),
     if is(idx = 0) then []
     else [%_ELECTROCHEM_DATA[idx], %_ELECTROCHEM_DATA[idx + 1], %_ELECTROCHEM_DATA[idx + 2], %_ELECTROCHEM_DATA[idx + 3]]
 )$
 
-chem_electrochem_core_pair_data(oxidant, reductant) := block([idx],
-    idx: _electrochem_find_stripped_pair(oxidant, reductant),
-    if is(idx = 0) then [oxidant, reductant]
-    else [%_ELECTROCHEM_STRIPPED_DATA[idx + 2], %_ELECTROCHEM_STRIPPED_DATA[idx + 3]]
-)$
-
-/* Returns the species that reacts with H+ for a given pair, or empty string if none. */
-chem_electrochem_Hplus_species(oxidant, reductant) := block([idx],
-    idx: _electrochem_find_hplus_pair(oxidant, reductant),
-    if is(idx = 0) then "" else %_ELECTROCHEM_HPLUS_DATA[idx + 2]
-)$
-
-/* Returns how many H+ are involved for a given pair (0 if none). */
-chem_electrochem_Hplus_count(oxidant, reductant) := block([idx],
-    idx: _electrochem_find_hplus_pair(oxidant, reductant),
-    if is(idx = 0) then 0 else %_ELECTROCHEM_HPLUS_DATA[idx + 3]
-)$
-
+/* Generate half-equation string with LaTeX formatting */
 chem_electrochem_half_equation(oxidant, reductant) := block([idx, n],
     idx: _electrochem_find_pair(oxidant, reductant),
     if is(idx = 0) then return(""),
     n: %_ELECTROCHEM_DATA[idx + 2],
     sconcat("\\ce{", oxidant, " + ", string(n), " e^- -> ", reductant, "}")
-)$
-
-/* Returns a teaching version with H^+ and H2O removed where mapping is available. */
-chem_electrochem_half_equation_excl_H_H2O(oxidant, reductant) := block([idx, n, ox_core, red_core],
-    idx: _electrochem_find_pair(oxidant, reductant),
-    if is(idx = 0) then return(""),
-    n: %_ELECTROCHEM_DATA[idx + 2],
-    [ox_core, red_core]: chem_electrochem_core_pair_data(oxidant, reductant),
-    sconcat("\\ce{", ox_core, " + ", string(n), " e^- -> ", red_core, "}")
 )$
 
 /* Navigation arrays */
@@ -254,17 +180,18 @@ chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
     result
 )$
 
-/* Cell voltage using standard reduction potentials:
+/* Cell voltage (standard conditions):
    Ecell = E0(cathode reduction) - E0(anode reduction) */
-chem_electrochem_cell_potential(cath_oxidant, cath_reductant, an_oxidant, an_reductant) := block([E_cath, E_an],
-    E_cath: chem_electrochem_E0(cath_oxidant, cath_reductant),
-    E_an: chem_electrochem_E0(an_oxidant, an_reductant),
+chem_electrochem_cell_potential(cathode_ox, cathode_red, anode_ox, anode_red) := block([E_cath, E_an],
+    E_cath: chem_electrochem_E0(cathode_ox, cathode_red),
+    E_an: chem_electrochem_E0(anode_ox, anode_red),
     if is(E_cath = null) or is(E_an = null) then null
     else float(E_cath - E_an)
 )$
 
-chem_electrochem_spontaneous(cath_oxidant, cath_reductant, an_oxidant, an_reductant) := block([Ecell],
-    Ecell: chem_electrochem_cell_potential(cath_oxidant, cath_reductant, an_oxidant, an_reductant),
+/* Check if a cell reaction is spontaneous (Ecell > 0) */
+chem_electrochem_spontaneous(cathode_ox, cathode_red, anode_ox, anode_red) := block([Ecell],
+    Ecell: chem_electrochem_cell_potential(cathode_ox, cathode_red, anode_ox, anode_red),
     if is(Ecell = null) then false else is(Ecell > 0)
 )$
 
