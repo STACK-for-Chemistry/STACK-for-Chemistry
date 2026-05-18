@@ -3789,6 +3789,7 @@ The numeric operations module provides utility functions for counting significan
 |----------|-------------|---------|
 | `chem_num_significant_digits(x)` | Count significant digits in a numeric input or string | `chem_num_significant_digits("1.230e-4")` → `4` |
 | `chem_num_significant_digits_arr(arr)` | Minimum significant digits across a list | `chem_num_significant_digits_arr(["12.30", "0.0560", "7.1"])` → `2` |
+| `chem_decimal_places(x)` | Count digits after the decimal point, preserving trailing zeros | `chem_decimal_places("1.23")` → `2`, `chem_decimal_places("1.00")` → `2` |
 
 ### Significant Digits Functions
 
@@ -3844,6 +3845,36 @@ minsig2: chem_num_significant_digits_arr(["1.200", "3.40", "0.0500"]);
 minsig3: chem_num_significant_digits_arr(["2.30", "abc"]);
 /* Returns false */
 ```
+
+---
+
+#### `chem_decimal_places(xstr)`
+
+**Description:** Returns the number of digits after the decimal point in a numeric input, preserving trailing zeros exactly as written.
+
+This function counts all digits that appear after a decimal point, making it useful for checking if a student answer has the correct number of decimal places. It handles both standard decimal notation and scientific notation.
+
+**Parameters:**
+- `xstr` (string or number): Numeric value to analyze
+
+**Returns:**
+- Integer number of digits after the decimal point
+- `0` if no decimal point is found
+- `false` if input is malformed
+
+**Example:**
+```maxima
+dp1: chem_decimal_places("1.23");       /* Returns 2 */
+dp2: chem_decimal_places("1.2");        /* Returns 1 */
+dp3: chem_decimal_places("1.10");       /* Returns 2 (preserves trailing zero) */
+dp4: chem_decimal_places("1.00");       /* Returns 2 (preserves trailing zeros) */
+dp5: chem_decimal_places("0.050");      /* Returns 3 */
+dp6: chem_decimal_places("123");        /* Returns 0 (no decimal point) */
+dp7: chem_decimal_places("1.23e-4");    /* Returns 2 (only counts mantissa decimals) */
+dp8: chem_decimal_places("abc");        /* Returns false */
+```
+
+**Note:** This function is especially useful for validating that student answers match a required number of decimal places, such as when grading thermodynamic data formatted to exactly 2 decimal places.
 
 ---
 

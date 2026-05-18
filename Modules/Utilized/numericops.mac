@@ -100,3 +100,54 @@ chem_num_significant_digits_arr(arr) := block(
 	),
 	return(min_sig)
 )$
+
+/* Returns the number of digits after the decimal point in a numeric string.
+   Handles trailing zeros (e.g., ".10" returns 2, ".00" returns 2).
+   If no decimal point is found, returns 0.
+   Non-string inputs are converted to string first.
+   Returns false if the input is invalid. */
+chem_decimal_places(xstr) := block(
+	[s, decimal_index, chars, i, n, count],
+
+	/* Convert to string if not already */
+	if stringp(xstr) then
+		s: sdowncase(xstr)
+	else
+		s: sdowncase(sconcat(xstr)),
+
+	/* Trim whitespace */
+	s: strim(" ", s),
+
+	/* Find decimal point position */
+	decimal_index: 0,
+	chars: charlist(s),
+	n: length(chars),
+
+	for i: 1 thru n do (
+		if sequal(chars[i], ".") then (
+			decimal_index: i,
+			i: n + 1  /* break loop */
+		)
+	),
+
+	/* If no decimal point found, return 0 */
+	if is(decimal_index = 0) then
+		return(0),
+
+	/* If decimal point is at the end, return 0 */
+	if is(decimal_index = n) then
+		return(0),
+
+	/* Count digits after decimal point until 'e' or end of string */
+	count: 0,
+	for i: decimal_index + 1 thru n do (
+		if sequal(chars[i], "e") or sequal(chars[i], "e") then
+			return(count),
+		if (cgreaterp(chars[i], "/") and clessp(chars[i], ":")) then
+			count: count + 1
+		else if not sequal(chars[i], " ") then
+			return(false)  /* Invalid character after decimal */
+	),
+
+	return(count)
+)$

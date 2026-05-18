@@ -6,6 +6,7 @@ bool_to_score(b) := if is(b) then 1 else 0;
 false_to_score(x) := if is(x = false) then 1 else 0;
 passfail(s) := if is(s = 1) then "PASS" else "FAIL";
 
+/* Test chem_num_significant_digits */
 t_1: chem_num_significant_digits("1.230e-4");
 t_2: chem_num_significant_digits("0.00450");
 t_3: chem_num_significant_digits("42");
@@ -13,17 +14,32 @@ t_4: chem_num_significant_digits_arr(["1.230","0.0045","12.0"]);
 t_5: chem_num_significant_digits("abc");
 t_6: chem_num_significant_digits_arr(["1.20","abc"]);
 
+/* Test chem_decimal_places */
+t_7: chem_decimal_places("1.23");
+t_8: chem_decimal_places("1.2");
+t_9: chem_decimal_places("1.10");
+t_10: chem_decimal_places("1.00");
+t_11: chem_decimal_places("123");
+t_12: chem_decimal_places("abc");
+
 s_1: bool_to_score(t_1 = 4);
 s_2: bool_to_score(t_2 = 3);
 s_3: bool_to_score(t_3 = 2);
 s_4: bool_to_score(t_4 = 2);
 s_5: false_to_score(t_5);
 s_6: false_to_score(t_6);
+s_7: bool_to_score(t_7 = 2);
+s_8: bool_to_score(t_8 = 1);
+s_9: bool_to_score(t_9 = 2);
+s_10: bool_to_score(t_10 = 2);
+s_11: bool_to_score(t_11 = 0);
+s_12: false_to_score(t_12);
 
-max_score:6;
-total_score:s_1+s_2+s_3+s_4+s_5+s_6;
+max_score:12;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12;
 score_pct:round(float(100*total_score/max_score));
 
 p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4); p_5:passfail(s_5); p_6:passfail(s_6);
+p_7:passfail(s_7); p_8:passfail(s_8); p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
 
 ta1:10;
