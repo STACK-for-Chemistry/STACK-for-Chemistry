@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-07-09T16:50:26.150080",
+  "optimized_json": "/home/alexander/Dokumente/STACK-for-Chemistry/Optimization Benchmark/data/benchmark_optimized_tests_v3_20260709_164059.json",
+  "tests_json": "/home/alexander/Dokumente/STACK-for-Chemistry/Optimization Benchmark/data/benchmark_implemented_module_tests_v2_20260709_164707.json",
+  "optimized_total_runtime": 0.3525383472442627,
+  "tests_total_runtime": 1.4085958003997803,
+  "common_modules": [
+    "acidbase",
+    "electrochemistry",
+    "nuclidetable",
+    "numericops",
+    "pse_masses",
+    "reactions",
+    "solubility",
+    "thermodynamictables"
+  ],
+  "optimized_runtimes": {
+    "acidbase": 0.03900432586669922,
+    "electrochemistry": 0.032164573669433594,
+    "nuclidetable": 0.041990041732788086,
+    "numericops": 0.032036781311035156,
+    "pse": 0.03794717788696289,
+    "pse_masses": 0.03873038291931152,
+    "reactions": 0.04286909103393555,
+    "solubility": 0.04000544548034668,
+    "thermodynamictables": 0.04779052734375
+  },
+  "tests_runtimes": {
+    "acidbase": 0.10702323913574219,
+    "electrochemistry": 0.11346268653869629,
+    "nuclidetable": 0.48072314262390137,
+    "numericops": 0.09927916526794434,
+    "pse_masses": 0.10357451438903809,
+    "reactions": 0.1156010627746582,
+    "solubility": 0.12144589424133301,
+    "thermodynamictables": 0.2674860954284668
+  }
+}

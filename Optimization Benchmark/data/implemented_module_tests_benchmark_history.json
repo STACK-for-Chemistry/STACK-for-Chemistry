@@ -33,6 +33,74 @@
         "solubility": true,
         "thermodynamictables": true
       }
+    },
+    {
+      "version": 1,
+      "timestamp": "2026-07-09T15:28:48.067488",
+      "runtimes": {
+        "acidbase": 0.12305068969726562,
+        "electrochemistry": 0.14073586463928223,
+        "nuclidetable": 0.4747495651245117,
+        "numericops": 0.08485126495361328,
+        "pse_masses": 0.09020018577575684,
+        "reactions": 0.08741974830627441,
+        "solubility": 0.128187894821167,
+        "thermodynamictables": 0.19202637672424316
+      },
+      "statuses": {
+        "acidbase": "success",
+        "electrochemistry": "success",
+        "nuclidetable": "success",
+        "numericops": "success",
+        "pse_masses": "success",
+        "reactions": "success",
+        "solubility": "success",
+        "thermodynamictables": "success"
+      },
+      "coverage_ok": {
+        "acidbase": true,
+        "electrochemistry": true,
+        "nuclidetable": true,
+        "numericops": true,
+        "pse_masses": true,
+        "reactions": true,
+        "solubility": true,
+        "thermodynamictables": true
+      }
+    },
+    {
+      "version": 2,
+      "timestamp": "2026-07-09T16:47:08.423651",
+      "runtimes": {
+        "acidbase": 0.10702323913574219,
+        "electrochemistry": 0.11346268653869629,
+        "nuclidetable": 0.48072314262390137,
+        "numericops": 0.09927916526794434,
+        "pse_masses": 0.10357451438903809,
+        "reactions": 0.1156010627746582,
+        "solubility": 0.12144589424133301,
+        "thermodynamictables": 0.2674860954284668
+      },
+      "statuses": {
+        "acidbase": "success",
+        "electrochemistry": "success",
+        "nuclidetable": "success",
+        "numericops": "success",
+        "pse_masses": "success",
+        "reactions": "success",
+        "solubility": "success",
+        "thermodynamictables": "success"
+      },
+      "coverage_ok": {
+        "acidbase": true,
+        "electrochemistry": true,
+        "nuclidetable": true,
+        "numericops": true,
+        "pse_masses": true,
+        "reactions": true,
+        "solubility": true,
+        "thermodynamictables": true
+      }
     }
   ]
 }

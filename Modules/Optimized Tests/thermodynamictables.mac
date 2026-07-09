@@ -460,6 +460,51 @@ unique_strings(lst) := block([result],
     ["Mg(OH)2", [-924.5, 63.2, -833.5, null, "s", ["hydroxide", "base", "inorganic"]]]
 ]$
 
+/* Precomputed hashed-array indexes over the static %_THERMO_DATA list, built once
+   at load time. %_THERMO_DATA itself is left untouched (it legitimately holds
+   multiple entries per substance for different states, so it cannot become a
+   simple substance-keyed hashed array), but every direct-lookup access pattern
+   is now O(1) instead of a linear sublist()/assoc() scan. */
+%_THERMO_BY_KEY: block([entry, substance, rawdata, key],
+    for entry in %_THERMO_DATA do (
+        substance: first(entry), rawdata: second(entry),
+        key: sconcat(substance, "|", fifth(rawdata)),
+        /* Preserve "first match wins" semantics (matching the original
+           sublist(...)/first(...) scan) in case of duplicate substance+state keys. */
+        if subvarp(%_THERMO_BY_KEY[key]) then
+            %_THERMO_BY_KEY[key] : rawdata
+    )
+)$
+
+%_THERMO_RAW_BY_SUBSTANCE_FIRST: block([entry, substance],
+    for entry in %_THERMO_DATA do (
+        substance: first(entry),
+        if subvarp(%_THERMO_RAW_BY_SUBSTANCE_FIRST[substance]) then
+            %_THERMO_RAW_BY_SUBSTANCE_FIRST[substance] : second(entry)
+    )
+)$
+
+%_THERMO_STATES_BY_SUBSTANCE: block([entry, substance, state, cur],
+    for entry in %_THERMO_DATA do (
+        substance: first(entry), state: fifth(second(entry)),
+        cur: %_THERMO_STATES_BY_SUBSTANCE[substance],
+        if subvarp(cur) then %_THERMO_STATES_BY_SUBSTANCE[substance] : [state]
+        else %_THERMO_STATES_BY_SUBSTANCE[substance] : endcons(state, cur)
+    )
+)$
+
+%_THERMO_TAG_INDEX: block([entry, tags, tag, cur],
+    for entry in %_THERMO_DATA do (
+        tags: sixth(second(entry)),
+        if listp(tags) then
+            for tag in tags do (
+                cur: %_THERMO_TAG_INDEX[tag],
+                if subvarp(cur) then %_THERMO_TAG_INDEX[tag] : [entry]
+                else %_THERMO_TAG_INDEX[tag] : endcons(entry, cur)
+            )
+    )
+)$
+
 /****************************************************************/
 /*                                                              */
 /*  Thermodynamic Data Retrieval Functions                      */
@@ -475,25 +520,18 @@ unique_strings(lst) := block([result],
 /* Precomputed field->unit map to avoid rebuilding it in every call. */
 %_THERMO_FIELD_UNIT_MAP: zip_pair(%_THERMO_FIELDS, %_THERMO_UNITS)$
 
-/* Returns all thermodynamic data for a substance in a specific state */
-chem_thermo_data_all(substance, state) := block([data, matches],
-    matches: sublist(%_THERMO_DATA, lambda([x], 
-        sequal(first(x), substance) and sequal(fifth(second(x)), state))),
-    if emptyp(matches) then
-        return(false)
-    else (
-        data: second(first(matches)),
-        return(zip_pair( %_THERMO_FIELDS, data))
-    )
+/* Returns all thermodynamic data for a substance in a specific state.
+   Direct O(1) hashed-array lookup replaces the former assoc()-after-sublist-scan. */
+chem_thermo_data_all(substance, state) := block([rawdata],
+    rawdata: %_THERMO_BY_KEY[sconcat(substance, "|", state)],
+    if subvarp(rawdata) then false else zip_pair(%_THERMO_FIELDS, rawdata)
 )$
 
-/* Returns all thermodynamic data for a substance (first match if multiple states exist) */
-chem_thermo_data_all_any(substance) := block([data, match],
-    match: assoc(substance, %_THERMO_DATA),
-    if is(match = false) then
-        return(false)
-    else
-        return(zip_pair( %_THERMO_FIELDS, match))
+/* Returns all thermodynamic data for a substance (first match if multiple states exist).
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+chem_thermo_data_all_any(substance) := block([rawdata],
+    rawdata: %_THERMO_RAW_BY_SUBSTANCE_FIRST[substance],
+    if subvarp(rawdata) then false else zip_pair(%_THERMO_FIELDS, rawdata)
 )$
 
 /* Returns a specific thermodynamic property for a substance in a specific state */
@@ -642,10 +680,11 @@ chem_thermo_substance_state_array(state) := block([filtered],
     return(unique_strings(map(first, filtered)))
 )$
 
-/* Returns an array of available states for a substance */
-chem_thermo_states(substance) := block([matches],
-    matches: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
-    return(map(lambda([x], fifth(second(x))), matches))
+/* Returns an array of available states for a substance.
+   Direct O(1) hashed-array lookup replaces the former sublist()+map() scan. */
+chem_thermo_states(substance) := block([states],
+    states: %_THERMO_STATES_BY_SUBSTANCE[substance],
+    if subvarp(states) then [] else states
 )$
 
 /****************************************************************/
@@ -663,9 +702,12 @@ chem_thermo_has_tag(entry, tag) := block([tags],
         false
 )$
 
-/* Returns all entries that have a specific tag */
-chem_thermo_filter_by_tag(tag) := 
-    sublist(%_THERMO_DATA, lambda([x], chem_thermo_has_tag(x, tag)))$
+/* Returns all entries that have a specific tag.
+   Direct O(1) hashed-array lookup replaces the former sublist() full-table scan. */
+chem_thermo_filter_by_tag(tag) := block([result],
+    result: %_THERMO_TAG_INDEX[tag],
+    if subvarp(result) then [] else result
+)$
 
 /* Returns all entries that have ALL specified tags (AND logic) */
 chem_thermo_filter_by_tags_all(tag_list) := 
@@ -701,23 +743,18 @@ chem_thermo_substances_by_tags_all(tag_list) :=
 chem_thermo_substances_by_tags_any(tag_list) := 
     unique_strings(map(first, chem_thermo_filter_by_tags_any(tag_list)))$
 
-/* Get all tags for a substance (first match) */
-chem_thermo_get_tags(substance) := block([match],
-    match: assoc(substance, %_THERMO_DATA),
-    if is(match = false) then
-        return(false)
-    else
-        return(sixth(match))
+/* Get all tags for a substance (first match).
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+chem_thermo_get_tags(substance) := block([rawdata],
+    rawdata: %_THERMO_RAW_BY_SUBSTANCE_FIRST[substance],
+    if subvarp(rawdata) then false else sixth(rawdata)
 )$
 
-/* Get all tags for a substance in a specific state */
-chem_thermo_get_tags_state(substance, state) := block([matches, data],
-    matches: sublist(%_THERMO_DATA, lambda([x], 
-        sequal(first(x), substance) and sequal(fifth(second(x)), state))),
-    if emptyp(matches) then
-        return(false)
-    else
-        return(sixth(second(first(matches))))
+/* Get all tags for a substance in a specific state.
+   Direct O(1) hashed-array lookup replaces the former sublist() scan. */
+chem_thermo_get_tags_state(substance, state) := block([rawdata],
+    rawdata: %_THERMO_BY_KEY[sconcat(substance, "|", state)],
+    if subvarp(rawdata) then false else sixth(rawdata)
 )$
 
 /* Returns all substances with ALL specified tags (for random selection by user) */

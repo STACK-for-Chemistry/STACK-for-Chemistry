@@ -27,7 +27,7 @@ except ImportError:
 class ImplementedModuleTestBenchmark:
     """Benchmark implemented module test files with coverage validation."""
 
-    def __init__(self, project_root, benchmark_root, timeout=120):
+    def __init__(self, project_root, benchmark_root, timeout=120, module_test_files_path=None):
         self.project_root = Path(project_root)
         self.output_dir = Path(benchmark_root)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -37,7 +37,11 @@ class ImplementedModuleTestBenchmark:
         self.runners_dir.mkdir(parents=True, exist_ok=True)
         self.figures_dir.mkdir(parents=True, exist_ok=True)
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.module_test_files_path = self.project_root / "Module Test files"
+        self.module_test_files_path = (
+            Path(module_test_files_path)
+            if module_test_files_path is not None
+            else self.project_root / "Module Test files"
+        )
         self.modules_utilized_path = self.project_root / "Modules" / "Utilized"
         self.modules_tests_path = self.project_root / "Modules" / "Tests"
         self.timeout = timeout
@@ -47,19 +51,6 @@ class ImplementedModuleTestBenchmark:
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.history_path = self.data_dir / "implemented_module_tests_benchmark_history.json"
         self.show_plots = True
-
-
-def _resolve_project_root(start_path):
-    """Find STACK-for-Chemistry root by probing for required directories."""
-    current = Path(start_path).resolve()
-    if current.is_file():
-        current = current.parent
-
-    for candidate in [current] + list(current.parents):
-        if (candidate / "Modules").exists() and (candidate / "Module Test files").exists():
-            return candidate
-
-    return Path(start_path).resolve().parent
 
     @staticmethod
     def build_module_color_map(module_names):
@@ -663,6 +654,19 @@ def _resolve_project_root(start_path):
         return output_file
 
 
+def _resolve_project_root(start_path):
+    """Find STACK-for-Chemistry root by probing for required directories."""
+    current = Path(start_path).resolve()
+    if current.is_file():
+        current = current.parent
+
+    for candidate in [current] + list(current.parents):
+        if (candidate / "Modules").exists() and (candidate / "Module Test files").exists():
+            return candidate
+
+    return Path(start_path).resolve().parent
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Benchmark implemented module test files with versioned runtime comparison"
@@ -688,13 +692,23 @@ def main():
         default=120,
         help="Timeout in seconds per test file (default: 120)",
     )
+    parser.add_argument(
+        "--module-test-files-path",
+        default=None,
+        help="Override path to module test files directory (default: '<project>/Module Test files')",
+    )
     args = parser.parse_args()
 
     script_dir = Path(__file__).resolve().parent
     project_root = _resolve_project_root(script_dir)
     benchmark_root = project_root / "Optimization Benchmark"
 
-    benchmarker = ImplementedModuleTestBenchmark(project_root, benchmark_root, timeout=args.timeout)
+    benchmarker = ImplementedModuleTestBenchmark(
+        project_root,
+        benchmark_root,
+        timeout=args.timeout,
+        module_test_files_path=args.module_test_files_path,
+    )
     benchmarker.show_plots = not args.no_show
 
     history_before = benchmarker.load_history()

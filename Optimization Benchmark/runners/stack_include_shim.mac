@@ -1,0 +1,59 @@
+/* Local stack_include shim - benchmark harness only.
+
+   Outside the real STACK/Moodle question engine, stack_include(url) is not
+   defined, so calling it in plain Maxima just returns the call unevaluated
+   and silently loads nothing. That made every "implemented module test"
+   benchmark run measure Maxima startup/parse time only, never the real
+   module code.
+
+   This shim redefines stack_include so it maps the GitHub URL used in the
+   test files (which must stay unchanged, matching the real Moodle setup)
+   to the equivalent local file and loads that instead. It prefers
+   Modules/Optimized Tests so the benchmark actually exercises the
+   optimized implementation, falling back to Modules/Tests or
+   Modules/Utilized if no optimized copy exists.
+
+   %_LOCAL_PROJECT_ROOT must be set (as a string) before this file is
+   loaded. */
+
+if not stringp(%_LOCAL_PROJECT_ROOT) then %_LOCAL_PROJECT_ROOT: "."$
+
+_stack_include_strip_query(u) := block([qidx],
+    qidx: ssearch("?", u),
+    if is(qidx = false) then u else substring(u, 1, qidx)
+)$
+
+_stack_include_relpath(u) := block([clean, markers, m, idx, rel],
+    clean: _stack_include_strip_query(u),
+    markers: ["Modules/Optimized Tests/", "Modules/Tests/", "Modules/Utilized/"],
+    rel: false,
+    for m in markers do (
+        if is(rel = false) then (
+            idx: ssearch(m, clean),
+            if not is(idx = false) then
+                rel: substring(clean, idx + slength(m))
+        )
+    ),
+    rel
+)$
+
+_stack_include_load_local(url) := block([rel, candidates, c, res, loaded],
+    rel: _stack_include_relpath(url),
+    if is(rel = false) then return(false),
+    candidates: [
+        sconcat(%_LOCAL_PROJECT_ROOT, "/Modules/Optimized Tests/", rel),
+        sconcat(%_LOCAL_PROJECT_ROOT, "/Modules/Tests/", rel),
+        sconcat(%_LOCAL_PROJECT_ROOT, "/Modules/Utilized/", rel)
+    ],
+    loaded: false,
+    for c in candidates do (
+        if not loaded then (
+            res: errcatch(load(c)),
+            if not is(res = []) then loaded: true
+        )
+    ),
+    loaded
+)$
+
+stack_include(url) := _stack_include_load_local(url)$
+stack_include_contrib(url) := _stack_include_load_local(url)$

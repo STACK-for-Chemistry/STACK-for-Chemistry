@@ -1,0 +1,101 @@
+<style>
+.nuc-wrap {
+	max-width: 1200px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.nuc-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	margin: 12px 0 24px;
+	background: #ffffff;
+}
+
+.nuc-table th,
+.nuc-table td {
+	border: 1px solid #cfd8dc;
+	padding: 8px 10px;
+	vertical-align: top;
+	text-align: left;
+}
+
+.nuc-table th {
+	background: #eef3f6;
+	font-weight: 600;
+}
+
+.nuc-table tr:nth-child(even) td {
+	background: #fafcfd;
+}
+
+.nuc-id {
+	width: 70px;
+}
+
+.nuc-desc {
+	width: 30%;
+}
+
+.nuc-result {
+	width: 90px;
+	font-weight: 600;
+}
+
+.nuc-output {
+	width: 50%;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	font-family: Consolas, "Liberation Mono", monospace;
+	font-size: 13px;
+}
+
+.nuc-summary {
+	width: 100%;
+	max-width: 520px;
+	border-collapse: collapse;
+	margin-top: 8px;
+	background: #ffffff;
+}
+
+.nuc-summary td {
+	border: 1px solid #cfd8dc;
+	padding: 10px 12px;
+}
+</style>
+
+<div class="nuc-wrap">
+<h2>Numericops Module Tests</h2>
+
+<table class="nuc-table">
+	<tr style="background-color:#f0f0f0;">
+		<th class="nuc-id">Test ID</th>
+		<th class="nuc-desc">Description</th>
+		<th class="nuc-result">Result</th>
+		<th class="nuc-output">Output</th>
+	</tr>
+	<tr><td>1</td><td><code>chem_num_significant_digits("1.230e-4")</code></td><td>{@p_1@}</td><td class="nuc-output">{@t_1@}</td></tr>
+	<tr><td>2</td><td><code>chem_num_significant_digits("0.00450")</code></td><td>{@p_2@}</td><td class="nuc-output">{@t_2@}</td></tr>
+	<tr><td>3</td><td><code>chem_num_significant_digits("42")</code></td><td>{@p_3@}</td><td class="nuc-output">{@t_3@}</td></tr>
+	<tr><td>4</td><td><code>chem_num_significant_digits_arr([...])</code></td><td>{@p_4@}</td><td class="nuc-output">{@t_4@}</td></tr>
+	<tr><td>5</td><td><code>chem_num_significant_digits("abc")</code></td><td>{@p_5@}</td><td class="nuc-output">{@t_5@}</td></tr>
+	<tr><td>6</td><td><code>chem_num_significant_digits_arr(["1.20","abc"])</code></td><td>{@p_6@}</td><td class="nuc-output">{@t_6@}</td></tr>
+	<tr style="background-color:#f5f5f5;"><td colspan="4"><strong>Decimal Places Function Tests</strong></td></tr>
+	<tr><td>7</td><td><code>chem_decimal_places("1.23")</code></td><td>{@p_7@}</td><td class="nuc-output">{@t_7@}</td></tr>
+	<tr><td>8</td><td><code>chem_decimal_places("1.2")</code></td><td>{@p_8@}</td><td class="nuc-output">{@t_8@}</td></tr>
+	<tr><td>9</td><td><code>chem_decimal_places("1.10")</code></td><td>{@p_9@}</td><td class="nuc-output">{@t_9@}</td></tr>
+	<tr><td>10</td><td><code>chem_decimal_places("1.00")</code></td><td>{@p_10@}</td><td class="nuc-output">{@t_10@}</td></tr>
+	<tr><td>11</td><td><code>chem_decimal_places("123")</code></td><td>{@p_11@}</td><td class="nuc-output">{@t_11@}</td></tr>
+	<tr><td>12</td><td><code>chem_decimal_places("abc")</code></td><td>{@p_12@}</td><td class="nuc-output">{@t_12@}</td></tr>
+</table>
+
+<table class="nuc-summary">
+	<tr><td>Total Tests</td><td>{@max_score@}</td></tr>
+	<tr><td>Tests Passed</td><td>{@total_score@}</td></tr>
+	<tr><td>Overall Score</td><td>{@score_pct@}%</td></tr>
+</table>
+
+<p>[[input:ans1]][[validation:ans1]]</p>
+</div>

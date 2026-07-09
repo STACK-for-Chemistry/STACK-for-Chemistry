@@ -1,0 +1,102 @@
+<style>
+.mwrap {
+  max-width: 1500px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mtable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 12px 0 24px;
+  background: #fff;
+}
+
+.mtable th,
+.mtable td {
+  border: 1px solid #cfd8dc;
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.mtable th {
+  background: #eef3f6;
+  font-weight: 600;
+}
+
+.mtable tr:nth-child(even) td {
+  background: #fafcfd;
+}
+
+.mout {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+.msum {
+  width: 100%;
+  max-width: 520px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.msum td {
+  border: 1px solid #cfd8dc;
+  padding: 10px 12px;
+}
+</style>
+
+<div class="mwrap">
+  <h2>Solubility Module Tests</h2>
+
+  <table class="mtable">
+    <tr>
+      <th>Test ID</th>
+      <th>Description</th>
+      <th>Result</th>
+      <th>Output</th>
+    </tr>
+    <tr><td>1</td><td><code>chem_sol_Ksp("AgCl")</code></td><td>{@p_1@}</td><td class="mout">{@t_1@}</td></tr>
+    <tr><td>2</td><td><code>chem_sol_pKsp("AgCl")</code></td><td>{@p_2@}</td><td class="mout">{@t_2@}</td></tr>
+    <tr><td>3</td><td><code>chem_sol_cation("AgCl")</code></td><td>{@p_3@}</td><td class="mout">{@t_3@}</td></tr>
+    <tr><td>4</td><td><code>chem_sol_cation_count("AgCl")</code></td><td>{@p_4@}</td><td class="mout">{@t_4@}</td></tr>
+    <tr><td>5</td><td><code>chem_sol_anion("AgCl")</code></td><td>{@p_5@}</td><td class="mout">{@t_5@}</td></tr>
+    <tr><td>6</td><td><code>chem_sol_anion_count("AgCl")</code></td><td>{@p_6@}</td><td class="mout">{@t_6@}</td></tr>
+    <tr><td>7</td><td><code>chem_sol_ion_counts("AgCl")</code></td><td>{@p_7@}</td><td class="mout">{@t_7@}</td></tr>
+    <tr><td>8</td><td><code>chem_sol_total_ion_count("AgCl")</code></td><td>{@p_8@}</td><td class="mout">{@t_8@}</td></tr>
+    <tr><td>9</td><td><code>chem_sol_entry("AgCl")</code></td><td>{@p_9@}</td><td class="mout">{@t_9@}</td></tr>
+    <tr><td>10</td><td><code>chem_sol_solubility_expression("AgCl")</code></td><td>{@p_10@}</td><td class="mout">{@t_10@}</td></tr>
+    <tr><td>11</td><td><code>chem_sol_molar_solubility("AgCl")</code></td><td>{@p_11@}</td><td class="mout">{@t_11@}</td></tr>
+    <tr><td>12</td><td><code>chem_sol_molar_solubility_common_ion("AgCl", 0.01, "cation")</code></td><td>{@p_12@}</td><td class="mout">{@t_12@}</td></tr>
+    <tr><td>13</td><td><code>chem_sol_array()</code></td><td>{@p_13@}</td><td class="mout">{@length(t_13)@}</td></tr>
+    <tr><td>14</td><td><code>chem_sol_array_by_cation("Ag^+")</code></td><td>{@p_14@}</td><td class="mout">{@t_14@}</td></tr>
+    <tr><td>15</td><td><code>chem_sol_array_by_anion("Cl^-")</code></td><td>{@p_15@}</td><td class="mout">{@t_15@}</td></tr>
+    <tr><td>16</td><td><code>chem_sol_cation_array()</code></td><td>{@p_16@}</td><td class="mout">{@length(t_16)@}</td></tr>
+    <tr><td>17</td><td><code>chem_sol_anion_array()</code></td><td>{@p_17@}</td><td class="mout">{@length(t_17)@}</td></tr>
+    <tr><td>18</td><td><code>chem_sol_array_sorted_Ksp()</code></td><td>{@p_18@}</td><td class="mout">{@length(t_18)@}</td></tr>
+    <tr><td>19</td><td><code>chem_sol_array_Ksp_range(1.0e-12, 1.0e-6)</code></td><td>{@p_19@}</td><td class="mout">{@length(t_19)@}</td></tr>
+    <tr><td>20</td><td><code>chem_sol_array_by_cation_count(1)</code></td><td>{@p_20@}</td><td class="mout">{@t_20@}</td></tr>
+    <tr><td>21</td><td><code>chem_sol_array_by_anion_count(1)</code></td><td>{@p_21@}</td><td class="mout">{@t_21@}</td></tr>
+    <tr><td>22</td><td><code>chem_sol_array_by_total_ions(2)</code></td><td>{@p_22@}</td><td class="mout">{@t_22@}</td></tr>
+    <tr><td>23</td><td><code>chem_sol_ion_product(0.001, 0.001, "AgCl")</code></td><td>{@p_23@}</td><td class="mout">{@t_23@}</td></tr>
+    <tr><td>24</td><td><code>chem_sol_precipitation_check(0.001, 0.001, "AgCl")</code></td><td>{@p_24@}</td><td class="mout">{@t_24@}</td></tr>
+    <tr><td>25</td><td><code>chem_sol_max_concentration(0.01, "AgCl", "cation")</code></td><td>{@p_25@}</td><td class="mout">{@t_25@}</td></tr>
+    <tr><td>26</td><td><code>chem_sol_dissolution_equation("AgCl")</code></td><td>{@p_26@}</td><td class="mout">{@t_26@}</td></tr>
+    <tr><td>27</td><td><code>chem_sol_Ksp_expression("AgCl")</code></td><td>{@p_27@}</td><td class="mout">{@t_27@}</td></tr>
+    <tr><td>28</td><td><code>chem_sol_Ksp_activity_expression("AgCl")</code></td><td>{@p_28@}</td><td class="mout">{@t_28@}</td></tr>
+    <tr><td>29</td><td><code>chem_sol_Ksp_activity_expression_simplified("AgCl")</code></td><td>{@p_29@}</td><td class="mout">{@t_29@}</td></tr>
+  </table>
+
+  <table class="msum">
+    <tr><td>Total Tests</td><td>{@max_score@}</td></tr>
+    <tr><td>Tests Passed</td><td>{@total_score@}</td></tr>
+    <tr><td>Overall Score</td><td>{@score_pct@}%</td></tr>
+  </table>
+
+    <p>[[input:ans1]][[validation:ans1]]</p>
+</div>

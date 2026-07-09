@@ -19,130 +19,148 @@
     IUPAC-NIST Solubility Data Series
 */
 
-%_SOLUBILITY_DB: [
+/* Restructured to a genuine Maxima hashed array: one indexed assignment per
+   salt, giving O(1) lookup instead of a linear assoc() scan. */
     /* --- Halides --- */
-    ["AgCl",      [9.75,  "Ag^+",      1, "Cl^-",  1]],
-    ["AgBr",      [12.27, "Ag^+",      1, "Br^-",  1]],
-    ["AgI",       [16.07, "Ag^+",      1, "I^-",   1]],
-    ["AgF",       [0.69,  "Ag^+",      1, "F^-",   1]],
-    ["CuCl",      [6.76,  "Cu^+",      1, "Cl^-",  1]],
-    ["PbCl2",     [4.77,  "Pb^{2+}",   1, "Cl^-",  2]],
-    ["PbBr2",     [5.18,  "Pb^{2+}",   1, "Br^-",  2]],
-    ["PbI2",      [8.01,  "Pb^{2+}",   1, "I^-",   2]],
-    ["PbF2",      [7.48,  "Pb^{2+}",   1, "F^-",   2]],
-    ["CaF2",      [10.46, "Ca^{2+}",   1, "F^-",   2]],
-    ["BaF2",      [6.74,  "Ba^{2+}",   1, "F^-",   2]],
-    ["MgF2",      [10.29, "Mg^{2+}",   1, "F^-",   2]],
-    ["SrF2",      [8.36,  "Sr^{2+}",   1, "F^-",   2]],
-    ["Hg2Cl2",    [17.84, "Hg2^{2+}",  1, "Cl^-",  2]],
-    ["Hg2Br2",    [22.19, "Hg2^{2+}",  1, "Br^-",  2]],
-    ["Hg2I2",     [28.28, "Hg2^{2+}",  1, "I^-",   2]],
-    ["TlCl",      [3.73,  "Tl^+",      1, "Cl^-",  1]],
-
+%_SOLUBILITY_DB["AgCl"] : [9.75,  "Ag^+",      1, "Cl^-",  1]$
+%_SOLUBILITY_DB["AgBr"] : [12.27, "Ag^+",      1, "Br^-",  1]$
+%_SOLUBILITY_DB["AgI"] : [16.07, "Ag^+",      1, "I^-",   1]$
+%_SOLUBILITY_DB["AgF"] : [0.69,  "Ag^+",      1, "F^-",   1]$
+%_SOLUBILITY_DB["CuCl"] : [6.76,  "Cu^+",      1, "Cl^-",  1]$
+%_SOLUBILITY_DB["PbCl2"] : [4.77,  "Pb^{2+}",   1, "Cl^-",  2]$
+%_SOLUBILITY_DB["PbBr2"] : [5.18,  "Pb^{2+}",   1, "Br^-",  2]$
+%_SOLUBILITY_DB["PbI2"] : [8.01,  "Pb^{2+}",   1, "I^-",   2]$
+%_SOLUBILITY_DB["PbF2"] : [7.48,  "Pb^{2+}",   1, "F^-",   2]$
+%_SOLUBILITY_DB["CaF2"] : [10.46, "Ca^{2+}",   1, "F^-",   2]$
+%_SOLUBILITY_DB["BaF2"] : [6.74,  "Ba^{2+}",   1, "F^-",   2]$
+%_SOLUBILITY_DB["MgF2"] : [10.29, "Mg^{2+}",   1, "F^-",   2]$
+%_SOLUBILITY_DB["SrF2"] : [8.36,  "Sr^{2+}",   1, "F^-",   2]$
+%_SOLUBILITY_DB["Hg2Cl2"] : [17.84, "Hg2^{2+}",  1, "Cl^-",  2]$
+%_SOLUBILITY_DB["Hg2Br2"] : [22.19, "Hg2^{2+}",  1, "Br^-",  2]$
+%_SOLUBILITY_DB["Hg2I2"] : [28.28, "Hg2^{2+}",  1, "I^-",   2]$
+%_SOLUBILITY_DB["TlCl"] : [3.73,  "Tl^+",      1, "Cl^-",  1]$
     /* --- Sulfates --- */
-    ["BaSO4",     [9.97,  "Ba^{2+}",   1, "SO4^{2-}", 1]],
-    ["CaSO4",     [4.31,  "Ca^{2+}",   1, "SO4^{2-}", 1]],
-    ["SrSO4",     [6.46,  "Sr^{2+}",   1, "SO4^{2-}", 1]],
-    ["PbSO4",     [7.60,  "Pb^{2+}",   1, "SO4^{2-}", 1]],
-    ["Ag2SO4",    [4.92,  "Ag^+",      2, "SO4^{2-}", 1]],
-    ["Hg2SO4",    [6.19,  "Hg2^{2+}",  1, "SO4^{2-}", 1]],
-    ["RaSO4",     [10.44, "Ra^{2+}",   1, "SO4^{2-}", 1]],
-
+%_SOLUBILITY_DB["BaSO4"] : [9.97,  "Ba^{2+}",   1, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["CaSO4"] : [4.31,  "Ca^{2+}",   1, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["SrSO4"] : [6.46,  "Sr^{2+}",   1, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["PbSO4"] : [7.60,  "Pb^{2+}",   1, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2SO4"] : [4.92,  "Ag^+",      2, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["Hg2SO4"] : [6.19,  "Hg2^{2+}",  1, "SO4^{2-}", 1]$
+%_SOLUBILITY_DB["RaSO4"] : [10.44, "Ra^{2+}",   1, "SO4^{2-}", 1]$
     /* --- Carbonates --- */
-    ["CaCO3",     [8.47,  "Ca^{2+}",   1, "CO3^{2-}", 1]],
-    ["BaCO3",     [8.59,  "Ba^{2+}",   1, "CO3^{2-}", 1]],
-    ["SrCO3",     [9.25,  "Sr^{2+}",   1, "CO3^{2-}", 1]],
-    ["MgCO3",     [5.17,  "Mg^{2+}",   1, "CO3^{2-}", 1]],
-    ["MnCO3",     [10.65, "Mn^{2+}",   1, "CO3^{2-}", 1]],
-    ["FeCO3",     [10.50, "Fe^{2+}",   1, "CO3^{2-}", 1]],
-    ["CoCO3",     [12.85, "Co^{2+}",   1, "CO3^{2-}", 1]],
-    ["NiCO3",     [6.85,  "Ni^{2+}",   1, "CO3^{2-}", 1]],
-    ["CuCO3",     [9.85,  "Cu^{2+}",   1, "CO3^{2-}", 1]],
-    ["ZnCO3",     [9.84,  "Zn^{2+}",   1, "CO3^{2-}", 1]],
-    ["Ag2CO3",    [11.07, "Ag^+",      2, "CO3^{2-}", 1]],
-    ["PbCO3",     [13.13, "Pb^{2+}",   1, "CO3^{2-}", 1]],
-    ["CdCO3",     [12.00, "Cd^{2+}",   1, "CO3^{2-}", 1]],
-
+%_SOLUBILITY_DB["CaCO3"] : [8.47,  "Ca^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["BaCO3"] : [8.59,  "Ba^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["SrCO3"] : [9.25,  "Sr^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["MgCO3"] : [5.17,  "Mg^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["MnCO3"] : [10.65, "Mn^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["FeCO3"] : [10.50, "Fe^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["CoCO3"] : [12.85, "Co^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["NiCO3"] : [6.85,  "Ni^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["CuCO3"] : [9.85,  "Cu^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["ZnCO3"] : [9.84,  "Zn^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2CO3"] : [11.07, "Ag^+",      2, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["PbCO3"] : [13.13, "Pb^{2+}",   1, "CO3^{2-}", 1]$
+%_SOLUBILITY_DB["CdCO3"] : [12.00, "Cd^{2+}",   1, "CO3^{2-}", 1]$
     /* --- Hydroxides --- */
-    ["Mg(OH)2",   [11.25, "Mg^{2+}",   1, "OH^-",  2]],
-    ["Ca(OH)2",   [5.33,  "Ca^{2+}",   1, "OH^-",  2]],
-    ["Ba(OH)2",   [2.30,  "Ba^{2+}",   1, "OH^-",  2]],
-    ["Sr(OH)2",   [2.19,  "Sr^{2+}",   1, "OH^-",  2]],
-    ["Fe(OH)2",   [16.31, "Fe^{2+}",   1, "OH^-",  2]],
-    ["Fe(OH)3",   [38.55, "Fe^{3+}",   1, "OH^-",  3]],
-    ["Al(OH)3",   [33.52, "Al^{3+}",   1, "OH^-",  3]],
-    ["Cu(OH)2",   [19.66, "Cu^{2+}",   1, "OH^-",  2]],
-    ["Zn(OH)2",   [16.52, "Zn^{2+}",   1, "OH^-",  2]],
-    ["Mn(OH)2",   [12.70, "Mn^{2+}",   1, "OH^-",  2]],
-    ["Ni(OH)2",   [15.26, "Ni^{2+}",   1, "OH^-",  2]],
-    ["Co(OH)2",   [14.23, "Co^{2+}",   1, "OH^-",  2]],
-    ["Cr(OH)3",   [30.20, "Cr^{3+}",   1, "OH^-",  3]],
-    ["Pb(OH)2",   [19.84, "Pb^{2+}",   1, "OH^-",  2]],
-    ["Cd(OH)2",   [14.14, "Cd^{2+}",   1, "OH^-",  2]],
-    ["Sn(OH)2",   [26.26, "Sn^{2+}",   1, "OH^-",  2]],
-    ["AgOH",      [7.70,  "Ag^+",      1, "OH^-",  1]],
-
+%_SOLUBILITY_DB["Mg(OH)2"] : [11.25, "Mg^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Ca(OH)2"] : [5.33,  "Ca^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Ba(OH)2"] : [2.30,  "Ba^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Sr(OH)2"] : [2.19,  "Sr^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Fe(OH)2"] : [16.31, "Fe^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Fe(OH)3"] : [38.55, "Fe^{3+}",   1, "OH^-",  3]$
+%_SOLUBILITY_DB["Al(OH)3"] : [33.52, "Al^{3+}",   1, "OH^-",  3]$
+%_SOLUBILITY_DB["Cu(OH)2"] : [19.66, "Cu^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Zn(OH)2"] : [16.52, "Zn^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Mn(OH)2"] : [12.70, "Mn^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Ni(OH)2"] : [15.26, "Ni^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Co(OH)2"] : [14.23, "Co^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Cr(OH)3"] : [30.20, "Cr^{3+}",   1, "OH^-",  3]$
+%_SOLUBILITY_DB["Pb(OH)2"] : [19.84, "Pb^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Cd(OH)2"] : [14.14, "Cd^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["Sn(OH)2"] : [26.26, "Sn^{2+}",   1, "OH^-",  2]$
+%_SOLUBILITY_DB["AgOH"] : [7.70,  "Ag^+",      1, "OH^-",  1]$
     /* --- Sulfides --- */
-    ["CuS",       [35.90, "Cu^{2+}",   1, "S^{2-}",  1]],
-    ["Cu2S",      [47.60, "Cu^+",      2, "S^{2-}",  1]],
-    ["PbS",       [27.10, "Pb^{2+}",   1, "S^{2-}",  1]],
-    ["ZnS",       [24.70, "Zn^{2+}",   1, "S^{2-}",  1]],
-    ["CdS",       [26.10, "Cd^{2+}",   1, "S^{2-}",  1]],
-    ["FeS",       [18.10, "Fe^{2+}",   1, "S^{2-}",  1]],
-    ["NiS",       [20.97, "Ni^{2+}",   1, "S^{2-}",  1]],
-    ["CoS",       [21.30, "Co^{2+}",   1, "S^{2-}",  1]],
-    ["MnS",       [13.52, "Mn^{2+}",   1, "S^{2-}",  1]],
-    ["Ag2S",      [50.22, "Ag^+",      2, "S^{2-}",  1]],
-    ["HgS",       [51.80, "Hg^{2+}",   1, "S^{2-}",  1]],
-    ["Bi2S3",     [97.00, "Bi^{3+}",   2, "S^{2-}",  3]],
-    ["SnS",       [26.00, "Sn^{2+}",   1, "S^{2-}",  1]],
-
+%_SOLUBILITY_DB["CuS"] : [35.90, "Cu^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["Cu2S"] : [47.60, "Cu^+",      2, "S^{2-}",  1]$
+%_SOLUBILITY_DB["PbS"] : [27.10, "Pb^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["ZnS"] : [24.70, "Zn^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["CdS"] : [26.10, "Cd^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["FeS"] : [18.10, "Fe^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["NiS"] : [20.97, "Ni^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["CoS"] : [21.30, "Co^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["MnS"] : [13.52, "Mn^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["Ag2S"] : [50.22, "Ag^+",      2, "S^{2-}",  1]$
+%_SOLUBILITY_DB["HgS"] : [51.80, "Hg^{2+}",   1, "S^{2-}",  1]$
+%_SOLUBILITY_DB["Bi2S3"] : [97.00, "Bi^{3+}",   2, "S^{2-}",  3]$
+%_SOLUBILITY_DB["SnS"] : [26.00, "Sn^{2+}",   1, "S^{2-}",  1]$
     /* --- Phosphates --- */
-    ["Ca3(PO4)2", [32.68, "Ca^{2+}",   3, "PO4^{3-}", 2]],
-    ["Ag3PO4",    [16.05, "Ag^+",      3, "PO4^{3-}", 1]],
-    ["FePO4",     [15.00, "Fe^{3+}",   1, "PO4^{3-}", 1]],
-    ["AlPO4",     [20.01, "Al^{3+}",   1, "PO4^{3-}", 1]],
-    ["Pb3(PO4)2", [42.10, "Pb^{2+}",   3, "PO4^{3-}", 2]],
-    ["Zn3(PO4)2", [32.05, "Zn^{2+}",   3, "PO4^{3-}", 2]],
-
+%_SOLUBILITY_DB["Ca3(PO4)2"] : [32.68, "Ca^{2+}",   3, "PO4^{3-}", 2]$
+%_SOLUBILITY_DB["Ag3PO4"] : [16.05, "Ag^+",      3, "PO4^{3-}", 1]$
+%_SOLUBILITY_DB["FePO4"] : [15.00, "Fe^{3+}",   1, "PO4^{3-}", 1]$
+%_SOLUBILITY_DB["AlPO4"] : [20.01, "Al^{3+}",   1, "PO4^{3-}", 1]$
+%_SOLUBILITY_DB["Pb3(PO4)2"] : [42.10, "Pb^{2+}",   3, "PO4^{3-}", 2]$
+%_SOLUBILITY_DB["Zn3(PO4)2"] : [32.05, "Zn^{2+}",   3, "PO4^{3-}", 2]$
     /* --- Chromates --- */
-    ["BaCrO4",    [9.93,  "Ba^{2+}",   1, "CrO4^{2-}", 1]],
-    ["PbCrO4",    [12.55, "Pb^{2+}",   1, "CrO4^{2-}", 1]],
-    ["Ag2CrO4",   [11.95, "Ag^+",      2, "CrO4^{2-}", 1]],
-    ["SrCrO4",    [4.66,  "Sr^{2+}",   1, "CrO4^{2-}", 1]],
-    ["CaCrO4",    [3.15,  "Ca^{2+}",   1, "CrO4^{2-}", 1]],
-
+%_SOLUBILITY_DB["BaCrO4"] : [9.93,  "Ba^{2+}",   1, "CrO4^{2-}", 1]$
+%_SOLUBILITY_DB["PbCrO4"] : [12.55, "Pb^{2+}",   1, "CrO4^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2CrO4"] : [11.95, "Ag^+",      2, "CrO4^{2-}", 1]$
+%_SOLUBILITY_DB["SrCrO4"] : [4.66,  "Sr^{2+}",   1, "CrO4^{2-}", 1]$
+%_SOLUBILITY_DB["CaCrO4"] : [3.15,  "Ca^{2+}",   1, "CrO4^{2-}", 1]$
     /* --- Oxalates --- */
-    ["CaC2O4",    [8.63,  "Ca^{2+}",   1, "C2O4^{2-}", 1]],
-    ["BaC2O4",    [6.80,  "Ba^{2+}",   1, "C2O4^{2-}", 1]],
-    ["SrC2O4",    [6.40,  "Sr^{2+}",   1, "C2O4^{2-}", 1]],
-    ["MgC2O4",    [5.32,  "Mg^{2+}",   1, "C2O4^{2-}", 1]],
-    ["PbC2O4",    [9.32,  "Pb^{2+}",   1, "C2O4^{2-}", 1]],
-    ["Ag2C2O4",   [11.27, "Ag^+",      2, "C2O4^{2-}", 1]],
-    ["FeC2O4",    [6.49,  "Fe^{2+}",   1, "C2O4^{2-}", 1]],
-
+%_SOLUBILITY_DB["CaC2O4"] : [8.63,  "Ca^{2+}",   1, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["BaC2O4"] : [6.80,  "Ba^{2+}",   1, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["SrC2O4"] : [6.40,  "Sr^{2+}",   1, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["MgC2O4"] : [5.32,  "Mg^{2+}",   1, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["PbC2O4"] : [9.32,  "Pb^{2+}",   1, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2C2O4"] : [11.27, "Ag^+",      2, "C2O4^{2-}", 1]$
+%_SOLUBILITY_DB["FeC2O4"] : [6.49,  "Fe^{2+}",   1, "C2O4^{2-}", 1]$
     /* --- Iodates --- */
-    ["Ca(IO3)2",  [5.19,  "Ca^{2+}",   1, "IO3^-",  2]],
-    ["Ba(IO3)2",  [8.40,  "Ba^{2+}",   1, "IO3^-",  2]],
-    ["Sr(IO3)2",  [6.94,  "Sr^{2+}",   1, "IO3^-",  2]],
-    ["Pb(IO3)2",  [12.43, "Pb^{2+}",   1, "IO3^-",  2]],
-    ["AgIO3",     [7.50,  "Ag^+",      1, "IO3^-",  1]],
-
+%_SOLUBILITY_DB["Ca(IO3)2"] : [5.19,  "Ca^{2+}",   1, "IO3^-",  2]$
+%_SOLUBILITY_DB["Ba(IO3)2"] : [8.40,  "Ba^{2+}",   1, "IO3^-",  2]$
+%_SOLUBILITY_DB["Sr(IO3)2"] : [6.94,  "Sr^{2+}",   1, "IO3^-",  2]$
+%_SOLUBILITY_DB["Pb(IO3)2"] : [12.43, "Pb^{2+}",   1, "IO3^-",  2]$
+%_SOLUBILITY_DB["AgIO3"] : [7.50,  "Ag^+",      1, "IO3^-",  1]$
     /* --- Cyanides --- */
-    ["AgCN",      [16.22, "Ag^+",      1, "CN^-",   1]],
-    ["Zn(CN)2",   [15.52, "Zn^{2+}",   1, "CN^-",   2]],
-    ["CuCN",      [19.46, "Cu^+",      1, "CN^-",   1]],
-
+%_SOLUBILITY_DB["AgCN"] : [16.22, "Ag^+",      1, "CN^-",   1]$
+%_SOLUBILITY_DB["Zn(CN)2"] : [15.52, "Zn^{2+}",   1, "CN^-",   2]$
+%_SOLUBILITY_DB["CuCN"] : [19.46, "Cu^+",      1, "CN^-",   1]$
     /* --- Thiocyanates --- */
-    ["AgSCN",     [11.99, "Ag^+",      1, "SCN^-",  1]],
-    ["CuSCN",     [12.75, "Cu^+",      1, "SCN^-",  1]],
-
+%_SOLUBILITY_DB["AgSCN"] : [11.99, "Ag^+",      1, "SCN^-",  1]$
+%_SOLUBILITY_DB["CuSCN"] : [12.75, "Cu^+",      1, "SCN^-",  1]$
     /* --- Miscellaneous --- */
-    ["BaSO3",     [6.10,  "Ba^{2+}",   1, "SO3^{2-}", 1]],
-    ["Ag2S2O3",   [12.92, "Ag^+",      2, "S2O3^{2-}", 1]],
-    ["PbSO3",     [6.52,  "Pb^{2+}",   1, "SO3^{2-}", 1]],
-    ["Ag2SO3",    [13.82, "Ag^+",      2, "SO3^{2-}", 1]]
-]$
+%_SOLUBILITY_DB["BaSO3"] : [6.10,  "Ba^{2+}",   1, "SO3^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2S2O3"] : [12.92, "Ag^+",      2, "S2O3^{2-}", 1]$
+%_SOLUBILITY_DB["PbSO3"] : [6.52,  "Pb^{2+}",   1, "SO3^{2-}", 1]$
+%_SOLUBILITY_DB["Ag2SO3"] : [13.82, "Ag^+",      2, "SO3^{2-}", 1]$
+
+/* Caches are genuine Maxima hashed arrays (auto-initialize on first indexed
+   assignment); existence is checked with subvarp() rather than assoc(). */
+
+%_SOL_ALL_SALTS : ["AgCl", "AgBr", "AgI", "AgF", "CuCl", "PbCl2", "PbBr2", "PbI2", "PbF2", "CaF2", "BaF2", "MgF2", "SrF2", "Hg2Cl2", "Hg2Br2", "Hg2I2", "TlCl", "BaSO4", "CaSO4", "SrSO4", "PbSO4", "Ag2SO4", "Hg2SO4", "RaSO4", "CaCO3", "BaCO3", "SrCO3", "MgCO3", "MnCO3", "FeCO3", "CoCO3", "NiCO3", "CuCO3", "ZnCO3", "Ag2CO3", "PbCO3", "CdCO3", "Mg(OH)2", "Ca(OH)2", "Ba(OH)2", "Sr(OH)2", "Fe(OH)2", "Fe(OH)3", "Al(OH)3", "Cu(OH)2", "Zn(OH)2", "Mn(OH)2", "Ni(OH)2", "Co(OH)2", "Cr(OH)3", "Pb(OH)2", "Cd(OH)2", "Sn(OH)2", "AgOH", "CuS", "Cu2S", "PbS", "ZnS", "CdS", "FeS", "NiS", "CoS", "MnS", "Ag2S", "HgS", "Bi2S3", "SnS", "Ca3(PO4)2", "Ag3PO4", "FePO4", "AlPO4", "Pb3(PO4)2", "Zn3(PO4)2", "BaCrO4", "PbCrO4", "Ag2CrO4", "SrCrO4", "CaCrO4", "CaC2O4", "BaC2O4", "SrC2O4", "MgC2O4", "PbC2O4", "Ag2C2O4", "FeC2O4", "Ca(IO3)2", "Ba(IO3)2", "Sr(IO3)2", "Pb(IO3)2", "AgIO3", "AgCN", "Zn(CN)2", "CuCN", "AgSCN", "CuSCN", "BaSO3", "Ag2S2O3", "PbSO3", "Ag2SO3"]$
+
+%_SOL_UNIQUE_CATIONS: block([result, cat, salt],
+    result: [],
+    for salt in %_SOL_ALL_SALTS do (
+        cat: %_SOLUBILITY_DB[salt][2],
+        if not member(cat, result) then result: cons(cat, result)
+    ),
+    reverse(result)
+)$
+
+%_SOL_UNIQUE_ANIONS: block([result, an, salt],
+    result: [],
+    for salt in %_SOL_ALL_SALTS do (
+        an: %_SOLUBILITY_DB[salt][4],
+        if not member(an, result) then result: cons(an, result)
+    ),
+    reverse(result)
+)$
+
+%_SOL_SORTED_BY_KSP: block([pairs, sorted_pairs, salt],
+    pairs: map(lambda([salt], [salt, %_SOLUBILITY_DB[salt][1]]), %_SOL_ALL_SALTS),
+    sorted_pairs: sort(pairs, lambda([a, b], is(second(a) > second(b)))),
+    map(first, sorted_pairs)
+)$
 
 /****************************************************************/
 /*                                                              */
@@ -152,8 +170,8 @@
 
 /* Lookup value-list for a salt; returns false if not found */
 _sol_lookup(salt) := block([entry],
-    entry: assoc(salt, %_SOLUBILITY_DB),
-    entry  /* returns the [pKsp,cat,ncat,an,nan] list or false */
+    entry: %_SOLUBILITY_DB[salt],
+    if subvarp(entry) then false else entry  /* [pKsp,cat,ncat,an,nan] or false */
 )$
 
 /****************************************************************/
@@ -285,95 +303,102 @@ chem_sol_molar_solubility_common_ion(salt, c_common, common_ion) := block(
 /****************************************************************/
 
 /* All salt names */
-chem_sol_array() := map(first, %_SOLUBILITY_DB)$
+chem_sol_array() := %_SOL_ALL_SALTS$
 
 /* All salts containing a specific cation */
-chem_sol_array_by_cation(cation) := block([result],
+chem_sol_array_by_cation(cation) := block([result, salt],
+    result: %_SOL_CACHE_BY_CATION[cation],
+    if not subvarp(result) then return(result),
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[2] = cation) then
-            result: cons(first(entry), result)
+    for salt in %_SOL_ALL_SALTS do (
+        if is(%_SOLUBILITY_DB[salt][2] = cation) then
+            result: cons(salt, result)
     ),
-    reverse(result)
+    result: reverse(result),
+    %_SOL_CACHE_BY_CATION[cation] : result,
+    result
 )$
 
 /* All salts containing a specific anion */
-chem_sol_array_by_anion(anion) := block([result],
+chem_sol_array_by_anion(anion) := block([result, salt],
+    result: %_SOL_CACHE_BY_ANION[anion],
+    if not subvarp(result) then return(result),
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[4] = anion) then
-            result: cons(first(entry), result)
+    for salt in %_SOL_ALL_SALTS do (
+        if is(%_SOLUBILITY_DB[salt][4] = anion) then
+            result: cons(salt, result)
     ),
-    reverse(result)
+    result: reverse(result),
+    %_SOL_CACHE_BY_ANION[anion] : result,
+    result
 )$
 
 /* All unique cations */
 chem_sol_cation_array() := block([result, cat],
-    result: [],
-    for entry in %_SOLUBILITY_DB do (
-        cat: second(entry)[2],
-        if not member(cat, result) then result: cons(cat, result)
-    ),
-    reverse(result)
+    %_SOL_UNIQUE_CATIONS
 )$
 
 /* All unique anions */
 chem_sol_anion_array() := block([result, an],
-    result: [],
-    for entry in %_SOLUBILITY_DB do (
-        an: second(entry)[4],
-        if not member(an, result) then result: cons(an, result)
-    ),
-    reverse(result)
+    %_SOL_UNIQUE_ANIONS
 )$
 
 /* Salts sorted by Ksp ascending (computed from pKsp descending) */
 chem_sol_array_sorted_Ksp() := block([pairs, sorted_pairs],
-    pairs: map(lambda([e], [first(e), second(e)[1]]), %_SOLUBILITY_DB),
-    /* Higher pKsp = lower Ksp, so sort pKsp descending for Ksp ascending */
-    sorted_pairs: sort(pairs, lambda([a, b], is(second(a) > second(b)))),
-    map(first, sorted_pairs)
+    %_SOL_SORTED_BY_KSP
 )$
 
 /* Salts with Ksp in [Ksp_min, Ksp_max] */
-chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp],
+chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp, salt],
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        Ksp: float(10^(-second(entry)[1])),
+    for salt in %_SOL_ALL_SALTS do (
+        Ksp: float(10^(-%_SOLUBILITY_DB[salt][1])),
         if is(Ksp >= Ksp_min) and is(Ksp <= Ksp_max) then
-            result: cons(first(entry), result)
+            result: cons(salt, result)
     ),
     reverse(result)
 )$
 
 /* Salts with a specific cation stoichiometric coefficient */
-chem_sol_array_by_cation_count(n) := block([result],
+chem_sol_array_by_cation_count(n) := block([result, salt],
+    result: %_SOL_CACHE_BY_CATION_COUNT[n],
+    if not subvarp(result) then return(result),
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[3] = n) then
-            result: cons(first(entry), result)
+    for salt in %_SOL_ALL_SALTS do (
+        if is(%_SOLUBILITY_DB[salt][3] = n) then
+            result: cons(salt, result)
     ),
-    reverse(result)
+    result: reverse(result),
+    %_SOL_CACHE_BY_CATION_COUNT[n] : result,
+    result
 )$
 
 /* Salts with a specific anion stoichiometric coefficient */
-chem_sol_array_by_anion_count(n) := block([result],
+chem_sol_array_by_anion_count(n) := block([result, salt],
+    result: %_SOL_CACHE_BY_ANION_COUNT[n],
+    if not subvarp(result) then return(result),
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[5] = n) then
-            result: cons(first(entry), result)
+    for salt in %_SOL_ALL_SALTS do (
+        if is(%_SOLUBILITY_DB[salt][5] = n) then
+            result: cons(salt, result)
     ),
-    reverse(result)
+    result: reverse(result),
+    %_SOL_CACHE_BY_ANION_COUNT[n] : result,
+    result
 )$
 
 /* Salts with a specific total number of ions (cation_count + anion_count) */
-chem_sol_array_by_total_ions(n) := block([result],
+chem_sol_array_by_total_ions(n) := block([result, salt],
+    result: %_SOL_CACHE_BY_TOTAL_IONS[n],
+    if not subvarp(result) then return(result),
     result: [],
-    for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[3] + second(entry)[5] = n) then
-            result: cons(first(entry), result)
+    for salt in %_SOL_ALL_SALTS do (
+        if is(%_SOLUBILITY_DB[salt][3] + %_SOLUBILITY_DB[salt][5] = n) then
+            result: cons(salt, result)
     ),
-    reverse(result)
+    result: reverse(result),
+    %_SOL_CACHE_BY_TOTAL_IONS[n] : result,
+    result
 )$
 
 /****************************************************************/

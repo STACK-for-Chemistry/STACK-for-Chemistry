@@ -146,8 +146,17 @@
     ["Og", 294]
 ]$
 
-/* Returns the molar mass of an element in g/mol. */
-chem_atomic_mass(element) := assoc(element, %_CHEM_MASS_DATA)$
+block([pair],
+    for pair in %_CHEM_MASS_DATA do
+        %_CHEM_MASS_HASH[pair[1]] : pair[2]
+)$
+
+/* Returns the molar mass of an element in g/mol.
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+chem_atomic_mass(element) := block([m],
+    m: %_CHEM_MASS_HASH[element],
+    if subvarp(m) then false else m
+)$
 
 /* Returns the molar mass of an element with units attached. */
 chem_atomic_mass_units(element) := block([mass],

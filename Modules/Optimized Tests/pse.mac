@@ -57,8 +57,8 @@ chem_internal_element_by_two_fields(field_pos_1, field_value_1, field_pos_2, fie
 )$
 
 chem_data_all(element) := block([entry, cdat, i],
-    entry: assoc(element, %_CHEM_ELEMENTS),
-    if is(entry=false) then return(false),
+    entry: %_CHEM_ELEMENTS_BY_SYMBOL[element],
+    if subvarp(entry) then return(false),
     cdat: [],
     for i:length(%_CHEM_FIELDS) step -1 thru 1 do (
         cdat: cons([%_CHEM_FIELDS[i], entry[i]], cdat)
@@ -68,9 +68,9 @@ chem_data_all(element) := block([entry, cdat, i],
 
 /* This function returns the data "dp" associated with "element". */
 chem_data(element, dp) := block([entry, idx],
-    entry: assoc(element, %_CHEM_ELEMENTS),
-    idx: assoc(dp, %_CHEM_FIELD_INDEX),
-    if is(entry=false) or is(idx=false) then false else entry[idx]
+    entry: %_CHEM_ELEMENTS_BY_SYMBOL[element],
+    idx: %_CHEM_FIELD_INDEX_HASH[dp],
+    if subvarp(entry) or subvarp(idx) then false else entry[idx]
 )$
 
 /* This function returns the element symbol for a given atomic number. */
@@ -366,6 +366,7 @@ chem_const_units(name) := block([val, unt],
     ["StandardState", 13], ["MeltingPoint", 14], ["BoilingPoint", 15], ["Density", 16],
     ["GroupBlock", 17]
 ]$
+%_CHEM_FIELD_INDEX_HASH: block([pair], for pair in %_CHEM_FIELD_INDEX do %_CHEM_FIELD_INDEX_HASH[pair[1]] : pair[2])$
 
 %_CHEM_FIELD_UNIT_DATA : zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)$
 
@@ -500,3 +501,8 @@ chem_const_units(name) := block([val, unt],
 ]$
 
 %_CHEM_ELEMENT_SYMBOLS : map(first, %_CHEM_ELEMENTS)$
+
+/* O(1) hashed-array lookup by element symbol, replacing assoc() scans in
+   chem_data() / chem_data_all(). Positional access via chem_element(atomic_num)
+   still uses the original ordered %_CHEM_ELEMENTS list (order = atomic number). */
+%_CHEM_ELEMENTS_BY_SYMBOL: block([entry], for entry in %_CHEM_ELEMENTS do %_CHEM_ELEMENTS_BY_SYMBOL[entry[1]] : entry[2])$

@@ -1,0 +1,83 @@
+<style>
+.mass-wrap {
+  max-width: 1300px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mass-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 12px 0 24px;
+  background: #ffffff;
+}
+
+.mass-table th,
+.mass-table td {
+  border: 1px solid #cfd8dc;
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.mass-table th {
+  background: #eef3f6;
+  font-weight: 600;
+}
+
+.mass-table tr:nth-child(even) td {
+  background: #fafcfd;
+}
+
+.mass-output {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+.mass-summary {
+  width: 100%;
+  max-width: 520px;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.mass-summary td {
+  border: 1px solid #cfd8dc;
+  padding: 10px 12px;
+}
+</style>
+
+<div class="mass-wrap">
+  <h2>PSE Masses Module Tests</h2>
+
+  <table class="mass-table">
+    <tr>
+      <th>Test ID</th>
+      <th>Description</th>
+      <th>Result</th>
+      <th>Output</th>
+    </tr>
+    <tr><td>1</td><td><code>chem_atomic_mass("O")</code></td><td>{@p_1@}</td><td class="mass-output">{@t_1@}</td></tr>
+    <tr><td>2</td><td><code>chem_atomic_mass("Xx")</code></td><td>{@p_2@}</td><td class="mass-output">{@t_2@}</td></tr>
+    <tr><td>3</td><td><code>chem_atomic_mass_units("Na")</code></td><td>{@p_3@}</td><td class="mass-output">{@t_3@}</td></tr>
+    <tr><td>4</td><td><code>chem_molar_mass_element("Cl")</code></td><td>{@p_4@}</td><td class="mass-output">{@t_4@}</td></tr>
+    <tr><td>5</td><td><code>chem_molar_mass_element_units("H")</code></td><td>{@p_5@}</td><td class="mass-output">{@t_5@}</td></tr>
+    <tr><td>6</td><td><code>chem_string_to_number("204")</code></td><td>{@p_6@}</td><td class="mass-output">{@t_6@}</td></tr>
+    <tr><td>7</td><td><code>chem_parse_formula("H2SO4")</code></td><td>{@p_7@}</td><td class="mass-output">{@t_7@}</td></tr>
+    <tr><td>8</td><td><code>chem_molar_mass("H2O")</code></td><td>{@p_8@}</td><td class="mass-output">{@t_8@}</td></tr>
+    <tr><td>9</td><td><code>chem_molar_mass("NaCl")</code></td><td>{@p_9@}</td><td class="mass-output">{@t_9@}</td></tr>
+    <tr><td>10</td><td><code>chem_molar_mass("Xy2")</code></td><td>{@p_10@}</td><td class="mass-output">{@t_10@}</td></tr>
+  </table>
+
+  <table class="mass-summary">
+    <tr><td>Total Tests</td><td>{@max_score@}</td></tr>
+    <tr><td>Tests Passed</td><td>{@total_score@}</td></tr>
+    <tr><td>Overall Score</td><td>{@score_pct@}%</td></tr>
+  </table>
+
+  <p>[[input:ans1]][[validation:ans1]]</p>
+</div>
