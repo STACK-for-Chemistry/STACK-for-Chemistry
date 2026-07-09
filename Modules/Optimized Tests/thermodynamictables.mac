@@ -94,9 +94,9 @@ some_member(tag_list, tags) := block([result],
 unique_strings(lst) := block([result],
     result: [],
     for item in lst do (
-        if not member(item, result) then result: endcons(item, result)
+        if not member(item, result) then result: cons(item, result)
     ),
-    result
+    reverse(result)
 )$
 
 /****************************************************************/
@@ -472,6 +472,9 @@ unique_strings(lst) := block([result],
 /* Units for thermodynamic data */
 %_THERMO_UNITS: [kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), J*mol^(-1)*K^(-1), null, null]$
 
+/* Precomputed field->unit map to avoid rebuilding it in every call. */
+%_THERMO_FIELD_UNIT_MAP: zip_pair(%_THERMO_FIELDS, %_THERMO_UNITS)$
+
 /* Returns all thermodynamic data for a substance in a specific state */
 chem_thermo_data_all(substance, state) := block([data, matches],
     matches: sublist(%_THERMO_DATA, lambda([x], 
@@ -502,7 +505,7 @@ chem_thermo_data_units(substance, property, state) := block([value, unit],
     value: chem_thermo_data(substance, property, state),
     if is(value = false) or is(value = null) then
         return(false),
-    unit: assoc(property, zip_pair( %_THERMO_FIELDS, %_THERMO_UNITS)),
+    unit: assoc(property, %_THERMO_FIELD_UNIT_MAP),
     if is(unit = null) then
         return(value)
     else

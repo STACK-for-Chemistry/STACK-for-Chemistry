@@ -894,7 +894,7 @@ chem_reaction_filter_by_species(n_reactants, n_products) := block([result, i, en
         entry: %_REACTIONS_DATA[i],
         if length(first(second(entry))) = n_reactants and
            length(second(second(entry))) = n_products then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$

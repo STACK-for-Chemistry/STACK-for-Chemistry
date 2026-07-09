@@ -142,10 +142,10 @@ chem_acid_array() := block([result, i, n],
     result: [],
     i: 1,
     while i <= n do (
-        result: append(result, [%_ACIDBASE_DATA[i]]),
+        result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* All bases */
@@ -154,10 +154,10 @@ chem_base_array() := block([result, i, n],
     result: [],
     i: 4,
     while i <= n do (
-        result: append(result, [%_ACIDBASE_DATA[i]]),
+        result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Strong acids: pKa < 0 */
@@ -167,10 +167,10 @@ chem_strong_acid_array() := block([result, i, n, pKa],
     i: 1,
     while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
-        if numberp(pKa) and is(pKa < 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        if numberp(pKa) and is(pKa < 0) then result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Weak acids: pKa > 0 */
@@ -180,10 +180,10 @@ chem_weak_acid_array() := block([result, i, n, pKa],
     i: 1,
     while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
-        if numberp(pKa) and is(pKa > 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        if numberp(pKa) and is(pKa > 0) then result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Strong bases: pKb <= 0 */
@@ -193,10 +193,10 @@ chem_strong_base_array() := block([result, i, n, pKb],
     i: 1,
     while i <= n do (
         pKb: %_ACIDBASE_DATA[i + 2],
-        if numberp(pKb) and is(pKb <= 0) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        if numberp(pKb) and is(pKb <= 0) then result: cons(%_ACIDBASE_DATA[i + 3], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Weak bases: 0 < pKb < 14 */
@@ -206,10 +206,10 @@ chem_weak_base_array() := block([result, i, n, pKb],
     i: 1,
     while i <= n do (
         pKb: %_ACIDBASE_DATA[i + 2],
-        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then result: cons(%_ACIDBASE_DATA[i + 3], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Acids with specific number of acidic protons */
@@ -219,10 +219,10 @@ chem_acid_array_nH(nH_target) := block([result, i, n, nH],
     i: 1,
     while i <= n do (
         nH: %_ACIDBASE_DATA[i + 4],
-        if numberp(nH) and is(nH = nH_target) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        if numberp(nH) and is(nH = nH_target) then result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Strong acids with specific number of acidic protons */
@@ -234,10 +234,10 @@ chem_strong_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
         pKa: %_ACIDBASE_DATA[i + 1],
         nH: %_ACIDBASE_DATA[i + 4],
         if numberp(pKa) and is(pKa < 0) and numberp(nH) and is(nH = nH_target) then 
-            result: append(result, [%_ACIDBASE_DATA[i]]),
+            result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Weak acids with specific number of acidic protons */
@@ -249,10 +249,10 @@ chem_weak_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
         pKa: %_ACIDBASE_DATA[i + 1],
         nH: %_ACIDBASE_DATA[i + 4],
         if numberp(pKa) and is(pKa > 0) and numberp(nH) and is(nH = nH_target) then 
-            result: append(result, [%_ACIDBASE_DATA[i]]),
+            result: cons(%_ACIDBASE_DATA[i], result),
         i: i + 5
     ),
-    result
+    reverse(result)
 )$
 
 /* Legacy: return all acid formulas */

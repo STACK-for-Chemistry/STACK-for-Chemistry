@@ -1,0 +1,56 @@
+{
+  "runs": [
+    {
+      "version": 0,
+      "timestamp": "2026-07-09T15:13:05.279268",
+      "runtimes": {
+        "acidbase": 0.1570572853088379,
+        "electrochemistry": 0.1445770263671875,
+        "nuclidetable": 0.1790170669555664,
+        "numericops": 0.13337063789367676,
+        "pse": 0.1765592098236084,
+        "pse_masses": 0.13248109817504883,
+        "reactions": 0.16066312789916992,
+        "solubility": 0.15127062797546387,
+        "thermodynamictables": 0.15824437141418457
+      },
+      "statuses": {
+        "acidbase": "success",
+        "electrochemistry": "success",
+        "nuclidetable": "success",
+        "numericops": "success",
+        "pse": "success",
+        "pse_masses": "success",
+        "reactions": "success",
+        "solubility": "success",
+        "thermodynamictables": "success"
+      }
+    },
+    {
+      "version": 1,
+      "timestamp": "2026-07-09T15:22:46.162094",
+      "runtimes": {
+        "acidbase": 0.04329204559326172,
+        "electrochemistry": 0.042168378829956055,
+        "nuclidetable": 0.05980706214904785,
+        "numericops": 0.04116940498352051,
+        "pse": 0.057949066162109375,
+        "pse_masses": 0.059247493743896484,
+        "reactions": 0.06410050392150879,
+        "solubility": 0.05417585372924805,
+        "thermodynamictables": 0.05472111701965332
+      },
+      "statuses": {
+        "acidbase": "success",
+        "electrochemistry": "success",
+        "nuclidetable": "success",
+        "numericops": "success",
+        "pse": "success",
+        "pse_masses": "success",
+        "reactions": "success",
+        "solubility": "success",
+        "thermodynamictables": "success"
+      }
+    }
+  ]
+}

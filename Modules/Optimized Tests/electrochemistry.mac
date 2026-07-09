@@ -204,10 +204,10 @@ chem_electrochem_oxidant_array() := block([result, i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 1,
     while i <= n do (
-        result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        result: cons(%_ELECTROCHEM_DATA[i], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 chem_electrochem_reductant_array() := block([result, i, n],
@@ -215,10 +215,10 @@ chem_electrochem_reductant_array() := block([result, i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 2,
     while i <= n do (
-        result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        result: cons(%_ELECTROCHEM_DATA[i], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 chem_electrochem_pairs_array() := block([result, i, n],
@@ -226,10 +226,10 @@ chem_electrochem_pairs_array() := block([result, i, n],
     n: length(%_ELECTROCHEM_DATA),
     i: 1,
     while i <= n do (
-        result: append(result, [[%_ELECTROCHEM_DATA[i], %_ELECTROCHEM_DATA[i + 1]]]),
+        result: cons([%_ELECTROCHEM_DATA[i], %_ELECTROCHEM_DATA[i + 1]], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
@@ -238,10 +238,10 @@ chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
     i: 1,
     while i <= n do (
         E0: %_ELECTROCHEM_DATA[i + 3],
-        if numberp(E0) and is(E0 >= E_min) then result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        if numberp(E0) and is(E0 >= E_min) then result: cons(%_ELECTROCHEM_DATA[i], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
@@ -250,10 +250,10 @@ chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
     i: 1,
     while i <= n do (
         E0: %_ELECTROCHEM_DATA[i + 3],
-        if numberp(E0) and is(E0 <= E_max) then result: append(result, [%_ELECTROCHEM_DATA[i + 1]]),
+        if numberp(E0) and is(E0 <= E_max) then result: cons(%_ELECTROCHEM_DATA[i + 1], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 /* Cell voltage (standard conditions):

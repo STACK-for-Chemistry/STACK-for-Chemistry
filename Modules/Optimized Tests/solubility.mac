@@ -292,9 +292,9 @@ chem_sol_array_by_cation(cation) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         if is(second(entry)[2] = cation) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /* All salts containing a specific anion */
@@ -302,9 +302,9 @@ chem_sol_array_by_anion(anion) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         if is(second(entry)[4] = anion) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /* All unique cations */
@@ -312,9 +312,9 @@ chem_sol_cation_array() := block([result, cat],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         cat: second(entry)[2],
-        if not member(cat, result) then result: append(result, [cat])
+        if not member(cat, result) then result: cons(cat, result)
     ),
-    result
+    reverse(result)
 )$
 
 /* All unique anions */
@@ -322,9 +322,9 @@ chem_sol_anion_array() := block([result, an],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         an: second(entry)[4],
-        if not member(an, result) then result: append(result, [an])
+        if not member(an, result) then result: cons(an, result)
     ),
-    result
+    reverse(result)
 )$
 
 /* Salts sorted by Ksp ascending (computed from pKsp descending) */
@@ -341,9 +341,9 @@ chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp],
     for entry in %_SOLUBILITY_DB do (
         Ksp: float(10^(-second(entry)[1])),
         if is(Ksp >= Ksp_min) and is(Ksp <= Ksp_max) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /* Salts with a specific cation stoichiometric coefficient */
@@ -351,9 +351,9 @@ chem_sol_array_by_cation_count(n) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         if is(second(entry)[3] = n) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /* Salts with a specific anion stoichiometric coefficient */
@@ -361,9 +361,9 @@ chem_sol_array_by_anion_count(n) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         if is(second(entry)[5] = n) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /* Salts with a specific total number of ions (cation_count + anion_count) */
@@ -371,9 +371,9 @@ chem_sol_array_by_total_ions(n) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
         if is(second(entry)[3] + second(entry)[5] = n) then
-            result: append(result, [first(entry)])
+            result: cons(first(entry), result)
     ),
-    result
+    reverse(result)
 )$
 
 /****************************************************************/

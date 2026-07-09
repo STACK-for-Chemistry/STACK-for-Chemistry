@@ -48,11 +48,9 @@ chem_internal_element_list_by_positive_field(field_pos) := block([result, entry]
 chem_internal_element_by_two_fields(field_pos_1, field_value_1, field_pos_2, field_value_2) := block([entry, data, result],
     result: false,
     for entry in %_CHEM_ELEMENTS do (
-        if is(result = false) then (
-            data: second(entry),
-            if is(data[field_pos_1] = field_value_1) then (
-                if is(data[field_pos_2] = field_value_2) then result: first(entry)
-            )
+        data: second(entry),
+        if is(data[field_pos_1] = field_value_1) then (
+            if is(data[field_pos_2] = field_value_2) then return(first(entry))
         )
     ),
     result

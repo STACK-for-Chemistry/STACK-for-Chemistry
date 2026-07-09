@@ -162,11 +162,12 @@ chem_molar_mass_element(element) := chem_atomic_mass(element)$
 chem_molar_mass_element_units(element) := chem_atomic_mass_units(element)$
 
 /* Manual digit-to-number conversion without forbidden functions. */
-chem_string_to_number(str) := block([chars, result, i, digit_val],
+chem_string_to_number(str) := block([chars, result, i, digit_val, n],
     if sequal(str, "") then return(0),
     chars: charlist(str),
+    n: length(chars),
     result: 0,
-    for i:1 thru length(chars) do (
+    for i:1 thru n do (
         digit_val: cint(chars[i]) - 48,
         result: result * 10 + digit_val
     ),

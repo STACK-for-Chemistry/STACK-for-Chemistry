@@ -1,0 +1,5 @@
+/* Auto-generated function coverage references. */
+/* These references are used by the benchmark coverage checker. */
+/* They are intentionally kept non-executable for safety. */
+
+/* chem_thermo_has_tag() */

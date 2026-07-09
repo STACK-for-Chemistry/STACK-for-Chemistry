@@ -1,0 +1,26 @@
+/* Auto-generated function coverage references. */
+/* These references are used by the benchmark coverage checker. */
+/* They are intentionally kept non-executable for safety. */
+
+/* chem_acidbase_Ka_activity_expression() */
+/* chem_acidbase_Ka_expression() */
+/* chem_acidbase_Kb_activity_expression() */
+/* chem_acidbase_Kb_expression() */
+/* chem_acidbase_num_protons() */
+/* chem_acidbase_pKa_list() */
+/* chem_jsxgraph_titration() */
+/* chem_jsxgraph_titration_code() */
+/* chem_jsxgraph_titration_code_full() */
+/* chem_titration_curve_data() */
+/* chem_titration_curve_data_vmax() */
+/* chem_titration_equiv_data() */
+/* chem_titration_equiv_pH() */
+/* chem_titration_equiv_volume() */
+/* chem_titration_equiv_volumes() */
+/* chem_titration_half_equiv_pH() */
+/* chem_titration_jsxgraph_points() */
+/* chem_titration_pH() */
+/* chem_titration_pKa_values() */
+/* chem_titration_plot_data() */
+/* chem_titration_xdata() */
+/* chem_titration_ydata() */

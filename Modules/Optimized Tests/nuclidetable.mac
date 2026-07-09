@@ -331,42 +331,65 @@ chem_nuc_id_from_ZN(z, n) := block([sym],
     else sconcat("^{", z + n, "}", sym)
 )$
 
+%_NUC_CACHE_BY_Z : []$
+%_NUC_CACHE_BY_N : []$
+%_NUC_CACHE_BY_A : []$
+%_NUC_CACHE_BY_ZN : []$
+%_NUC_CACHE_BY_DECAY_MODE : []$
+
 /* ---- Lookup by Z, N, A ---- */
 
-chem_nuc_by_Z(z) := block([results],
+chem_nuc_by_Z(z) := block([results, cached],
+    cached: assoc(z, %_NUC_CACHE_BY_Z),
+    if not is(cached = false) then return(cached),
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if entry[2][1] = z then
             results: cons(entry[1], results)
     ),
-    reverse(results)
+    results: reverse(results),
+    %_NUC_CACHE_BY_Z : endcons([z, results], %_NUC_CACHE_BY_Z),
+    results
 )$
 
-chem_nuc_by_N(n) := block([results],
+chem_nuc_by_N(n) := block([results, cached],
+    cached: assoc(n, %_NUC_CACHE_BY_N),
+    if not is(cached = false) then return(cached),
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if entry[2][2] = n then
             results: cons(entry[1], results)
     ),
-    reverse(results)
+    results: reverse(results),
+    %_NUC_CACHE_BY_N : endcons([n, results], %_NUC_CACHE_BY_N),
+    results
 )$
 
-chem_nuc_by_A(a) := block([results],
+chem_nuc_by_A(a) := block([results, cached],
+    cached: assoc(a, %_NUC_CACHE_BY_A),
+    if not is(cached = false) then return(cached),
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if entry[2][1] + entry[2][2] = a then
             results: cons(entry[1], results)
     ),
-    reverse(results)
+    results: reverse(results),
+    %_NUC_CACHE_BY_A : endcons([a, results], %_NUC_CACHE_BY_A),
+    results
 )$
 
-chem_nuc_by_ZN(z, n) := block([results],
+chem_nuc_by_ZN(z, n) := block([results, key, cached],
+    key: sconcat(z, "|", n),
+    cached: assoc(key, %_NUC_CACHE_BY_ZN),
+    if not is(cached = false) then return(cached),
     results: [],
     for entry in %_NUCLIDE_DATA do (
         if entry[2][1] = z and entry[2][2] = n then
             results: cons(entry[1], results)
     ),
-    reverse(results)
+    results: reverse(results),
+    %_NUC_CACHE_BY_ZN : endcons([key, results], %_NUC_CACHE_BY_ZN),
+    results
 )$
 
 /* ---- Field extractors ---- */
@@ -444,7 +467,17 @@ chem_nuc_gs_branching(id) := block([br],
 
 chem_nuc_halflife_to_seconds(val, unit) := block([factor],
     if is(val = null) or is(unit = null) then return(false),
-    factor: assoc(unit, %_HALFLIFE_UNIT_FACTORS),
+    if sequal(unit, "fs") then factor: 1e-15
+    else if sequal(unit, "ps") then factor: 1e-12
+    else if sequal(unit, "ns") then factor: 1e-9
+    else if sequal(unit, "us") then factor: 1e-6
+    else if sequal(unit, "ms") then factor: 1e-3
+    else if sequal(unit, "s") then factor: 1
+    else if sequal(unit, "m") then factor: 60
+    else if sequal(unit, "h") then factor: 3600
+    else if sequal(unit, "d") then factor: 86400
+    else if sequal(unit, "y") then factor: 31557600
+    else factor: false,
     if is(factor = false) then false else val * factor
 )$
 
@@ -457,14 +490,18 @@ chem_nuc_gs_halflife_s(id) := block([hl, u],
 
 /* ---- Filtering / searching ---- */
 
-chem_nuc_with_decay_mode(mode) := block([results, dm],
+chem_nuc_with_decay_mode(mode) := block([results, dm, cached],
+    cached: assoc(mode, %_NUC_CACHE_BY_DECAY_MODE),
+    if not is(cached = false) then return(cached),
     results: [],
     for entry in %_NUCLIDE_DATA do (
         dm: first(entry[2][6]),
         if member(mode, dm) then
             results: cons(entry[1], results)
     ),
-    reverse(results)
+    results: reverse(results),
+    %_NUC_CACHE_BY_DECAY_MODE : endcons([mode, results], %_NUC_CACHE_BY_DECAY_MODE),
+    results
 )$
 
 chem_nuc_halflife_range(t_min, t_max) := block([results, hl_s, v, u],
@@ -486,7 +523,7 @@ chem_nuc_num_levels(id) := block([lvl],
     if is(lvl = false) then 0 else length(lvl)
 )$
 
-chem_nuc_exists(id) := assoc(id, %_NUCLIDE_DATA) # false$
+chem_nuc_exists(id) := chem_nuc_get_data(id) # false$
 
 %_NUCLIDE_ALL_IDS : map(first, %_NUCLIDE_DATA)$
 
