@@ -22,6 +22,8 @@ A comprehensive benchmarking tool that automatically runs all Maxima module test
 
 2. **Maxima** (any recent version)
    - Installation: [Maxima Official Site](https://maxima.sourceforge.io/)
+   - Linux (Ubuntu/Debian): `sudo apt install maxima`
+   - Windows (winget): `winget install MaximaTeam.Maxima`
    - Verify: `maxima --version`
 
 3. **Python Packages**
@@ -54,8 +56,21 @@ The script will:
 ### Option 2: Direct Python Execution
 
 ```bash
-cd c:\STACK\STACK-for-Chemistry
+cd /path/to/STACK-for-Chemistry
 python benchmark_modules.py
+```
+
+Select which module directory to benchmark:
+
+```bash
+# Benchmark only Modules/Utilized (default)
+python benchmark_modules.py --source utilized
+
+# Benchmark only Modules/Tests
+python benchmark_modules.py --source tests
+
+# Benchmark both directories in one run
+python benchmark_modules.py --source both
 ```
 
 ### Option 3: From Python Code
@@ -288,7 +303,7 @@ with open("benchmark_results.csv", "w", newline="") as f:
 
 To add benchmarking for new modules:
 
-1. Add test file to `Module Test files/{module_name}/test_{module_name}.txt`
+1. Add one or more files matching `Module Test files/{module_name}/test_{module_name}*.txt`
 2. Run benchmarker — it will automatically discover the new module
 3. Results will be included in visualizations and JSON output
 

@@ -8,7 +8,7 @@ import argparse
 import subprocess
 import time
 from pathlib import Path
-from datetime import datetime
+import shutil
 import sys
 
 
@@ -18,23 +18,34 @@ class ModuleBenchmark:
     def __init__(self, base_path):
         self.base_path = Path(base_path)
         self.test_path = self.base_path / "Module Test files"
+
+    @staticmethod
+    def check_maxima_available():
+        """Return True when Maxima executable is available in PATH."""
+        return shutil.which("maxima") is not None
+
+    def get_module_test_files(self, module_name):
+        """Return all test files for a module, including split test suites."""
+        module_dir = self.test_path / module_name
+        if not module_dir.exists() or not module_dir.is_dir():
+            return []
+        return sorted(module_dir.glob(f"test_{module_name}*.txt"))
     
     def list_modules(self):
         """List all available modules."""
         modules = []
         for module_dir in sorted(self.test_path.iterdir()):
             if module_dir.is_dir():
-                test_file = module_dir / f"test_{module_dir.name}.txt"
-                if test_file.exists():
+                if self.get_module_test_files(module_dir.name):
                     modules.append(module_dir.name)
         return modules
     
     def benchmark_module(self, module_name, runs=1, verbose=True):
-        """Benchmark a specific module multiple times."""
-        test_file = self.test_path / module_name / f"test_{module_name}.txt"
-        
-        if not test_file.exists():
-            print(f"Error: Test file not found: {test_file}")
+        """Benchmark a specific module multiple times across all its test files."""
+        test_files = self.get_module_test_files(module_name)
+
+        if not test_files:
+            print(f"Error: No test files found for module '{module_name}'")
             return None
         
         runtimes = []
@@ -46,26 +57,36 @@ class ModuleBenchmark:
             start = time.time()
             
             try:
-                result = subprocess.run(
-                    ["maxima", "-b", str(test_file), "-q"],
-                    capture_output=True,
-                    timeout=120
-                )
+                for test_file in test_files:
+                    result = subprocess.run(
+                        ["maxima", "-b", str(test_file), "-q"],
+                        capture_output=True,
+                        text=True,
+                        timeout=120
+                    )
+                    if result.returncode != 0:
+                        if verbose:
+                            stderr_snippet = (result.stderr or "").strip()
+                            stdout_snippet = (result.stdout or "").strip()
+                            details = stderr_snippet or stdout_snippet
+                            print(f"\n  Failed in {test_file.name} (exit {result.returncode}).")
+                            if details:
+                                print(f"  Output: {details[-300:]}")
+                        return None
                 
                 elapsed = time.time() - start
                 
-                if result.returncode == 0:
-                    runtimes.append(elapsed)
-                    if verbose and runs > 1:
-                        print(f"{elapsed:.3f}s ✓")
-                else:
-                    if verbose and runs > 1:
-                        print(f"Failed ✗")
-                    return None
+                runtimes.append(elapsed)
+                if verbose and runs > 1:
+                    print(f"{elapsed:.3f}s ✓")
                     
             except subprocess.TimeoutExpired:
                 if verbose and runs > 1:
                     print(f"Timeout ✗")
+                return None
+            except FileNotFoundError:
+                if verbose:
+                    print("Maxima executable not found in PATH.")
                 return None
             except Exception as e:
                 if verbose and runs > 1:
@@ -130,8 +151,19 @@ def main():
     )
     
     args = parser.parse_args()
+
+    if args.runs < 1:
+        print("Error: --runs must be at least 1")
+        return 1
     
     benchmarker = ModuleBenchmark(args.path)
+
+    if not benchmarker.check_maxima_available():
+        print("Error: Maxima is not installed or not in PATH.")
+        print("Install Maxima and try again.")
+        print("Ubuntu/Debian: sudo apt install maxima")
+        print("Windows (winget): winget install MaximaTeam.Maxima")
+        return 1
     
     # List modules
     if args.list:

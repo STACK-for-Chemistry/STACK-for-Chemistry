@@ -1,0 +1,479 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    Solubility equilibrium database and helper functions.
+    Analogous structure to acidbase.mac.
+
+    Database format: association list
+      key = salt (string, mhchem-compatible)
+      value = [pKsp, cation, cation_count, anion, anion_count]
+
+    Ksp is always computed from pKsp: Ksp = 10^(-pKsp)
+    This avoids rounding errors from storing both values.
+
+    CRC Handbook of Chemistry and Physics — Table of solubility product constants
+    NIST Standard Reference Database — Critically evaluated stability constants
+    Lange's Handbook of Chemistry — Solubility product table
+    Atkins' Physical Chemistry or Zumdahl's Chemistry textbook appendices
+    IUPAC-NIST Solubility Data Series
+*/
+
+%_SOLUBILITY_DB: [
+    /* --- Halides --- */
+    ["AgCl",      [9.75,  "Ag^+",      1, "Cl^-",  1]],
+    ["AgBr",      [12.27, "Ag^+",      1, "Br^-",  1]],
+    ["AgI",       [16.07, "Ag^+",      1, "I^-",   1]],
+    ["AgF",       [0.69,  "Ag^+",      1, "F^-",   1]],
+    ["CuCl",      [6.76,  "Cu^+",      1, "Cl^-",  1]],
+    ["PbCl2",     [4.77,  "Pb^{2+}",   1, "Cl^-",  2]],
+    ["PbBr2",     [5.18,  "Pb^{2+}",   1, "Br^-",  2]],
+    ["PbI2",      [8.01,  "Pb^{2+}",   1, "I^-",   2]],
+    ["PbF2",      [7.48,  "Pb^{2+}",   1, "F^-",   2]],
+    ["CaF2",      [10.46, "Ca^{2+}",   1, "F^-",   2]],
+    ["BaF2",      [6.74,  "Ba^{2+}",   1, "F^-",   2]],
+    ["MgF2",      [10.29, "Mg^{2+}",   1, "F^-",   2]],
+    ["SrF2",      [8.36,  "Sr^{2+}",   1, "F^-",   2]],
+    ["Hg2Cl2",    [17.84, "Hg2^{2+}",  1, "Cl^-",  2]],
+    ["Hg2Br2",    [22.19, "Hg2^{2+}",  1, "Br^-",  2]],
+    ["Hg2I2",     [28.28, "Hg2^{2+}",  1, "I^-",   2]],
+    ["TlCl",      [3.73,  "Tl^+",      1, "Cl^-",  1]],
+
+    /* --- Sulfates --- */
+    ["BaSO4",     [9.97,  "Ba^{2+}",   1, "SO4^{2-}", 1]],
+    ["CaSO4",     [4.31,  "Ca^{2+}",   1, "SO4^{2-}", 1]],
+    ["SrSO4",     [6.46,  "Sr^{2+}",   1, "SO4^{2-}", 1]],
+    ["PbSO4",     [7.60,  "Pb^{2+}",   1, "SO4^{2-}", 1]],
+    ["Ag2SO4",    [4.92,  "Ag^+",      2, "SO4^{2-}", 1]],
+    ["Hg2SO4",    [6.19,  "Hg2^{2+}",  1, "SO4^{2-}", 1]],
+    ["RaSO4",     [10.44, "Ra^{2+}",   1, "SO4^{2-}", 1]],
+
+    /* --- Carbonates --- */
+    ["CaCO3",     [8.47,  "Ca^{2+}",   1, "CO3^{2-}", 1]],
+    ["BaCO3",     [8.59,  "Ba^{2+}",   1, "CO3^{2-}", 1]],
+    ["SrCO3",     [9.25,  "Sr^{2+}",   1, "CO3^{2-}", 1]],
+    ["MgCO3",     [5.17,  "Mg^{2+}",   1, "CO3^{2-}", 1]],
+    ["MnCO3",     [10.65, "Mn^{2+}",   1, "CO3^{2-}", 1]],
+    ["FeCO3",     [10.50, "Fe^{2+}",   1, "CO3^{2-}", 1]],
+    ["CoCO3",     [12.85, "Co^{2+}",   1, "CO3^{2-}", 1]],
+    ["NiCO3",     [6.85,  "Ni^{2+}",   1, "CO3^{2-}", 1]],
+    ["CuCO3",     [9.85,  "Cu^{2+}",   1, "CO3^{2-}", 1]],
+    ["ZnCO3",     [9.84,  "Zn^{2+}",   1, "CO3^{2-}", 1]],
+    ["Ag2CO3",    [11.07, "Ag^+",      2, "CO3^{2-}", 1]],
+    ["PbCO3",     [13.13, "Pb^{2+}",   1, "CO3^{2-}", 1]],
+    ["CdCO3",     [12.00, "Cd^{2+}",   1, "CO3^{2-}", 1]],
+
+    /* --- Hydroxides --- */
+    ["Mg(OH)2",   [11.25, "Mg^{2+}",   1, "OH^-",  2]],
+    ["Ca(OH)2",   [5.33,  "Ca^{2+}",   1, "OH^-",  2]],
+    ["Ba(OH)2",   [2.30,  "Ba^{2+}",   1, "OH^-",  2]],
+    ["Sr(OH)2",   [2.19,  "Sr^{2+}",   1, "OH^-",  2]],
+    ["Fe(OH)2",   [16.31, "Fe^{2+}",   1, "OH^-",  2]],
+    ["Fe(OH)3",   [38.55, "Fe^{3+}",   1, "OH^-",  3]],
+    ["Al(OH)3",   [33.52, "Al^{3+}",   1, "OH^-",  3]],
+    ["Cu(OH)2",   [19.66, "Cu^{2+}",   1, "OH^-",  2]],
+    ["Zn(OH)2",   [16.52, "Zn^{2+}",   1, "OH^-",  2]],
+    ["Mn(OH)2",   [12.70, "Mn^{2+}",   1, "OH^-",  2]],
+    ["Ni(OH)2",   [15.26, "Ni^{2+}",   1, "OH^-",  2]],
+    ["Co(OH)2",   [14.23, "Co^{2+}",   1, "OH^-",  2]],
+    ["Cr(OH)3",   [30.20, "Cr^{3+}",   1, "OH^-",  3]],
+    ["Pb(OH)2",   [19.84, "Pb^{2+}",   1, "OH^-",  2]],
+    ["Cd(OH)2",   [14.14, "Cd^{2+}",   1, "OH^-",  2]],
+    ["Sn(OH)2",   [26.26, "Sn^{2+}",   1, "OH^-",  2]],
+    ["AgOH",      [7.70,  "Ag^+",      1, "OH^-",  1]],
+
+    /* --- Sulfides --- */
+    ["CuS",       [35.90, "Cu^{2+}",   1, "S^{2-}",  1]],
+    ["Cu2S",      [47.60, "Cu^+",      2, "S^{2-}",  1]],
+    ["PbS",       [27.10, "Pb^{2+}",   1, "S^{2-}",  1]],
+    ["ZnS",       [24.70, "Zn^{2+}",   1, "S^{2-}",  1]],
+    ["CdS",       [26.10, "Cd^{2+}",   1, "S^{2-}",  1]],
+    ["FeS",       [18.10, "Fe^{2+}",   1, "S^{2-}",  1]],
+    ["NiS",       [20.97, "Ni^{2+}",   1, "S^{2-}",  1]],
+    ["CoS",       [21.30, "Co^{2+}",   1, "S^{2-}",  1]],
+    ["MnS",       [13.52, "Mn^{2+}",   1, "S^{2-}",  1]],
+    ["Ag2S",      [50.22, "Ag^+",      2, "S^{2-}",  1]],
+    ["HgS",       [51.80, "Hg^{2+}",   1, "S^{2-}",  1]],
+    ["Bi2S3",     [97.00, "Bi^{3+}",   2, "S^{2-}",  3]],
+    ["SnS",       [26.00, "Sn^{2+}",   1, "S^{2-}",  1]],
+
+    /* --- Phosphates --- */
+    ["Ca3(PO4)2", [32.68, "Ca^{2+}",   3, "PO4^{3-}", 2]],
+    ["Ag3PO4",    [16.05, "Ag^+",      3, "PO4^{3-}", 1]],
+    ["FePO4",     [15.00, "Fe^{3+}",   1, "PO4^{3-}", 1]],
+    ["AlPO4",     [20.01, "Al^{3+}",   1, "PO4^{3-}", 1]],
+    ["Pb3(PO4)2", [42.10, "Pb^{2+}",   3, "PO4^{3-}", 2]],
+    ["Zn3(PO4)2", [32.05, "Zn^{2+}",   3, "PO4^{3-}", 2]],
+
+    /* --- Chromates --- */
+    ["BaCrO4",    [9.93,  "Ba^{2+}",   1, "CrO4^{2-}", 1]],
+    ["PbCrO4",    [12.55, "Pb^{2+}",   1, "CrO4^{2-}", 1]],
+    ["Ag2CrO4",   [11.95, "Ag^+",      2, "CrO4^{2-}", 1]],
+    ["SrCrO4",    [4.66,  "Sr^{2+}",   1, "CrO4^{2-}", 1]],
+    ["CaCrO4",    [3.15,  "Ca^{2+}",   1, "CrO4^{2-}", 1]],
+
+    /* --- Oxalates --- */
+    ["CaC2O4",    [8.63,  "Ca^{2+}",   1, "C2O4^{2-}", 1]],
+    ["BaC2O4",    [6.80,  "Ba^{2+}",   1, "C2O4^{2-}", 1]],
+    ["SrC2O4",    [6.40,  "Sr^{2+}",   1, "C2O4^{2-}", 1]],
+    ["MgC2O4",    [5.32,  "Mg^{2+}",   1, "C2O4^{2-}", 1]],
+    ["PbC2O4",    [9.32,  "Pb^{2+}",   1, "C2O4^{2-}", 1]],
+    ["Ag2C2O4",   [11.27, "Ag^+",      2, "C2O4^{2-}", 1]],
+    ["FeC2O4",    [6.49,  "Fe^{2+}",   1, "C2O4^{2-}", 1]],
+
+    /* --- Iodates --- */
+    ["Ca(IO3)2",  [5.19,  "Ca^{2+}",   1, "IO3^-",  2]],
+    ["Ba(IO3)2",  [8.40,  "Ba^{2+}",   1, "IO3^-",  2]],
+    ["Sr(IO3)2",  [6.94,  "Sr^{2+}",   1, "IO3^-",  2]],
+    ["Pb(IO3)2",  [12.43, "Pb^{2+}",   1, "IO3^-",  2]],
+    ["AgIO3",     [7.50,  "Ag^+",      1, "IO3^-",  1]],
+
+    /* --- Cyanides --- */
+    ["AgCN",      [16.22, "Ag^+",      1, "CN^-",   1]],
+    ["Zn(CN)2",   [15.52, "Zn^{2+}",   1, "CN^-",   2]],
+    ["CuCN",      [19.46, "Cu^+",      1, "CN^-",   1]],
+
+    /* --- Thiocyanates --- */
+    ["AgSCN",     [11.99, "Ag^+",      1, "SCN^-",  1]],
+    ["CuSCN",     [12.75, "Cu^+",      1, "SCN^-",  1]],
+
+    /* --- Miscellaneous --- */
+    ["BaSO3",     [6.10,  "Ba^{2+}",   1, "SO3^{2-}", 1]],
+    ["Ag2S2O3",   [12.92, "Ag^+",      2, "S2O3^{2-}", 1]],
+    ["PbSO3",     [6.52,  "Pb^{2+}",   1, "SO3^{2-}", 1]],
+    ["Ag2SO3",    [13.82, "Ag^+",      2, "SO3^{2-}", 1]]
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Internal Helper: lookup                                     */
+/*                                                              */
+/****************************************************************/
+
+/* Lookup value-list for a salt; returns false if not found */
+_sol_lookup(salt) := block([entry],
+    entry: assoc(salt, %_SOLUBILITY_DB),
+    entry  /* returns the [pKsp,cat,ncat,an,nan] list or false */
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Accessor Functions                                          */
+/*                                                              */
+/****************************************************************/
+
+/* Ksp is always computed from pKsp to avoid rounding errors */
+chem_sol_Ksp(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else float(10^(-v[1]))
+)$
+
+chem_sol_pKsp(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else v[1]
+)$
+
+chem_sol_cation(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then "" else v[2]
+)$
+
+chem_sol_cation_count(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else v[3]
+)$
+
+chem_sol_anion(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then "" else v[4]
+)$
+
+chem_sol_anion_count(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else v[5]
+)$
+
+chem_sol_ion_counts(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else [v[3], v[5]]
+)$
+
+/* Total number of ions produced per formula unit */
+chem_sol_total_ion_count(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else v[3] + v[5]
+)$
+
+/* Full entry: [salt, Ksp, pKsp, cation, n_cat, anion, n_an] */
+chem_sol_entry(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null
+    else [salt, float(10^(-v[1])), v[1], v[2], v[3], v[4], v[5]]
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Molar Solubility Calculation                                */
+/*                                                              */
+/****************************************************************/
+
+/* Generate LaTeX expression for the molar solubility formula.
+   For M_p X_q: s = (Ksp / (p^p * q^q))^(1/(p+q))
+   Shows the algebraic derivation with ion concentrations. */
+chem_sol_solubility_expression(salt) := block([v, cat, an, p, q, denom_val, exponent],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    /* Compute numeric denominator p^p * q^q */
+    denom_val: p^p * q^q,
+
+    /* Build exponent 1/(p+q) */
+    exponent: sconcat("\\frac{1}{", string(p + q), "}"),
+
+    /* Build final expression: s = (Ksp / (p^p * q^q))^(1/(p+q)) */
+    if is(p = 1) and is(q = 1) then
+        sconcat("\\sqrt{K_{\\mathrm{sp}}}")
+    else if is(denom_val = 1) then
+        sconcat("\\left( K_{\\mathrm{sp}} \\right)^{", exponent, "}")
+    else
+        sconcat("\\left( \\frac{K_{\\mathrm{sp}}}{", string(denom_val), "} \\right)^{", exponent, "}")
+)$
+
+/* s = (Ksp / (p^p * q^q))^(1/(p+q))  for M_p X_q */
+chem_sol_molar_solubility(salt) := block([v, Ksp, p, q],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(null),
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
+    stackunits(float((Ksp / (p^p * q^q))^(1/(p + q))), mol*L^(-1))
+)$
+
+/* Molar solubility with common-ion effect (bisection solver) */
+chem_sol_molar_solubility_common_ion(salt, c_common, common_ion) := block(
+    [v, Ksp, p, q, s_lo, s_hi, s_mid, f_mid, f_lo, iter],
+
+    v: _sol_lookup(salt),
+    if is(v = false) then return(null),
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
+
+    /* f(s) = ion-product(s) - Ksp */
+    _sol_f(s) := block([cc, ca],
+        if is(common_ion = "cation") then (cc: p*s + c_common, ca: q*s)
+        else (cc: p*s, ca: q*s + c_common),
+        float(cc^p * ca^q - Ksp)
+    ),
+
+    s_lo: 0.0,
+    s_hi: float((Ksp / (p^p * q^q))^(1/(p + q))) * 2,
+    f_lo: _sol_f(s_lo),
+
+    iter: 0,
+    while iter < 100 do (
+        s_mid: float((s_lo + s_hi) / 2.0),
+        f_mid: _sol_f(s_mid),
+        if is(f_lo > 0) = is(f_mid > 0) then (s_lo: s_mid, f_lo: f_mid)
+        else s_hi: s_mid,
+        iter: iter + 1
+    ),
+    stackunits(float(s_mid), mol*l^(-1))
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Navigation / Array Functions                                */
+/*                                                              */
+/****************************************************************/
+
+/* All salt names */
+chem_sol_array() := map(first, %_SOLUBILITY_DB)$
+
+/* All salts containing a specific cation */
+chem_sol_array_by_cation(cation) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[2] = cation) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* All salts containing a specific anion */
+chem_sol_array_by_anion(anion) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[4] = anion) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* All unique cations */
+chem_sol_cation_array() := block([result, cat],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        cat: second(entry)[2],
+        if not member(cat, result) then result: append(result, [cat])
+    ),
+    result
+)$
+
+/* All unique anions */
+chem_sol_anion_array() := block([result, an],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        an: second(entry)[4],
+        if not member(an, result) then result: append(result, [an])
+    ),
+    result
+)$
+
+/* Salts sorted by Ksp ascending (computed from pKsp descending) */
+chem_sol_array_sorted_Ksp() := block([pairs, sorted_pairs],
+    pairs: map(lambda([e], [first(e), second(e)[1]]), %_SOLUBILITY_DB),
+    /* Higher pKsp = lower Ksp, so sort pKsp descending for Ksp ascending */
+    sorted_pairs: sort(pairs, lambda([a, b], is(second(a) > second(b)))),
+    map(first, sorted_pairs)
+)$
+
+/* Salts with Ksp in [Ksp_min, Ksp_max] */
+chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        Ksp: float(10^(-second(entry)[1])),
+        if is(Ksp >= Ksp_min) and is(Ksp <= Ksp_max) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific cation stoichiometric coefficient */
+chem_sol_array_by_cation_count(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[3] = n) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific anion stoichiometric coefficient */
+chem_sol_array_by_anion_count(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[5] = n) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific total number of ions (cation_count + anion_count) */
+chem_sol_array_by_total_ions(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[3] + second(entry)[5] = n) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Precipitation Check Functions                               */
+/*                                                              */
+/****************************************************************/
+
+chem_sol_ion_product(c_cation, c_anion, salt) := block([v, p, q],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(null),
+    p: v[3], q: v[5],
+    float(c_cation^p * c_anion^q)
+)$
+
+chem_sol_precipitation_check(c_cation, c_anion, salt) := block([Q, Ksp],
+    Q: chem_sol_ion_product(c_cation, c_anion, salt),
+    Ksp: chem_sol_Ksp(salt),
+    if is(Q = null) or is(Ksp = null) then return(null),
+    if is(Q > Ksp) then "precipitates"
+    else if is(abs(Q - Ksp) / Ksp < 0.001) then "saturated"
+    else "unsaturated"
+)$
+
+chem_sol_max_concentration(c_known, salt, ion_type) := block([v, Ksp, p, q],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(null),
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
+    if is(ion_type = "cation") then float((Ksp / c_known^q)^(1/p))
+    else if is(ion_type = "anion") then float((Ksp / c_known^p)^(1/q))
+    else null
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Dissolution Equation String (mhchem format)                 */
+/*                                                              */
+/****************************************************************/
+
+/* Returns a LaTeX-formatted dissolution equation with \ce{} included,
+   so the question text only needs \({@...@}\) without manual \ce wrapping. */
+chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    if is(p = 1) then rhs_cat: cat else rhs_cat: sconcat(string(p), " ", cat),
+    if is(q = 1) then rhs_an: an  else rhs_an:  sconcat(string(q), " ", an),
+
+    sconcat("\\ce{", salt, " -> ", rhs_cat, " + ", rhs_an, "}")
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Equilibrium Expression Functions                            */
+/*                                                              */
+/****************************************************************/
+
+/* Generate Ksp expression in bracket notation with mhchem rendering. */
+chem_sol_Ksp_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    if is(p = 1) then cat_part: sconcat("[\\ce{", cat, "}]")
+    else cat_part: sconcat("[\\ce{", cat, "}]^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("[\\ce{", an, "}]")
+    else an_part: sconcat("[\\ce{", an, "}]^", string(q)),
+
+    sconcat(cat_part, " \\cdot ", an_part)
+)$
+
+/* Generate Ksp expression in activity notation with mhchem rendering.
+   Includes denominator a(salt) for pedagogical purposes. */
+chem_sol_Ksp_activity_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    if is(p = 1) then cat_part: sconcat("a(\\ce{", cat, "})")
+    else cat_part: sconcat("a(\\ce{", cat, "})^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("a(\\ce{", an, "})")
+    else an_part: sconcat("a(\\ce{", an, "})^", string(q)),
+
+    sconcat("\\frac{", cat_part, " \\cdot ", an_part, "}{a(\\ce{", salt, "})}")
+)$
+
+/* Simplified activity expression (denominator = 1 for pure solid) with mhchem rendering. */
+chem_sol_Ksp_activity_expression_simplified(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    if is(p = 1) then cat_part: sconcat("a(\\ce{", cat, "})")
+    else cat_part: sconcat("a(\\ce{", cat, "})^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("a(\\ce{", an, "})")
+    else an_part: sconcat("a(\\ce{", an, "})^", string(q)),
+
+    sconcat(cat_part, " \\cdot ", an_part)
+)$

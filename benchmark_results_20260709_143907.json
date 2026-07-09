@@ -1,0 +1,146 @@
+{
+  "timestamp": "2026-07-09T14:39:28.632690",
+  "results": {
+    "acidbase": {
+      "status": "success",
+      "runtime": 0.12771248817443848,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_acidbase.txt",
+          "status": "success",
+          "runtime": 0.12771248817443848,
+          "stdout_lines": 189,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "electrochemistry": {
+      "status": "success",
+      "runtime": 0.13212180137634277,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_electrochemistry.txt",
+          "status": "success",
+          "runtime": 0.13212180137634277,
+          "stdout_lines": 260,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "nuclidetable": {
+      "status": "failed",
+      "runtime": 20.206592559814453,
+      "files_run": 3,
+      "files_total": 4,
+      "file_results": [
+        {
+          "file": "test_nuclidetable_V2.txt",
+          "status": "success",
+          "runtime": 0.11489462852478027,
+          "stdout_lines": 97,
+          "stderr_lines": 4
+        },
+        {
+          "file": "test_nuclidetable_comprehensive.txt",
+          "status": "success",
+          "runtime": 0.12044358253479004,
+          "stdout_lines": 356,
+          "stderr_lines": 4
+        },
+        {
+          "file": "test_nuclidetable_part1.txt",
+          "status": "failed",
+          "runtime": 19.971254348754883,
+          "error": "SIMPLE-WARNING: Maxima is unable to set up the help system.\n(Details: CL-INFO::LOAD-PRIMARY-INDEX: Condition in CL-INFO::LOAD-PRIMARY-INDEX [or a callee]: INTERNAL-SIMPLE-FILE-ERROR: File error on #P\""
+        }
+      ],
+      "error": "SIMPLE-WARNING: Maxima is unable to set up the help system.\n(Details: CL-INFO::LOAD-PRIMARY-INDEX: Condition in CL-INFO::LOAD-PRIMARY-INDEX [or a callee]: INTERNAL-SIMPLE-FILE-ERROR: File error on #P\""
+    },
+    "numericops": {
+      "status": "success",
+      "runtime": 0.10546255111694336,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_numericops.txt",
+          "status": "success",
+          "runtime": 0.10546255111694336,
+          "stdout_lines": 96,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "pse_masses": {
+      "status": "success",
+      "runtime": 0.0959024429321289,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_pse_masses.txt",
+          "status": "success",
+          "runtime": 0.0959024429321289,
+          "stdout_lines": 87,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "reactions": {
+      "status": "success",
+      "runtime": 0.10922837257385254,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_reactions.txt",
+          "status": "success",
+          "runtime": 0.10922837257385254,
+          "stdout_lines": 102,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "solubility": {
+      "status": "success",
+      "runtime": 0.1492617130279541,
+      "files_run": 1,
+      "files_total": 1,
+      "file_results": [
+        {
+          "file": "test_solubility.txt",
+          "status": "success",
+          "runtime": 0.1492617130279541,
+          "stdout_lines": 258,
+          "stderr_lines": 4
+        }
+      ]
+    },
+    "thermodynamictables": {
+      "status": "success",
+      "runtime": 0.21177268028259277,
+      "files_run": 2,
+      "files_total": 2,
+      "file_results": [
+        {
+          "file": "test_thermodynamictables_part1.txt",
+          "status": "success",
+          "runtime": 0.11392593383789062,
+          "stdout_lines": 204,
+          "stderr_lines": 4
+        },
+        {
+          "file": "test_thermodynamictables_part2.txt",
+          "status": "success",
+          "runtime": 0.09784674644470215,
+          "stdout_lines": 57,
+          "stderr_lines": 4
+        }
+      ]
+    }
+  }
+}

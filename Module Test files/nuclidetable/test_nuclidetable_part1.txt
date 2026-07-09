@@ -86,7 +86,7 @@ s_28: bool_to_score(length(t_6_radioactive) > 0);
 
 s_29: bool_to_score(t_7_num_levels >= 0);
 s_30: not_false_to_score(t_7_exists_true);
-s_31: bool_to_score(not t_7_exists_false);
+s_31: bool_to_score(t_7_exists_false = false);
 s_32: bool_to_score(length(t_7_all_ids) > 0);
 
 s_39: bool_to_score(t_9_parse_charge_pos = 2);

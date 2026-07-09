@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-07-09T14:47:36.435304",
+  "mode": "utilized",
+  "results": {
+    "utilized": {
+      "acidbase": {
+        "status": "success",
+        "runtime": 0.049018144607543945,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "electrochemistry": {
+        "status": "success",
+        "runtime": 0.043660640716552734,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "nuclidetable": {
+        "status": "success",
+        "runtime": 0.05444669723510742,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "numericops": {
+        "status": "success",
+        "runtime": 0.04097890853881836,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "pse": {
+        "status": "success",
+        "runtime": 0.04670405387878418,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "pse_masses": {
+        "status": "success",
+        "runtime": 0.04370689392089844,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "reactions": {
+        "status": "success",
+        "runtime": 0.0452122688293457,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "solubility": {
+        "status": "success",
+        "runtime": 0.04234051704406738,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      },
+      "thermodynamictables": {
+        "status": "success",
+        "runtime": 0.052193641662597656,
+        "stdout_lines": 3,
+        "stderr_lines": 3
+      }
+    }
+  }
+}
