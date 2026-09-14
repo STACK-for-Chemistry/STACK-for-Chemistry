@@ -10,6 +10,9 @@ texput("sc_charge", lambda([ex], sconcat(tex1(first(ex)), "^{", abs(second(ex)),
 texput("sc_reaction", lambda([ex], sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
 texput("sc_err", lambda([ex], "Invalid equation input"));
 
+/* `safe_op()` differs between STACK versions; normalize operators locally. */
+sc_op_p(ex, name) := if atom(ex) then false else is(sconcat(op(ex)) = name);
+
 upper_chars: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 
 record_tokens(s) := block([chars, result, starts, ch, previous],
@@ -42,15 +45,15 @@ reaction_to_sc(name) := block([reaction], reaction: chem_reaction_data(name), sc
 
 collect_species(ex, multiplier) := block([a, b, output],
  if atom(ex) then return([[ex, multiplier]]),
- if is(safe_op(ex) = "+") then (
+ if sc_op_p(ex, "+") then (
   output: [], for a in args(ex) do output: append(output, collect_species(a, multiplier)), return(output)
  ),
- if is(safe_op(ex) = "*") then (
+ if sc_op_p(ex, "*") then (
   a: args(ex)[1], b: args(ex)[2],
   if numberp(a) then return(collect_species(b, multiplier * a)),
   if numberp(b) then return(collect_species(a, multiplier * b))
  ),
- if is(safe_op(ex) = "/") and numberp(second(ex)) then return(collect_species(first(ex), multiplier / second(ex))),
+ if sc_op_p(ex, "/") and numberp(second(ex)) then return(collect_species(first(ex), multiplier / second(ex))),
  [[ex, multiplier]]
 );
 
@@ -80,7 +83,7 @@ side_scale(student_side, teacher_side) := block([student_molecules, teacher_mole
 );
 
 reaction_equivalent(student, teacher) := block([student_left, student_right, teacher_left, teacher_right, left_scale, right_scale],
- if not is(safe_op(student) = "sc_reaction") then return(false),
+ if not sc_op_p(student, "sc_reaction") then return(false),
  student_left: side_bag(first(student)), student_right: side_bag(second(student)), teacher_left: side_bag(first(teacher)), teacher_right: side_bag(second(teacher)),
  left_scale: side_scale(student_left, teacher_left), right_scale: side_scale(student_right, teacher_right),
  if not is(left_scale = false) and not is(right_scale = false) and is(abs(left_scale - right_scale) < 1.0e-10) then return(true),
@@ -89,5 +92,5 @@ reaction_equivalent(student, teacher) := block([student_left, student_right, tea
  false
 );
 
-validate_input(ex) := if is(safe_op(ex) = "sc_err") then castext("Parsing error: {@second(ex)@}") else true;
+validate_input(ex) := if sc_op_p(ex, "sc_err") then castext("Parsing error: {@second(ex)@}") else true;
 ans1_validator(ex) := stack_seq_validator(ex, [validate_input]);

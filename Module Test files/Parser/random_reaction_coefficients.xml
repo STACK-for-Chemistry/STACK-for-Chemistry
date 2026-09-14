@@ -32,11 +32,9 @@ Addition = a:Term b:AdditionTail { return [a, ...b].join(' + '); }
 AdditionTail = _ '+' _ a:Term b:AdditionTail { return [a, ...b]; } / _ '+' _ a:Term { return [a]; }
 Term = Multiplied / Component
 Multiplied = a:Coefficient _ [*]? _ b:Component { return a + ' * ' + b; }
-Component = Ion / Molecule / Group / Atom
+Component = Ion / Formula
 Atom = [A-Z][a-z]* { return 'sc_atom("' + text() + '")'; }
-Ion = a:Atom c:Charge { return 'sc_charge(' + a + ',' + c + ')'; }
-  / a:Molecule c:Charge { return 'sc_charge(' + a + ',' + c + ')'; }
-  / a:Group c:Charge { return 'sc_charge(' + a + ',' + c + ')'; }
+Ion = a:Formula c:Charge { return 'sc_charge(' + a + ',' + c + ')'; }
 Charge = '^' '{' b:Integer '-' '}' { return '-' + b; }
   / '^' '{' b:Integer '+' '}' { return b; }
   / '^' '{' '-' '}' { return '-1'; }
@@ -45,14 +43,13 @@ Charge = '^' '{' b:Integer '-' '}' { return '-' + b; }
   / '^' b:Integer '+' { return b; }
   / '^-' { return '-1'; }
   / '^+' { return '1'; }
-Group = '(' _ a:Component _ ')' { return 'sc_group(' + a + ')'; }
-  / '[' _ a:Component _ ']' { return 'sc_groupb(' + a + ')'; }
-Multiple = a:Atom b:Subscript { return 'sc_mult(' + a + ',' + b + ')'; }
-  / a:Group b:Subscript { return 'sc_mult(' + a + ',' + b + ')'; }
+Group = '(' _ a:Formula _ ')' { return 'sc_group(' + a + ')'; }
+  / '[' _ a:Formula _ ']' { return 'sc_groupb(' + a + ')'; }
+FormulaUnit = Group / Atom
+FormulaComponent = a:FormulaUnit b:Subscript { return 'sc_mult(' + a + ',' + b + ')'; } / FormulaUnit
 Subscript = '_' '{' b:Integer '}' { return b; } / [_]? b:Integer { return b; }
-Molecule = a:MoleculeComponent b:MoleculeTail { return 'sc_molecule([' + a + ',' + b.join(',') + '])'; } / Multiple
-MoleculeComponent = Multiple / Group / Atom
-MoleculeTail = a:MoleculeComponent b:MoleculeTail { return [a, ...b]; } / a:MoleculeComponent { return [a]; }
+Formula = a:FormulaComponent b:FormulaTail { return 'sc_molecule([' + a + ',' + b.join(',') + '])'; } / FormulaComponent
+FormulaTail = a:FormulaComponent b:FormulaTail { return [a, ...b]; } / a:FormulaComponent { return [a]; }
 Coefficient = Fraction / Decimal / Integer
 Fraction = a:Integer _ '/' _ b:Integer { return a + '/' + b; }
 Decimal = [0-9]+ '.' [0-9]+ { return text(); }
@@ -62,19 +59,26 @@ _ = [ \\t\\n\\r]*
  const leftside = document.getElementById(fake1ref);
  const rightside = document.getElementById(fake2ref);
  const real = document.getElementById(ans1ref);
+ const notifyStack = () => {
+  real.dispatchEvent(new Event('input', { bubbles: true }));
+  real.dispatchEvent(new Event('change', { bubbles: true }));
+ };
  const update = () => {
   const raw = '[' + (new stack_mp.MPString(leftside.value.trim())).toString() + ',' + (new stack_mp.MPString(rightside.value.trim())).toString() + ']';
-  if (raw === '["",""]') { real.value = ''; real.dispatchEvent(new Event('change')); return; }
+  if (raw === '["",""]') { real.value = ''; notifyStack(); return; }
   try {
    if (leftside.value.trim() === '' || rightside.value.trim() === '') throw new Error('Fill in both sides of the equation.');
    real.value = 'sc_reaction(' + chem_parser.parse(leftside.value.trim()) + ',' + chem_parser.parse(rightside.value.trim()) + ')';
   } catch (error) {
    real.value = 'sc_err(' + raw + ',' + (new stack_mp.MPString(error.message)).toString() + ')';
   }
-  real.dispatchEvent(new Event('change'));
+  notifyStack();
  };
+ leftside.addEventListener('input', update);
+ rightside.addEventListener('input', update);
  leftside.addEventListener('change', update);
  rightside.addEventListener('change', update);
+ real.closest('form')?.addEventListener('submit', update, true);
 });
 [[/javascript]]]]></text>
     </questiontext>
@@ -97,6 +101,8 @@ reaction_names: ["SodiumWater", "MagnesiumCO2", "AluminumHCl", "WaterGasShift", 
 rxn_name: rand(reaction_names);
 rxn_data: chem_reaction_data(rxn_name);
 reaction_display: chem_reaction_equation_without_coefficients(rxn_name);
+
+sc_op_p(ex, name) := if atom(ex) then false else is(sconcat(op(ex)) = name);
 
 upper_chars: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 record_tokens(s) := block([chars, result, starts, ch, previous],
@@ -127,15 +133,15 @@ ta1: sc_reaction(side_to_sc(rxn_data[1]), side_to_sc(rxn_data[2]));
 
 collect_species(ex, multiplier) := block([a, b, output],
  if atom(ex) then return([[ex, multiplier]]),
- if is(safe_op(ex) = "+") then (
+ if sc_op_p(ex, "+") then (
   output: [], for a in args(ex) do output: append(output, collect_species(a, multiplier)), return(output)
  ),
- if is(safe_op(ex) = "*") then (
+ if sc_op_p(ex, "*") then (
   a: args(ex)[1], b: args(ex)[2],
   if numberp(a) then return(collect_species(b, multiplier * a)),
   if numberp(b) then return(collect_species(a, multiplier * b))
  ),
- if is(safe_op(ex) = "/") and numberp(second(ex)) then return(collect_species(first(ex), multiplier / second(ex))),
+ if sc_op_p(ex, "/") and numberp(second(ex)) then return(collect_species(first(ex), multiplier / second(ex))),
  [[ex, multiplier]]
 );
 side_bag(ex) := block([pairs, molecules, coefficients, pair, indices, out, out_coefficients],
@@ -164,7 +170,7 @@ side_scale(student_side, teacher_side) := block([student_molecules, teacher_mole
  if valid then scale else false
 );
 reaction_equivalent(student, teacher) := block([student_left, student_right, teacher_left, teacher_right, left_scale, right_scale],
- if not is(safe_op(student) = "sc_reaction") then return(false),
+ if not sc_op_p(student, "sc_reaction") then return(false),
  student_left: side_bag(first(student)), student_right: side_bag(second(student)), teacher_left: side_bag(first(teacher)), teacher_right: side_bag(second(teacher)),
  left_scale: side_scale(student_left, teacher_left), right_scale: side_scale(student_right, teacher_right),
  if not is(left_scale = false) and not is(right_scale = false) and is(abs(left_scale - right_scale) < 1.0e-10) then return(true),
@@ -172,7 +178,7 @@ reaction_equivalent(student, teacher) := block([student_left, student_right, tea
  if not is(left_scale = false) and not is(right_scale = false) and is(abs(left_scale - right_scale) < 1.0e-10) then return(true),
  false
 );
-validate_input(ex) := if is(safe_op(ex) = "sc_err") then castext("Parsing error: {@second(ex)@}") else true;
+validate_input(ex) := if sc_op_p(ex, "sc_err") then castext("Parsing error: {@second(ex)@}") else true;
 ans1_validator(ex) := stack_seq_validator(ex, [validate_input]);]]></text>
     </questionvariables>
     <specificfeedback format="html"><text></text></specificfeedback>
@@ -189,7 +195,7 @@ ans1_validator(ex) := stack_seq_validator(ex, [validate_input]);]]></text>
       <name>prt1</name><value>1.0000000</value><autosimplify>1</autosimplify><feedbackstyle>1</feedbackstyle>
       <feedbackvariables><text><![CDATA[correct_reaction: reaction_equivalent(ans1, ta1);]]></text></feedbackvariables>
       <node>
-        <name>0</name><description>Check balanced equation</description><answertest>AlgEquiv</answertest><sans>correct_reaction</sans><tans>true</tans><testoptions></testoptions><quiet>0</quiet><truescoremode>+</truescoremode><truescore>1</truescore><truepenalty></truepenalty><truenextnode>-1</truenextnode><trueanswernote>prt1-1-T</trueanswernote><truefeedback format="html"><text></text></truefeedback><falsescoremode>-</falsescoremode><falsescore>0</falsescore><falsepenalty></falsepenalty><falsenextnode>-1</falsenextnode><falseanswernote>prt1-1-F</falseanswernote><falsefeedback format="html"><text><![CDATA[<p>Check the substances and their relative stoichiometric coefficients.</p>]]></text></falsefeedback>
+        <name>0</name><description>Check balanced equation</description><answertest>AlgEquiv</answertest><sans>correct_reaction</sans><tans>true</tans><testoptions></testoptions><quiet>0</quiet><truescoremode>+</truescoremode><truescore>1</truescore><truepenalty></truepenalty><truenextnode>-1</truenextnode><trueanswernote>prt1-1-T</trueanswernote><truefeedback format="html"><text><![CDATA[<p>This answer is correct.</p>]]></text></truefeedback><falsescoremode>-</falsescoremode><falsescore>0</falsescore><falsepenalty></falsepenalty><falsenextnode>-1</falsenextnode><falseanswernote>prt1-1-F</falseanswernote><falsefeedback format="html"><text><![CDATA[<p>Check the substances and their relative stoichiometric coefficients.</p>]]></text></falsefeedback>
       </node>
     </prt>
     <qtest>
