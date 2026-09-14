@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 2012112  -->
+  <question type="stack">
+    <name>
+      <text>Chemie Parser Matti (+Ladungen-) Kap. 4, A3a) Uni H, Kaliumpermanganat - No DemoButton</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[[[lang code ='de']]<p>Experimentell wurde festgestellt, dass Permanganat-Ionen in saurer Lösung aus Chloriden Chlorgas entstehen lassen und selber als \( Mn^{2+}\) in Lösung verbleiben.
+<br>
+Geben Sie die zugehörige Redoxgleichung an.</p>
+[[/lang]]
+[[lang code='en,other']]
+<p>Experiments have shown that permanganate ions in an acidic chloride solution produce chlorine gas while remaining in solution as \( Mn^{2+} \).
+<br>
+Write the corresponding redox equation.
+</p>
+[[/lang]]
+
+<div style="display: flex; justify-content: center; align-items: center;width:100%;">
+<table><tr>
+ <td><input id="[[quid id='_fake1'/]]" style="width:100%;"/></td>
+ <td><b style="font-size: x-large;">→</b></td>
+ <td><input id="[[quid id='_fake2'/]]"  style="width:100%;"/></td>
+</tr></table> 
+</div>
+<div style="display: flex; justify-content: center; align-items: center;">
+ [[validation:ans1]]
+</div>
+<div style="display: flex; justify-content: center; align-items: center;">
+[[feedback:prt1]]
+</div>
+<p{@hide_value@}>The real input is here, don't touch it as it is not two-way bound. [[input:ans1]]</p>
+
+[[javascript]]
+/* We will load the Peggy parser generator to build our own syntax. */
+import * as peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js';
+
+/* We will also need the JS Maxima parser */
+import * as stack_mp from 'https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js';
+
+/* Hotfix here, if you have STACK 4.12 without commit 0620f88 then the trick to use MPString objects to escape Maxima strings does not work, you may drop this after 4.13 */
+stack_mp.MPString.prototype.toString = function() {
+   return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', "\\\"") + '"';
+}; 
+/* As this is a JavaScript block we already have stack_js present. */
+
+
+Promise.all([
+ stack_js.request_access_to_input('ans1',true),
+ stack_js.request_access_to_input('fake1',true),
+ stack_js.request_access_to_input('fake2',true)
+]).then(([ans1ref, fake1ref,fake2ref]) => {
+
+
+
+/* First lets generate the parser for that custom grammar. */
+/* Note that we need to escape things twice here. */
+/* Also note the packaging of that source places peggy somewhere we did not expect. */
+const chem_parser = window.peggy.generate(`
+/* A simple notation for reaction equations. Atoms molecules and charges.
+   but no states, their changes or energies.
+   
+   A simple grammar example. Jut start from the top and try to list 
+   the longest imaginable things first.
+ */
+Expression
+  = _ ex:Addition _ { return ex;}
+  / _ ex:TermA _ { return ex;}
+  
+/* Terms that can be added together */
+TermA = Multiplied
+  / Component
+  / Group
+  / Electron
+
+/* Addition can have many terms. */
+Addition = a:TermA  b:AdditionTail {return [a, ...b].join(' + ');}
+AdditionTail = _ '+' _ a:TermA b:AdditionTail {return [a, ...b];}
+  / _ '+' _ a:TermA {return [a];}
+
+/* 2O2 etc. */
+Multiplied = a:Multiplier _ [*]? _ b:Component {return a + ' * ' + b;}
+  / a:Multiplier _ [*]? _ b:Electron {return a + ' * ' + b;}
+
+/* Basic components */
+Component = PolyatomicIon
+  / Molecule
+  / Group
+  / Ion
+  / Atom
+
+/* We will not check if the element name makes sense at this level. 
+Simply assume a capital letter followed by optional lower-case letters is an element.*/
+Atom = [A-Z][a-z]* {return 'sc_atom("' + text() + '")';}
+
+Ion = a:Atom '^+' {return 'sc_charge(' + a + ',1)';}
+  / a:Atom '^-' {return 'sc_charge(' + a + ',-1)';}
+  / a:Atom '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
+  / a:Atom '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
+
+PolyatomicIon = a:Molecule '^+' {return 'sc_charge(' + a + ',1)';}
+  / a:Molecule '^-' {return 'sc_charge(' + a + ',-1)';}
+  / a:Molecule '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
+  / a:Molecule '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
+  / a:Group '^+' {return 'sc_charge(' + a + ',1)';}
+  / a:Group '^-' {return 'sc_charge(' + a + ',-1)';}
+  / a:Group '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
+  / a:Group '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
+
+
+/* To complete the charge logic we need electrons, simply map them to a variable. */
+Electron = 'e^-' {return ' electron ';}
+
+/* Parenthesis are a bit more important here and we have tow types. */
+Group = '(' _ a:Component _ ')' {return 'sc_group(' + a + ')';}
+  / '[' _ a:Component _ ']' {return 'sc_groupb(' + a + ')';}
+
+/* O_2 or (XY)_2 etc. Not an ion... */   
+Multiple = a:Atom [_]? b:Multiplier {return 'sc_mult(' + a + ',' + b + ')';}
+  / a:Group [_]? b:Multiplier {return 'sc_mult(' + a + ',' + b + ')';}
+
+/* O_2 is also a molecule, but does not consist of multiple components. */
+Molecule = a:MoleculeComponent b:MoleculeTail {return 'sc_molecule([' + a + ',' + b.join(',') + '])';}
+  / Multiple
+
+MoleculeComponent = Multiple
+  / Group
+  / Atom
+
+MoleculeTail = a:MoleculeComponent b:MoleculeTail {return [a, ...b];}
+  / a:MoleculeComponent {return [a];}
+
+Multiplier = Integer
+  / '?' {return '?';}
+
+Integer "integer"
+  = [0-9]+ { return text(); }
+
+_ "whitespace"
+  = [ \\t\\n\\r]*
+
+`);
+
+
+/* Lets attach that parser to the "fake"-inputs and route the result to the real one. */
+const leftside = document.getElementById(fake1ref);
+const rightside = document.getElementById(fake2ref);
+const real = document.getElementById(ans1ref);
+const listener = (e) => {
+ /* Either return an `sc_reaction` with both sides populated. 
+    Or `sc_err` with the raw inputs and any possible error.
+  */
+ /* Use the MP-parser classes to escape "strings" correctly */
+ let raw = "[" + (new stack_mp.MPString(leftside.value.trim())).toString() + "," + (new stack_mp.MPString(rightside.value.trim())).toString() + "]";
+
+ if (raw === '["",""]') {
+  /* The fully empty input case. */
+  real.value = '';
+  real.dispatchEvent(new Event('change'));
+ } else {
+  /* Not fully empty, so we will try parsing. */
+  let left_err = null;
+  let right_err = null;
+  let left_parsed = null;
+  let right_parsed = null;
+
+  if (leftside.value.trim() !== '') {
+   try {
+    left_parsed = chem_parser.parse(leftside.value.trim());
+   } catch(e) {
+    left_err = e.message;
+   }
+  }
+  if (rightside.value.trim() !== '') {
+   try {
+    right_parsed = chem_parser.parse(rightside.value.trim());
+   } catch(e) {
+    right_err = e.message;
+   }
+  }
+ 
+  /* Now if we have any errors, we will map to the `sc_err` case. Also, if we only have one side.*/
+  if (left_err !== null || right_err !== null || left_parsed === null || right_parsed === null) {
+   raw = 'sc_err(' + raw + ',';
+   let err ='';
+   if (left_err !== null) {
+    err = left_err;
+   }
+   if (right_err !== null) {
+    err += ' ' +  right_err;
+   }
+   raw += (new stack_mp.MPString(err.trim())).toString() + ')';
+  } else {
+   /* Otherwise it is a valid input. */
+   raw = 'sc_reaction(' + left_parsed + "," + right_parsed + ")";
+  }
+  real.value = raw;
+  real.dispatchEvent(new Event('change'));
+ }
+};
+
+leftside.addEventListener('change', listener);
+rightside.addEventListener('change', listener);
+
+/* For return to the question purposes lets check the real input for anything to restore */
+if (real.value != '' && real.value != undefined && real.value != null) {
+ let mp_parsed = stack_mp.parse_decimal_dot(real.value);
+ /* That there is an AST and it provides a translation feature, typically meant for translating to JS or JessieCode. 
+  * We can hijack that to change the translations of various things.
+  *
+  * Note that no one is forcing you to have those translation functions to just return stuff, they can also do stuff.
+  * In our case, the `sc_err` picks the raw input values and the `sc_reaction` the translated ones and both of them place them to the correct place.
+  */
+ let translation_options = {
+  functions: {
+   'sc_atom' : (args, opt) => args[0].value,
+   'sc_mult' : (args, opt) => args[0].translate(opt) + '_' + args[1].translate(opt),
+   'sc_group' : (args, opt) => '(' + args[0].translate(opt) + ')',
+   'sc_groupb' : (args, opt) => '[' + args[0].translate(opt) + ']',
+   'sc_reaction' : (args, opt) => {
+    let left = args[0].translate(opt);
+    leftside.value = left;
+    let right = args[1].translate(opt);
+    rightside.value = right;
+    return left + ' --> ' + right;
+   },
+   'sc_err' : (args, opt) => {
+    /* For the error package we have the raw input values... */
+    let left = args[0].items[0].value;
+    leftside.value = left;
+    let right = args[1].items[1].value;
+    rightside.value = right;
+    return 'nope';
+   },
+   'sc_molecule': (args, opt) => {
+     let r = '';
+     for(let i = 0; i < args[0].items.length; i++) {
+      r += args[0].items[i].translate(opt);
+     }
+     return r;
+   },
+   'sc_charge':  (args, opt) => {
+     let r = args[0].translate(opt) + '^';
+     let c = parseInt(args[1].translate(opt));
+     if (c < -1) {
+       r += (-c) + "-";
+     } else if (c == -1) {
+       r += "-";
+     } else if (c == 1) {
+       r += "+";
+     } else if (c > 1) {
+       r += c + "+";
+     }
+     return r;
+   }
+  },
+  operators: {
+   '*': (lhs,rhs,opt) => lhs.translate(opt) + ' ' + rhs.translate(opt),
+   '+': (lhs,rhs,opt) => lhs.translate(opt) + ' + ' + rhs.translate(opt)
+  },
+  variables: {
+   'electron': 'e^-'
+  }
+ };
+
+ /* Then push the fake input values generated from the real one. To the correct fields. */
+ /* Let the translation logic pick the correct way to do that. */
+ mp_parsed.translate(translation_options);
+ leftside.dispatchEvent(new Event('change'));
+ rightside.dispatchEvent(new Event('change'));
+}
+
+/* The promises close here */
+});
+[[/javascript]]]]></text>
+    </questiontext>
+    <generalfeedback format="moodle_auto_format">
+      <text></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion>
+      <text>2026010500</text>
+    </stackversion>
+    <questionvariables>
+      <text><![CDATA[/* This question uses client side syntax rewriting to allow custom syntax to be used
+ * in this case we are playing with chemical formulae.
+ *
+ * Basically, we use Peggy.js to generate a custom parser on the client side.
+ * Then use that parser to map to Maxima syntax, which will be pushed to
+ * a real input and processed as the answer. For teachers answer and returning to 
+ * the question we use a ready made parser for Maxima syntax and define how to
+ * translate from its results to the custom one.
+ *
+ * Basically, plenty of JavaScript but not too much.
+ */
+
+/* Missing function in Version 4.11 */ 
+
+extract_matching_parts(predicate, expression) := block([out,sub_ex],
+      out : if is(predicate(expression) = true) then [expression] else [],
+    if not atom(expression) then (
+        for sub_ex in args(expression) do out : append(out, extract_matching_parts(predicate, sub_ex))
+    ),
+    return(out)
+);
+
+/* Control if the weird code output is displayed or not */ 
+
+/* Use this to display the code */ 
+hide_value: ""; 
+/* Use this to hide the code */
+/* hide_value: " hidden";   */ 
+
+
+/**
+ * First, define some presentation rules for our custom functions representing objects
+ * in the custom syntax.
+ */
+texput("sc_atom",lambda([ex],sconcat("{\\textrm{",first(ex),"}}")));
+texput("sc_mult",lambda([ex],sconcat(tex1(first(ex)),"_{",tex1(second(ex)),"}")));
+texput("sc_group",lambda([ex],sconcat("\\left(",tex1(first(ex)),"\\right)")));
+texput("sc_groupb",lambda([ex],sconcat("\\left[",tex1(first(ex)),"\\right]")));
+texput("sc_molecule",lambda([ex],simplode(map(tex1,first(ex)))));
+texput("sc_reaction",lambda([ex],sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
+texput("sc_err",lambda([ex],sconcat(first(ex)[1], " --> ", first(ex)[2])));
+texput("electron","\\textrm{e}^-");
+
+texput("sc_charge",lambda([ex],sconcat(tex1(first(ex)),"^{", if ev(is(abs(second(ex))>1),simp) then ev(abs(second(ex)),simp) else "",if ev(is(second(ex)<0),simp) then "-" else "+","}")));
+
+/* 
+ * Then construct some extra validation logic, in our case not all "atoms" are atoms.
+ *  - A validator to check that the element names are valid
+ *  - A validation message to replace "variables used" with "elements used"
+ *
+ * Use the contrib chemistry library to check if an element is in the periodic table.
+ */
+stack_include("contribl://chemistry.mac");
+
+/* Utility function to extract the set of "elements" from an expression. 
+ * 'sc_molecule([sc_mult(sc_atom("H"),2),sc_atom("O")])' -> ["H","O"] */
+sc_elems(ex):= ev(setify(map(first,
+ extract_matching_parts(lambda([_x],is(safe_op(_x)="sc_atom")), ex)
+)),simp);
+
+/* Validate that we do not have a parse error from the other side */
+validate_err(ex) := block([simp],
+ if safe_op(ex) = "sc_err" then (
+   if not is(second(ex) = "") then (
+    return(castext("Parsing error: {@second(ex)@}"))
+   ) else (
+    return("Incomplete answer, fill in the other side as well.")
+   )
+ ),
+ return(true)
+);
+
+validate_elements(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Unknown elements: [[/lang]][[lang code='fi']]Tuntemattomat alkuaineet: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name=false) then (
+   %_els: append(%_els, [%_el])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+ans1_validator(ex) := stack_seq_validator(ex, [validate_err, validate_elements]);
+
+feedback_elems(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Elements present: [[/lang]][[lang code='fi']]Alkuaineet vastauksessa: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name#false) then (
+   %_els: append(%_els, [%_name])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+%_stack_preamble_end;
+
+/* 
+ * Extracts the counts of elements from an expression. Returns a bag.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ * The bag will not contain elements that might have 0 counts after such subtraction.
+ * Set the second argument to 1 to init recursion correctly.
+ *
+ * Note that will not track charge.
+ */
+sc_elem_counts(ex,mult):= block([%_bag,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_bag:[],
+ if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_bag: sc_elem_counts(args(ex)[1],mult),
+  %_a: sc_elem_counts(apply("+",rest(args(ex))),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   if is(%_c=0) then (
+    %_bag: append(%_bag, [[first(%_pair),second(%_pair)]])
+   ) else (
+    %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+    %_bag: append(%_bag, [[first(%_pair),(second(%_pair)+%_c)]])
+   )
+  )
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_elem_counts(sc_mult(%_b,%_a),mult)) else
+  %_bag:sc_elem_counts(sc_mult(%_a,%_b),mult)
+ ) else if is(safe_op(ex) = "sc_atom") then %_bag: [[first(ex),mult]]
+ else if is(safe_op(ex) = "sc_charge") then %_bag: 
+sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_group") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_bag: sc_elem_counts(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_bag: sc_elem_counts(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_a: sc_elem_counts(first(ex),mult),
+  %_bag: sc_elem_counts(second(ex),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+   if is((%_c-second(%_pair))#0) then (
+    %_bag: append(%_bag,[[first(%_pair),%_c-second(%_pair)]])
+   )
+  )
+ ),
+ return(%_bag)
+);
+
+/* 
+ * Counts charges of all `sc_charge` and electron` elements in the inputs.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ *
+ * Set the second argument to 1 to init recursion correctly.
+ */
+sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_charge:0,
+ if is(ex = electron) then (
+  %_charge: -1*mult
+ ) else if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_charge: sc_total_charge(args(ex)[1],mult) +  sc_total_charge(apply("+",rest(args(ex))),mult)
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_total_charge(%_b, mult* %_a)) else
+  %_charge:sc_total_charge(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_charge:0
+ else if is(safe_op(ex) = "sc_charge") then %_charge: mult*second(ex)
+ else if is(safe_op(ex) = "sc_group") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_charge: sc_total_charge(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_charge: sc_total_charge(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_charge: sc_total_charge(second(ex),mult) - sc_total_charge(first(ex),mult)
+ ),
+ return(%_charge)
+);
+
+
+
+/* Permanganat- und Chlorid-Ionen, Verwendet H+ als Schreibweise */
+
+ta1:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge(sc_atom("H"),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 8*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* Alternative Lösung, mit H3O+-Ionen statt H+ */
+
+ta1_alt:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge( sc_molecule([ sc_mult(sc_atom("H"),3), sc_atom("O")]),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 24*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* ********** Testfälle ********** */
+
+/* Testfall 1: Seiten der Reaktionsgleichung getauscht */ 
+pa1: sc_reaction(second(ta1), first(ta1));
+
+
+/* Testfall 2: alle stöchiometrischen Koeffizienten skaliert */ 
+pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));]]></text>
+    </questionvariables>
+    <specificfeedback format="html">
+      <text></text>
+    </specificfeedback>
+    <questionnote format="html">
+      <text>{@ta1@}</text>
+    </questionnote>
+    <questiondescription format="markdown">
+      <text><![CDATA[[[todo]] 
+- `molecules_l` und `molecules_r`-Funktionen stimmen noch nicht, wenn man Ausdrücke vom Typ `2*(mol_1 + mol_2)` hat ... 
+- Anpassen, dass Vielfache der Gleichungen tatsächlich volle Punktzahl, bzw. dies einstellbar ist.
+- Eingabehinweise überlegen 
+- Fehler: Situatives Vertauschen der Seiten der Gleichung funktioniert nicht
+-  \( H^+\) oder \( H_3O^+\) die bessere Schreibweise ist, oder beides gleichwertig?
+- Anderen Reaktionspfeil (beide Richtungen)
+[[/todo]]
+**Quellen**
+
+- <a href="https://de.chemicalaid.net/tools/equationbalancer.php?equation=KMnO4+%2B+NaCl+%2B+H2O+%3D+MnO2+%2B+NaOH+%2B+KOH+%2B+Cl2"> Link Chemicalaid</a>
+- Brieler, Allgemeine Chemie, Übungen S. 10 (Kapitel 4, Aufgabe 3a) - dort allgemeiner Permanganat-Ionen und Chlorid-Ionen in saurer Lösung)
+ <a href="https://www.mbzi.de/sites/redoxReaktionen3.php"> Lösung hier </a>
+<a href="https://de.wikipedia.org/wiki/Permanganate">Gleichung auf Wikipedia </a>
+
+**Aufgabenerzeugung**
+
+-  Vielfachheit immer außerhalb von <code>sc_mult</code> bzw. <code>sc_molecule</code>-Umgebungen schreiben
+- <code>sc_charge</code>: Ähnlich wie <code>sc_mult</code>: 1. Arugment Molekül, 2. Argument Ladung (als +n/-m)
+- Hierbei sind 2 Schreibweisen von \( H^+ \)-Ionen denkbar, einmal als \( H^+\) und als \( H_3O^+\), weshalb es 2 Musterlösungen gibt: <code>ta1</code> und <code>ta1_alt</code>
+
+**Feedback und PRT**
+
+Verwendet Template, das auf Teilpunkte optimiert ist:
+
+- Es gibt Teilpunkte für jedes korrekte Molekül mit korrekter Vielfachheit auf beiden Seiten der Reaktionsgleichung
+- Die Variable <code>weight_wrongcoeff</code> steuert den Faktor, mit dem Moleküle mit falschem Koeffizienten eingehen (default-Wert: 0.5)
+- Die Variable <code>malus_wrongmolecule</code> steuert den prozentualen Abzug, den ein falsch angegebenes Molekül gibt (default-Wert: 0)
+- Mattis Funktionen <code>balance</code> und <code>charge_balance</code>, die auch Ladungen prüfen
+
+**Mattis Parser**
+
+- In STACK-Version 4.11. fehlt die Funktion <code>extract_matching_parts</code>. Die muss per Hand eingegeben werden in den Fragenvariablen, dann funktioniert es.
+- <code>sc_molecule</code> erwartet eine Liste! Die Funktion <code>sc_mult</code>nimmt eine Gruppe/Atom/Molekül und fügt den 2. Eintrag als Subskript an.]]></text>
+    </questiondescription>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span> [[lang code='de']]&nbsp;
+Richtige Antwort, gut gemacht![[/lang]][[lang code='en,other']]&nbsp;Correct answer, well done![[/lang]]]]></text>
+    </prtcorrect>
+    <prtpartiallycorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i></span> [[lang code='de']]&nbsp;Ihre Antwort ist teilweise korrekt.[[/lang]][[lang code='en,other']]&nbsp;Your answer is partially correct.[[/lang]]]]></text>
+    </prtpartiallycorrect>
+    <prtincorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span> [[lang code='de']]&nbsp;Falsche Antwort.[[/lang]][[lang code='en,other']]&nbsp;Wrong answer.[[/lang]]</p>]]></text>
+    </prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>none</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>ans1</name>
+      <type>algebraic</type>
+      <tans>ta1</tans>
+      <boxsize>40</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords>sc_atom,sc_mult,sc_group,sc_groupb,sc_molecule,sc_reaction,sc_err,sc_charge,electron</allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>2</showvalidation>
+      <options>feedback:feedback_elems,validator:ans1_validator,hideanswer</options>
+    </input>
+    <prt>
+      <name>prt1</name>
+      <value>1.0000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text><![CDATA[/* Are we in balance? */
+balance: sc_elem_counts(ans1,1);
+appeared: map(lambda([x],chem_data(first(x), "Name")), sublist(balance, lambda([x],is(second(x)>0))));
+disappeared: map(lambda([x],chem_data(first(x), "Name")), sublist(balance, lambda([x],is(second(x)<0))));
+
+/* LAdungen ausgeglichen? */
+charge_balance: sc_total_charge(ans1,1); 
+
+/* Antwort-Überprüfungen und Teilpunkte */
+
+/* ****************************** */ 
+/* ---- Hilfsfunktionen ---- */
+/* ****************************** */ 
+
+molecules_l(eing):= block([dummy, lhs, mult_lhs, molecules_lhs],
+dummy: sc_reaction(first(eing) + sc_atom("Dummy"), second(eing) + sc_atom("Dummy")),
+lhs: args(first(dummy)),
+mult_lhs: [], molecules_lhs: [],
+/* if listp(first(lhs)) then return([[first(args(dummy))], [1]]), 
+if is(length(lhs) = 1) then return([[first(args(dummy))], [1]]),
+if is(length(lhs) = 2) then (if integerp(second(lhs)) then return([[sc_mult(first(lhs), second(lhs)) ], [1]])), */
+if integerp(first(lhs)) then return([[second(lhs)], [first(lhs)]]) else 
+(for ex in lhs do if integerp(first(args(ex))) then 
+(mult_lhs: append(mult_lhs, [first(args(ex))]),  molecules_lhs: append(molecules_lhs, [second(args(ex))]) ) 
+else (if is(ex # sc_atom("Dummy")) then (mult_lhs: append(mult_lhs, [1]),   molecules_lhs: append(molecules_lhs, [ex])  )), 
+return([molecules_lhs, mult_lhs])));
+
+/* Moleküle mit Vielfachheiten von rechter Seite der Reaktionsgleichung */ 
+
+molecules_r(eing):=block([dummy, lhs, mult_lhs, molecules_lhs],
+dummy: sc_reaction(first(eing) + sc_atom("Dummy"), second(eing) + sc_atom("Dummy")),
+lhs: args(second(dummy)),
+mult_lhs: [], molecules_lhs: [],
+/* if listp(first(lhs)) then return([[second(args(dummy))], [1]]),
+if is(length(lhs) = 2) then (if integerp(second(lhs)) then return([[sc_mult(first(lhs), second(lhs)) ], [1]])), */
+if integerp(first(lhs)) then return([[second(lhs)], [first(lhs)]]) else
+(for ex in lhs do  if integerp(first(args(ex))) then 
+(mult_lhs: append(mult_lhs, [first(args(ex))]),  molecules_lhs: append(molecules_lhs, [second(args(ex))]) ) 
+else (if is(ex # sc_atom("Dummy")) then (mult_lhs: append(mult_lhs, [1]),   molecules_lhs: append(molecules_lhs, [ex])  )), 
+return([molecules_lhs, mult_lhs])));
+
+/* Hilfsfunktion, um mehrfach auftretende Moleküle einer Seite zusammenzufassen */
+aux_unify_lists(lst1, lst2) := block([aux, aux_lst1, aux_lst2], 
+aux_lst1: listify(setify(lst1)), 
+aux_lst2: 0*aux_lst1,
+for i:1 thru length(aux_lst1) do ( 
+    aux: sublist_indices(lst1, lambda([x],x=aux_lst1[i])), 
+    for j:1 thru length(aux) do (
+        aux_lst2[i]: aux_lst2[i] + lst2[aux[j]]
+        )
+    ),
+return([aux_lst1, aux_lst2]) 
+);
+
+/* ************************************************ */ 
+/* Setzen der Teilpunkte und der Feedback-Prädikate */ 
+/* ************************************************ */
+
+ANS_l: aux_unify_lists(molecules_l(ans1)[1], molecules_l(ans1)[2]);
+ANS_r: aux_unify_lists(molecules_r(ans1)[1], molecules_r(ans1)[2]);
+
+/* Prüft, ob H+ oder H3O+ in der studentischen Antwort vorkommt; sonst H3O+  */ 
+TA_l1: aux_unify_lists(molecules_l(ta1)[1], molecules_l(ta1)[2]);
+TA_l2: aux_unify_lists(molecules_l(ta1_alt)[1], molecules_l(ta1_alt)[2]);
+TA_r1: aux_unify_lists(molecules_r(ta1)[1], molecules_r(ta1)[2]);
+TA_r2: aux_unify_lists(molecules_r(ta1_alt)[1], molecules_r(ta1_alt)[2]); 
+
+pred_ta_auswahl: is( length(intersect(setify(ANS_l[1]), setify(TA_l1[1])  )) > length(intersect(setify(ANS_l[1]), setify(TA_l2[1])  )) );
+if pred_ta_auswahl then (TA_l: TA_l1, TA_r: TA_r1) else (TA_l: TA_l2, TA_r: TA_r2);
+
+/* checks if left and right hand side are swapped wrt ta. Does so if one of the opposing sides coincide. */
+/* Hier vielleicht besser unterlassen, um besser auf H+ oder H3O+ prüfen zu können */
+
+if is(setify(ANS_l[1] ) = setify(TA_r[1] )) or is(setify(ANS_r[1] ) = setify(TA_l[1] ) ) then (ANS_r: ANS_l,  ANS_l: aux_unify_lists(molecules_r(ans1)[1], molecules_r(ans1)[2]) );
+
+/* Ermittelt alle Moleküle mit korrektem stöchiometrischen Koeffizienten */ 
+
+num_molecules: length(TA_l[1]) + length(TA_r[1]);
+
+intersect_l: intersect(setify(ANS_l[1]), setify(TA_l[1])  );
+intersect_r:  intersect(setify(ANS_r[1]), setify(TA_r[1])  );
+num_intersect: length(intersect_l) + length(intersect_r);
+
+num_malus: length(ANS_l[1]) + length(ANS_r[1]) -   num_intersect;
+
+num_correct_coeff: 0;
+
+
+for i:1 thru length(ANS_l[1]) do (aux_indices: sublist_indices(TA_l[1], lambda([x], x=ANS_l[1][i]) ), if is(aux_indices # []) then (if is(ANS_l[2][i]  =TA_l[2][aux_indices[1]] ) then num_correct_coeff: num_correct_coeff + 1));
+for i:1 thru length(ANS_r[1]) do (aux_indices: sublist_indices(TA_r[1], lambda([x], x=ANS_r[1][i]) ), if is(aux_indices # []) then (if is(ANS_r[2][i]  =TA_r[2][aux_indices[1]] ) then num_correct_coeff: num_correct_coeff + 1));
+
+
+/* Test der Korrektheit der Lösung */ 
+
+full_correctness: is(num_correct_coeff = num_molecules) and is(num_malus = 0);
+
+/* num_correct ist die Anzahl der richtigen Moleküle, bei denen der Koeffizient falsch ist */
+num_correctmol_wrongcoeff: num_intersect - num_correct_coeff; 
+
+
+/* Steuere Gewichtung bei der Punktzahl von den falsch angegebenen Molekülen und den korrekten Molekülen mit falschem Koeffizienten */ 
+
+malus_wrongmolecule: 0; /* Malus für jedes falsch vorkommende Molekül */ 
+weight_wrongcoeff: 0.5;  /* Steuert die Gewichtung von diesen Molekülen in der Mark. Default-Wert: 0.5 */
+
+/* Formel für die Ermittlung der Teilpunkte */ 
+
+mark: 1/num_molecules*(  num_correct_coeff +  weight_wrongcoeff*num_correctmol_wrongcoeff - malus_wrongmolecule * num_malus);]]></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Check elements</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>balance</sans>
+        <tans>[]</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>1</truenextnode>
+        <trueanswernote>prt1-1-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>1</falsenextnode>
+        <falseanswernote>prt1-1-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[[[if test="length(appeared)>0"]]<p>There are extra {@appeared@} on the right side.</p>[[/if]]
+
+[[if test="length(disappeared)>0"]]<p>There seems to be some {@disappeared@} missing on the right side.</p>[[/if]]]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>1</name>
+        <description>Check charge</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>charge_balance</sans>
+        <tans>0</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>2</truenextnode>
+        <trueanswernote>prt1-2-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.2</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>2</falsenextnode>
+        <falseanswernote>prt1-2-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[[[if test="charge_balance>0"]]<p>There seems to be more electrons on the left side.</p>[[else]]<p>There seems to be more electrons on the right side.</p>[[/if]]]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>2</name>
+        <description>Check correctness of molecules and its coefficients</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>full_correctness</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>0</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt1-3-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>mark</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt1-3-F</falseanswernote>
+        <falsefeedback format="html">
+          <text></text>
+        </falsefeedback>
+      </node>
+    </prt>
+    <qtest>
+      <testcase>1</testcase>
+      <description>Testfall, der annimmt, dass die Eingabe der Trainer/innen die volle Punktezahl erreicht.</description>
+      <testinput>
+        <name>ans1</name>
+        <value>ta1</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>2</testcase>
+      <description>Rechte und linke Seite der Gleichung vertauscht</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa1</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>3</testcase>
+      <description>Lösung mit H3O+ statt H+</description>
+      <testinput>
+        <name>ans1</name>
+        <value>ta1_alt</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+  </question>
+
+</quiz>

@@ -1,0 +1,218 @@
+/*  Reusable Maxima helpers for STACK reaction-parser questions.
+    This file provides the AST presentation rules, validation helpers,
+    and a bridge from the reactions database to the parser's internal
+    sc_* representation.
+*/
+
+/* Missing function in STACK 4.11. */
+extract_matching_parts(predicate, expression) := block([out,sub_ex],
+      out : if is(predicate(expression) = true) then [expression] else [],
+    if not atom(expression) then (
+        for sub_ex in args(expression) do out : append(out, extract_matching_parts(predicate, sub_ex))
+    ),
+    return(out)
+);
+
+stack_include("contribl://chemistry.mac");
+
+texput("sc_atom",lambda([ex],sconcat("{\\textrm{",first(ex),"}}")));
+texput("sc_mult",lambda([ex],sconcat(tex1(first(ex)),"_{",tex1(second(ex)),"}")));
+texput("sc_group",lambda([ex],sconcat("\\left(",tex1(first(ex)),"\\right)")));
+texput("sc_groupb",lambda([ex],sconcat("\\left[",tex1(first(ex)),"\\right]")));
+texput("sc_molecule",lambda([ex],simplode(map(tex1,first(ex)))));
+texput("sc_reaction",lambda([ex],sconcat(tex1(first(ex))," \\to ",tex1(second(ex)))));
+texput("sc_err",lambda([ex],sconcat(first(ex)[1], " --> ", first(ex)[2])));
+texput("electron","\\textrm{e}^-");
+texput("sc_charge",lambda([ex],sconcat(tex1(first(ex)),"^{", if ev(is(abs(second(ex))>1),simp) then ev(abs(second(ex)),simp) else "",if ev(is(second(ex)<0),simp) then "-" else "+","}")));
+texput("sc_state",lambda([ex],sconcat(tex1(first(ex)),"\\left(",second(ex),"\\right)")));
+
+sc_elems(ex):= ev(setify(map(first,
+ extract_matching_parts(lambda([_x],is(safe_op(_x)="sc_atom")), ex)
+)),simp);
+
+validate_err(ex) := block([simp],
+ if safe_op(ex) = "sc_err" then (
+   if not is(second(ex) = "") then (
+    return(castext("Parsing error: {@second(ex)@}"))
+   ) else (
+    return("Incomplete answer, fill in the other side as well.")
+   )
+ ),
+ return(true)
+);
+
+validate_elements(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Unknown elements: [[/lang]][[lang code='fi']]Tuntemattomat alkuaineet: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name=false) then (
+   %_els: append(%_els, [%_el])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+ans1_validator(ex) := stack_seq_validator(ex, [validate_err, validate_elements]);
+
+feedback_elems(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Elements present: [[/lang]][[lang code='fi']]Alkuaineet vastauksessa: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name#false) then (
+   %_els: append(%_els, [%_name])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+sc_elem_counts(ex,mult):= block([%_bag,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_bag:[],
+ if is(safe_op(ex) = "+") then (
+  %_bag: sc_elem_counts(args(ex)[1],mult),
+  %_a: sc_elem_counts(apply("+",rest(args(ex))),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   if is(%_c=0) then (
+    %_bag: append(%_bag, [[first(%_pair),second(%_pair)]])
+   ) else (
+    %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+    %_bag: append(%_bag, [[first(%_pair),(second(%_pair)+%_c)]])
+   )
+  )
+ ) else if is(safe_op(ex) = "*") then (
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_elem_counts(%_b, mult* %_a)) else
+  %_bag:sc_elem_counts(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_bag: [[first(ex),mult]]
+ else if is(safe_op(ex) = "sc_charge") then %_bag:
+sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_group") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_bag: sc_elem_counts(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_bag: sc_elem_counts(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_a: sc_elem_counts(first(ex),mult),
+  %_bag: sc_elem_counts(second(ex),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+   if is((%_c-second(%_pair))#0) then (
+    %_bag: append(%_bag,[[first(%_pair),%_c-second(%_pair)]])
+   )
+  )
+ ),
+ return(%_bag)
+);
+
+sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_charge:0,
+ if is(ex = electron) then (
+  %_charge: -1*mult
+ ) else if is(safe_op(ex) = "+") then (
+  %_charge: sc_total_charge(args(ex)[1],mult) +  sc_total_charge(apply("+",rest(args(ex))),mult)
+ ) else if is(safe_op(ex) = "*") then (
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_total_charge(%_b, mult* %_a)) else
+  %_charge:sc_total_charge(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_charge:0
+ else if is(safe_op(ex) = "sc_charge") then %_charge: mult*second(ex)
+ else if is(safe_op(ex) = "sc_group") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_charge: sc_total_charge(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_charge: sc_total_charge(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_charge: sc_total_charge(second(ex),mult) - sc_total_charge(first(ex),mult)
+ ),
+ return(%_charge)
+);
+
+/* Simple string splitting */
+to_tokens(s):=block([simp:true,%_chars,%_tokens,%_token_boundaries,%_c,%_prev],
+ /* First turn this to a list of chars. */
+ %_chars: charlist(s),
+ /* Then figure out where token boundaries are. i.e., where we have upper case letters and where digits and signs.*/
+ %_token_boundaries: [],
+ %_prev: false,
+ for i:1 thru length(%_chars) do (
+  %_c: %_chars[i],
+  if uppercasep(%_c) then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "U"
+  ) else if digitcharp(%_c) and not is(%_prev="D") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "D"
+  ) else if is(%_c="+") and not is(%_prev="+") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "+"
+  ) else if is(%_c="-") and not is(%_prev="-") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "-"
+  )
+ ),
+ /* Then we can split the string to those tokens.*/
+ %_tokens: [substring(s, %_token_boundaries[1])],
+ for i:2 thru length(%_token_boundaries) do (
+  %_tokens: push(substring(s, %_token_boundaries[i],%_token_boundaries[i-1]),%_tokens)
+ ),
+ %_tokens
+);
+
+/* Splitted things to sc thing. */
+to_sc(s):=block([simp:true,%_tokens,%_c,%_is],
+ %_tokens: to_tokens(s),
+ /* Convert to workable items */
+ for i:1 thru length(%_tokens) do (
+  %_c: charat(%_tokens[i], 1),
+  if digitcharp(%_c) then (
+   /* Convert integer tokens to integers, use the function we have available so we don't need eval..*/
+   %_tokens[i]: stack_string_parse_number(%_tokens[i])
+  ) else if is(%_c="-") then (
+    %_tokens[i]: [-slength(%_tokens[i])]
+  ) else if is(%_c="+") then (
+    %_tokens[i]: [slength(%_tokens[i])]
+  ) else (
+    %_tokens[i]: sc_atom(%_tokens[i])
+  )
+ ),
+ /* Then identify the indices with integers and merge them down with the preceding item.*/
+ %_is: sublist_indices(%_tokens, integerp),
+ while not emptyp(%_is) do (
+  %_tokens[%_is[1] - 1]: sc_mult(%_tokens[%_is[1] - 1],%_tokens[%_is[1]]),
+  %_tokens: append(firstn(%_tokens, %_is[1] - 1) , rest(%_tokens, %_is[1])),
+  %_is: sublist_indices(%_tokens, integerp)
+ ),
+ /* So now we have a list of possibly multiplied atoms and a possible charge item at the end. */
+ /* Pop that charge out and decide will we have a molecule or something simpler. */
+ %_c: false,
+ if listp(last(%_tokens)) then (
+  %_c: first(last(%_tokens)),
+  %_tokens: firstn(%_tokens, length(%_tokens) - 1)
+ ),
+ %_is: if length(%_tokens) > 1 then sc_molecule(%_tokens) else first(%_tokens),
+ if is(%_c=false) then
+  return(%_is)
+ else
+  return(sc_charge(%_is, %_c))
+);
+
+/* Then reaction list conversion */
+to_sc_reaction(l):= block([simp:true,lhs,rhs,convert],
+ convert: lambda([x],x[3]*sc_state(to_sc(x[1]), x[2])),
+ lhs: map(convert, l[2][1]),
+ rhs: map(convert, l[2][2]),
+ if length(lhs) = 1 then lhs: lhs[1] else lhs : apply("+", lhs),
+ if length(rhs) = 1 then rhs: rhs[1] else rhs : apply("+", rhs),
+ sc_reaction(lhs,rhs)
+);
+
+reaction_to_sc(name) := to_sc_reaction(chem_reaction_data(name));

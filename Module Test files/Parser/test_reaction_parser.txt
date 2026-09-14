@@ -1,0 +1,186 @@
+/* Reaction parser question code (Maxima-only).
+	 - loads a reaction from reactions.mac
+	 - builds TA using parser logic from reaction_parser.mac
+	 - provides equivalence checks that accept swapped sides and global scaling
+*/
+
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reaction_parser.mac");
+
+stackfltfmt:"~f";
+
+/* Keep formulas compatible with to_sc(): letters, digits and +/- only. */
+simple_formula_p(s) := block([chars, c],
+	chars: charlist(s),
+	for c in chars do (
+		if not (lowercasep(c) or uppercasep(c) or digitcharp(c) or is(c = "+") or is(c = "-")) then return(false)
+	),
+	true
+);
+
+reaction_simple_p(rec) := block([left, right, sp],
+	left: rec[2][1],
+	right: rec[2][2],
+	for sp in left do if not simple_formula_p(sp[1]) then return(false),
+	for sp in right do if not simple_formula_p(sp[1]) then return(false),
+	true
+);
+
+rxn_pool: sublist(chem_reaction_array(), lambda([nm], reaction_simple_p(chem_reaction_data(nm))));
+rxn_name: rand(rxn_pool);
+rxn_data: chem_reaction_data(rxn_name);
+
+/* Human-readable prompt equation without coefficients. */
+rxn_side_to_string(side) := simplode(map(lambda([x], x[1]), side), " + ");
+rxn_unbalanced: sconcat(rxn_side_to_string(rxn_data[2][1]), " -> ", rxn_side_to_string(rxn_data[2][2]));
+
+/* We grade without phase labels, so strip sc_state wrappers from student answers if needed. */
+strip_sc_state(ex) := block([op],
+	if atom(ex) then return(ex),
+	op: safe_op(ex),
+	if is(op = "sc_state") then return(strip_sc_state(first(ex))),
+	if is(op = "+") then return(apply("+", map(strip_sc_state, args(ex)))),
+	if is(op = "*") then return(strip_sc_state(args(ex)[1]) * strip_sc_state(args(ex)[2])),
+	if is(op = "sc_reaction") then return(sc_reaction(strip_sc_state(first(ex)), strip_sc_state(second(ex)))),
+	if is(op = "sc_molecule") then return(sc_molecule(map(strip_sc_state, first(ex)))),
+	if is(op = "sc_mult") then return(sc_mult(strip_sc_state(first(ex)), second(ex))),
+	if is(op = "sc_charge") then return(sc_charge(strip_sc_state(first(ex)), second(ex))),
+	if is(op = "sc_group") then return(sc_group(strip_sc_state(first(ex)))),
+	if is(op = "sc_groupb") then return(sc_groupb(strip_sc_state(first(ex)))),
+	ex
+);
+
+/* Build TA directly from reaction data using parser species conversion. */
+side_from_data(side) := block([terms, sp],
+	terms: [],
+	for sp in side do terms: append(terms, [sp[3] * to_sc(sp[1])]),
+	if is(length(terms) = 1) then first(terms) else apply("+", terms)
+);
+
+lhs_species: map(lambda([x], to_sc(x[1])), rxn_data[2][1]);
+rhs_species: map(lambda([x], to_sc(x[1])), rxn_data[2][2]);
+lhs_ta_coeffs: map(third, rxn_data[2][1]);
+rhs_ta_coeffs: map(third, rxn_data[2][2]);
+
+ta1: sc_reaction(side_from_data(rxn_data[2][1]), side_from_data(rxn_data[2][2]));
+
+/* Student enters only coefficients as: [[lhs_coeffs],[rhs_coeffs]] */
+coeff_input_valid(inp) := block([],
+	if not listp(inp) then return(false),
+	if not is(length(inp) = 2) then return(false),
+	if not listp(first(inp)) then return(false),
+	if not listp(second(inp)) then return(false),
+	if not is(length(first(inp)) = length(lhs_species)) then return(false),
+	if not is(length(second(inp)) = length(rhs_species)) then return(false),
+	for c in first(inp) do if not numberp(c) then return(false),
+	for c in second(inp) do if not numberp(c) then return(false),
+	true
+);
+
+side_from_coeffs(species, coeffs) := block([terms],
+	terms: [],
+	for i:1 thru length(species) do terms: append(terms, [coeffs[i] * species[i]]),
+	if is(length(terms) = 1) then first(terms) else apply("+", terms)
+);
+
+reaction_from_coeffs(inp) := block([lhs, rhs],
+	if not coeff_input_valid(inp) then return(false),
+	lhs: side_from_coeffs(lhs_species, first(inp)),
+	rhs: side_from_coeffs(rhs_species, second(inp)),
+	sc_reaction(lhs, rhs)
+);
+
+/* Flatten one side into [species, coefficient] pairs. */
+collect_species_coeffs(ex, mult) := block([op, out, a, b],
+	if atom(ex) then return([[ex, mult]]),
+	op: safe_op(ex),
+	if is(op = "+") then (
+		out: [],
+		for a in args(ex) do out: append(out, collect_species_coeffs(a, mult)),
+		return(out)
+	),
+	if is(op = "*") then (
+		a: args(ex)[1],
+		b: args(ex)[2],
+		if numberp(a) then return(collect_species_coeffs(b, mult * a)),
+		if numberp(b) then return(collect_species_coeffs(a, mult * b)),
+		return([[ex, mult]])
+	),
+	[[ex, mult]]
+);
+
+side_bag(ex) := block([pairs, species, coeffs, p],
+	pairs: collect_species_coeffs(ex, 1),
+	species: [],
+	coeffs: [],
+	for p in pairs do (
+		species: append(species, [first(p)]),
+		coeffs: append(coeffs, [second(p)])
+	),
+	aux_unify_lists(species, coeffs)
+);
+
+/* Helper to combine duplicate species by summing coefficients. */
+aux_unify_lists(lst1, lst2) := block([aux, out1, out2],
+	out1: listify(setify(lst1)),
+	out2: 0 * out1,
+	for i:1 thru length(out1) do (
+		aux: sublist_indices(lst1, lambda([x], x = out1[i])),
+		for j:1 thru length(aux) do out2[i]: out2[i] + lst2[aux[j]]
+	),
+	[out1, out2]
+);
+
+/* Determine common scaling factor between two side bags. Returns false if not proportional. */
+side_scale(ans_side, ta_side) := block([ans_m, ans_c, ta_m, ta_c, idx, k, r],
+	ans_m: ans_side[1], ans_c: ans_side[2],
+	ta_m: ta_side[1], ta_c: ta_side[2],
+	if not is(setify(ans_m) = setify(ta_m)) then return(false),
+	if is(length(ta_m) = 0) then return(false),
+	idx: sublist_indices(ta_m, lambda([x], x = ans_m[1]))[1],
+	if is(ta_c[idx] = 0) then return(false),
+	k: ans_c[1] / ta_c[idx],
+	for i:1 thru length(ans_m) do (
+		idx: sublist_indices(ta_m, lambda([x], x = ans_m[i]))[1],
+		if is(ta_c[idx] = 0) then return(false),
+		r: ans_c[i] / ta_c[idx],
+		if not is(r = k) then return(false)
+	),
+	k
+);
+
+reaction_equiv(ans, ta) := block([a, t, aL, aR, tL, tR, k1, k2],
+	if not is(safe_op(ans) = "sc_reaction") then return(false),
+	if not is(safe_op(ta) = "sc_reaction") then return(false),
+	a: strip_sc_state(ans),
+	t: strip_sc_state(ta),
+	aL: side_bag(first(a)),
+	aR: side_bag(second(a)),
+	tL: side_bag(first(t)),
+	tR: side_bag(second(t)),
+	k1: side_scale(aL, tL),
+	k2: side_scale(aR, tR),
+	if not is(k1 = false) and not is(k2 = false) and is(k1 = k2) then return(true),
+	k1: side_scale(aL, tR),
+	k2: side_scale(aR, tL),
+	if not is(k1 = false) and not is(k2 = false) and is(k1 = k2) then return(true),
+	false
+);
+
+/* Convenience predicates for PRT nodes. */
+is_balanced_elements(ex) := is(sc_elem_counts(strip_sc_state(ex), 1) = []);
+is_balanced_charge(ex) := is(sc_total_charge(strip_sc_state(ex), 1) = 0);
+
+/* PRT usage examples:
+	coeff_input_valid(ans1)
+	reaction_equiv(reaction_from_coeffs(ans1), ta1)
+	is_balanced_elements(reaction_from_coeffs(ans1))
+	is_balanced_charge(reaction_from_coeffs(ans1))
+*/
+
+/* Teacher-side checks/examples. */
+pa_swapped: sc_reaction(second(ta1), first(ta1));
+pa_scaled: sc_reaction(first(ta1) + first(ta1), second(ta1) + second(ta1));
+
+ok_swapped: reaction_equiv(pa_swapped, ta1);
+ok_scaled: reaction_equiv(pa_scaled, ta1);

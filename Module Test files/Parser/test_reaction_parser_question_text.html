@@ -1,0 +1,17 @@
+\(\require{mhchem}\)
+
+<p>Balance the following reaction by entering only stoichiometric coefficients.</p>
+<p><b>Reaction name:</b> {@rxn_name@}</p>
+<p>Unbalanced form: \(\ce{ {@rxn_unbalanced@} }\)</p>
+
+<p>Use this coefficient format:</p>
+<p><code>[[c1,c2,...],[d1,d2,...]]</code></p>
+
+<p>Coefficient order is fixed by species order:</p>
+<p>LHS species: {@rxn_side_to_string(rxn_data[2][1])@}</p>
+<p>RHS species: {@rxn_side_to_string(rxn_data[2][2])@}</p>
+
+<p>Example: if LHS has 2 species and RHS has 3 species, input like <code>[[2,1],[1,2,3]]</code>.</p>
+
+<p>[[input:ans1]]</p>
+<p>[[validation:ans1]]</p>
