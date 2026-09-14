@@ -15,7 +15,9 @@
 <div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
 <p hidden>[[input:ans1]]</p>
 [[javascript]]
-stack_js.request_access_to_input('ans1', true).then(async (ans1ref) => {
+Promise.all([
+ stack_js.request_access_to_input('ans1', true)
+]).then(async ([ans1ref]) => {
  const parserStatus = document.getElementById('parser-validation');
  if (parserStatus) parserStatus.textContent = 'Loading parser...';
  let peggy, stack_mp;
@@ -121,6 +123,8 @@ _ = [ \t\n\r]*
   }
  };
  restoreVisibleInputs();
+ real.addEventListener('input', restoreVisibleInputs);
+ real.addEventListener('change', restoreVisibleInputs);
 });
 [[/javascript]]]]></text>
     </questiontext>
