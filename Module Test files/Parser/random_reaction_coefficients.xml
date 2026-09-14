@@ -15,7 +15,7 @@
 <div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
 <p>The real input is here; it shows the STACK expression generated from the two fields. [[input:ans1]]</p>
 [[javascript]]
-import * as peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js';
+import peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/+esm';
 import * as stack_mp from 'https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js';
 
 Promise.all([
@@ -28,7 +28,7 @@ Promise.all([
   return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
  };
 
- const chem_parser = window.peggy.generate(`
+ const chem_parser = peggy.generate(`
 Expression = _ ex:Addition _ { return ex; } / _ ex:Term _ { return ex; }
 Addition = a:Term b:AdditionTail { return [a, ...b].join(' + '); }
 AdditionTail = _ '+' _ a:Term b:AdditionTail { return [a, ...b]; } / _ '+' _ a:Term { return [a]; }
@@ -61,6 +61,7 @@ _ = [ \t\n\r]*
  const leftside = document.getElementById(fake1ref);
  const rightside = document.getElementById(fake2ref);
  const real = document.getElementById(ans1ref);
+ if (parserStatus) parserStatus.textContent = 'Parser ready.';
  const notifyStack = () => {
   real.dispatchEvent(new Event('input', { bubbles: true }));
   real.dispatchEvent(new Event('change', { bubbles: true }));
