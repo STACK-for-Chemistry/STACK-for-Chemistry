@@ -8,25 +8,32 @@
 <p style="font-size: 1.3em; text-align: center;">\({@reaction_display@}\)</p>
 <p>Enter the complete balanced equation. Use <code>+</code> between substances. Coefficients may be integers, decimals, or fractions, for example <code>2H2</code>, <code>1.5O2</code>, or <code>3/2O2</code>.</p>
 <div style="display:flex; justify-content:center; align-items:center; width:100%;">
-<table><tr><td><input id="[[quid id='_fake1'/]]" style="width:100%;"/></td><td><b style="font-size:x-large;">→</b></td><td><input id="[[quid id='_fake2'/]]" style="width:100%;"/></td></tr></table>
+<table><tr><td><input id="fake1" style="width:100%;"/></td><td><b style="font-size:x-large;">→</b></td><td><input id="fake2" style="width:100%;"/></td></tr></table>
 </div>
 <div style="text-align:center;">[[validation:ans1]]</div>
 <div style="text-align:center;">[[feedback:prt1]]</div>
+<div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
 <p hidden>[[input:ans1]]</p>
 [[javascript]]
-import * as peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js';
-import * as stack_mp from 'https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js';
+stack_js.request_access_to_input('ans1', true).then(async (ans1ref) => {
+ const parserStatus = document.getElementById('parser-validation');
+ if (parserStatus) parserStatus.textContent = 'Loading parser...';
+ let peggy, stack_mp;
+ try {
+  peggy = await import('https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js');
+  stack_mp = await import('https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js');
+  peggy = peggy.default ? peggy.default : peggy;
+  stack_mp = stack_mp.default ? stack_mp.default : stack_mp;
+ } catch (error) {
+  if (parserStatus) parserStatus.textContent = 'Parser load failed: ' + (error.message || 'unknown error');
+  return;
+ }
 
-stack_mp.MPString.prototype.toString = function() {
- return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
-};
+ stack_mp.MPString.prototype.toString = function() {
+  return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
+ };
 
-Promise.all([
- stack_js.request_access_to_input('ans1', true),
- stack_js.request_access_to_input('fake1', true),
- stack_js.request_access_to_input('fake2', true)
-]).then(([ans1ref, fake1ref, fake2ref]) => {
- const chem_parser = window.peggy.generate(`
+ const chem_parser = peggy.generate(`
 Expression = _ ex:Addition _ { return ex; } / _ ex:Term _ { return ex; }
 Addition = a:Term b:AdditionTail { return [a, ...b].join(' + '); }
 AdditionTail = _ '+' _ a:Term b:AdditionTail { return [a, ...b]; } / _ '+' _ a:Term { return [a]; }
@@ -54,10 +61,10 @@ Coefficient = Fraction / Decimal / Integer
 Fraction = a:Integer _ '/' _ b:Integer { return a + '/' + b; }
 Decimal = [0-9]+ '.' [0-9]+ { return text(); }
 Integer = [0-9]+ { return text(); }
-_ = [ \\t\\n\\r]*
+_ = [ \t\n\r]*
  `);
- const leftside = document.getElementById(fake1ref);
- const rightside = document.getElementById(fake2ref);
+ const leftside = document.getElementById('fake1');
+ const rightside = document.getElementById('fake2');
  const real = document.getElementById(ans1ref);
  const notifyStack = () => {
   real.dispatchEvent(new Event('input', { bubbles: true }));
@@ -65,12 +72,14 @@ _ = [ \\t\\n\\r]*
  };
  const update = () => {
   const raw = '[' + (new stack_mp.MPString(leftside.value.trim())).toString() + ',' + (new stack_mp.MPString(rightside.value.trim())).toString() + ']';
-  if (raw === '["",""]') { real.value = ''; notifyStack(); return; }
+  if (raw === '["",""]') { real.value = ''; if (parserStatus) parserStatus.textContent = ''; notifyStack(); return; }
   try {
    if (leftside.value.trim() === '' || rightside.value.trim() === '') throw new Error('Fill in both sides of the equation.');
    real.value = 'sc_reaction(' + chem_parser.parse(leftside.value.trim()) + ',' + chem_parser.parse(rightside.value.trim()) + ')';
-  } catch (error) {
+    if (parserStatus) parserStatus.textContent = 'Parser OK.';
+    } catch (error) {
    real.value = 'sc_err(' + raw + ',' + (new stack_mp.MPString(error.message)).toString() + ')';
+    if (parserStatus) parserStatus.textContent = 'Parser error: ' + error.message;
   }
   notifyStack();
  };
@@ -79,6 +88,39 @@ _ = [ \\t\\n\\r]*
  leftside.addEventListener('change', update);
  rightside.addEventListener('change', update);
  real.closest('form')?.addEventListener('submit', update, true);
+
+ const restoreVisibleInputs = () => {
+  if (!real.value) return;
+  try {
+   const parsed = stack_mp.parse_decimal_dot(real.value);
+   parsed.translate({
+    functions: {
+     sc_atom: (args) => args[0].value,
+     sc_mult: (args, opt) => args[0].translate(opt) + args[1].translate(opt),
+     sc_group: (args, opt) => '(' + args[0].translate(opt) + ')',
+     sc_groupb: (args, opt) => '[' + args[0].translate(opt) + ']',
+     sc_molecule: (args, opt) => args[0].items.map((item) => item.translate(opt)).join(''),
+     sc_charge: (args, opt) => {
+      const charge = Number(args[1].translate(opt));
+      return args[0].translate(opt) + '^' + (charge === 1 ? '+' : charge === -1 ? '-' : Math.abs(charge) + (charge < 0 ? '-' : '+'));
+     },
+     sc_reaction: (args, opt) => {
+      leftside.value = args[0].translate(opt);
+      rightside.value = args[1].translate(opt);
+      return '';
+     },
+     sc_err: () => ''
+    },
+    operators: {
+     '*': (lhs, rhs, opt) => lhs.translate(opt) + ' ' + rhs.translate(opt),
+     '+': (lhs, rhs, opt) => lhs.translate(opt) + ' + ' + rhs.translate(opt)
+    }
+   });
+  } catch (error) {
+   if (parserStatus) parserStatus.textContent = 'Could not restore the saved response.';
+  }
+ };
+ restoreVisibleInputs();
 });
 [[/javascript]]]]></text>
     </questiontext>
