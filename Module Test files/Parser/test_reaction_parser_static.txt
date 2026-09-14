@@ -1,9 +1,8 @@
 /* Reaction parser question code.
-   Single stack_include: load reactions database only.
-   Client-side JS builds ans1 as sc_reaction(...); Maxima handles equivalence/scoring helpers.
+  No stack_include: fixed reaction record in reactions.mac style.
+  Client-side JS builds ans1 as sc_reaction(...); Maxima handles equivalence/scoring helpers.
 */
 
-stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
 stackfltfmt:"~f";
 
 /* Missing function in STACK 4.11 */
@@ -110,7 +109,8 @@ to_sc(s):=block([simp:true,%_tokens,%_c,%_is],
 );
 
 to_sc_reaction(l):= block([simp:true,lhs,rhs,%_map_species],
- %_map_species: lambda([x],x[3]*sc_state(to_sc(x[1]), x[2])),
+ /* Ignore aggregate states for grading: use formula+stoichiometry only. */
+ %_map_species: lambda([x],x[3]*to_sc(x[1])),
  lhs: map(%_map_species, l[2][1]),
  rhs: map(%_map_species, l[2][2]),
  if length(lhs) = 1 then lhs: lhs[1] else lhs : apply("+", lhs),
@@ -275,40 +275,10 @@ reaction_equiv(ans, ta) := block([a, t, aL, aR, tL, tR, k1, k2],
  false
 );
 
-/* Choose a parser-safe reaction from reactions.mac.
-   We restrict to simple formulas because to_sc() is intentionally simple.
+/* Fixed reaction in reactions.mac style:
+  [name, [[ [formula,state,coeff], ...reactants... ], [ ...products... ]]]
 */
-simple_formula_p(s) := block([chars, c],
- chars: charlist(s),
- for c in chars do (
-  if not allowed_formula_char_p(c) then return(false)
- ),
- true
-);
-
-reaction_simple_p(rec) := block([left, right, sp],
- left: rec[2][1],
- right: rec[2][2],
- for sp in left do if not simple_formula_p(sp[1]) then return(false),
- for sp in right do if not simple_formula_p(sp[1]) then return(false),
- true
-);
-
-/* Timeout-safe reaction selection: bounded search + deterministic fallback. */
-rxn_names: chem_reaction_array();
-rxn_data: false;
-if listp(rxn_names) and is(length(rxn_names) > 0) then (
- for i:1 thru 40 do (
-  if is(rxn_data = false) then block([cand_name, cand_data],
-   cand_name: rand(rxn_names),
-   cand_data: chem_reaction_data(cand_name),
-   if reaction_simple_p(cand_data) then rxn_data: cand_data
-  )
- )
-);
-if is(rxn_data = false) then (
- rxn_data: ["fallback_h2_o2",[[["H2","g",2],["O2","g",1]],[["H2O","l",2]]]]
-);
+rxn_data: ["CombustionMethane",[[["CH4","g",1],["O2","g",2]],[["CO2","g",1],["H2O","g",2]]]];
 lhs_unbalanced: simplode(map(lambda([x], x[1]), rxn_data[2][1]), " + ");
 rhs_unbalanced: simplode(map(lambda([x], x[1]), rxn_data[2][2]), " + ");
 

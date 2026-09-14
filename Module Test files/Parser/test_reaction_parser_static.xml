@@ -1,0 +1,1107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="stack">
+    <name>
+      <text>Reaction Parser from reactions.mac (JS parser)</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[\(\require{mhchem}\)
+
+[[lang code='de']]
+<p>Geben Sie die Reaktionsgleichung mit Koeffizienten ein.</p>
+<p>Reaktion (ohne Koeffizienten): \(\ce{ {@lhs_unbalanced@} -> {@rhs_unbalanced@} }\)</p>
+<p>Hinweise:</p>
+<ul>
+ <li>Verwenden Sie die Parser-Syntax, z.B. <code>2H2 + O2</code> links und <code>2H2O</code> rechts.</li>
+ <li>Ladungen sind erlaubt, z.B. <code>Cl^-</code>, <code>Mn^2+</code>.</li>
+ <li>Vertauschte Seiten und global skalierte Koeffizienten werden als korrekt gewertet.</li>
+</ul>
+[[/lang]]
+
+[[lang code='en,other']]
+<p>Enter the balanced reaction equation with coefficients.</p>
+<p>Reaction (without coefficients): \(\ce{ {@lhs_unbalanced@} -> {@rhs_unbalanced@} }\)</p>
+<p>Notes:</p>
+ * in the custom syntax.
+ */
+texput("sc_atom",lambda([ex],sconcat("{\\textrm{",first(ex),"}}")));
+texput("sc_mult",lambda([ex],sconcat(tex1(first(ex)),"_{",tex1(second(ex)),"}")));
+texput("sc_group",lambda([ex],sconcat("\\left(",tex1(first(ex)),"\\right)")));
+texput("sc_groupb",lambda([ex],sconcat("\\left[",tex1(first(ex)),"\\right]")));
+texput("sc_molecule",lambda([ex],simplode(map(tex1,first(ex)))));
+texput("sc_reaction",lambda([ex],sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
+texput("sc_err",lambda([ex],sconcat(first(ex)[1], " --> ", first(ex)[2])));
+texput("electron","\\textrm{e}^-");
+
+texput("sc_charge",lambda([ex],sconcat(tex1(first(ex)),"^{", if ev(is(abs(second(ex))>1),simp) then ev(abs(second(ex)),simp) else "",if ev(is(second(ex)<0),simp) then "-" else "+","}")));
+
+/* 
+ * Then construct some extra validation logic, in our case not all "atoms" are atoms.
+ *  - A validator to check that the element names are valid
+ *  - A validation message to replace "variables used" with "elements used"
+ *
+ * Use the contrib chemistry library to check if an element is in the periodic table.
+ */
+stack_include("contribl://chemistry.mac");
+
+/* Utility function to extract the set of "elements" from an expression. 
+ * 'sc_molecule([sc_mult(sc_atom("H"),2),sc_atom("O")])' -> ["H","O"] */
+sc_elems(ex):= ev(setify(map(first,
+ extract_matching_parts(lambda([_x],is(safe_op(_x)="sc_atom")), ex)
+)),simp);
+
+/* Validate that we do not have a parse error from the other side */
+validate_err(ex) := block([simp],
+ if safe_op(ex) = "sc_err" then (
+   if not is(second(ex) = "") then (
+    return(castext("Parsing error: {@second(ex)@}"))
+   ) else (
+    return("Incomplete answer, fill in the other side as well.")
+   )
+ ),
+ return(true)
+);
+
+validate_elements(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Unknown elements: [[/lang]][[lang code='fi']]Tuntemattomat alkuaineet: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name=false) then (
+   %_els: append(%_els, [%_el])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+ans1_validator(ex) := stack_seq_validator(ex, [validate_err, validate_elements]);
+
+feedback_elems(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Elements present: [[/lang]][[lang code='fi']]Alkuaineet vastauksessa: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name#false) then (
+   %_els: append(%_els, [%_name])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+%_stack_preamble_end;
+
+/* 
+ * Extracts the counts of elements from an expression. Returns a bag.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ * The bag will not contain elements that might have 0 counts after such subtraction.
+ * Set the second argument to 1 to init recursion correctly.
+ *
+ * Note that will not track charge.
+ */
+sc_elem_counts(ex,mult):= block([%_bag,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_bag:[],
+ if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_bag: sc_elem_counts(args(ex)[1],mult),
+  %_a: sc_elem_counts(apply("+",rest(args(ex))),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   if is(%_c=0) then (
+    %_bag: append(%_bag, [[first(%_pair),second(%_pair)]])
+   ) else (
+    %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+    %_bag: append(%_bag, [[first(%_pair),(second(%_pair)+%_c)]])
+   )
+  )
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_elem_counts(sc_mult(%_b,%_a),mult)) else
+  %_bag:sc_elem_counts(sc_mult(%_a,%_b),mult)
+ ) else if is(safe_op(ex) = "sc_atom") then %_bag: [[first(ex),mult]]
+ else if is(safe_op(ex) = "sc_charge") then %_bag: 
+sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_group") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_bag: sc_elem_counts(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_bag: sc_elem_counts(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_a: sc_elem_counts(first(ex),mult),
+  %_bag: sc_elem_counts(second(ex),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+   if is((%_c-second(%_pair))#0) then (
+    %_bag: append(%_bag,[[first(%_pair),%_c-second(%_pair)]])
+   )
+  )
+ ),
+ return(%_bag)
+);
+
+/* 
+ * Counts charges of all `sc_charge` and electron` elements in the inputs.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ *
+ * Set the second argument to 1 to init recursion correctly.
+ */
+sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_charge:0,
+ if is(ex = electron) then (
+  %_charge: -1*mult
+ ) else if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_charge: sc_total_charge(args(ex)[1],mult) +  sc_total_charge(apply("+",rest(args(ex))),mult)
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_total_charge(%_b, mult* %_a)) else
+  %_charge:sc_total_charge(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_charge:0
+ else if is(safe_op(ex) = "sc_charge") then %_charge: mult*second(ex)
+ else if is(safe_op(ex) = "sc_group") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_charge: sc_total_charge(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_charge: sc_total_charge(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_charge: sc_total_charge(second(ex),mult) - sc_total_charge(first(ex),mult)
+ ),
+ return(%_charge)
+);
+
+
+
+/* Permanganat- und Chlorid-Ionen, Verwendet H+ als Schreibweise */
+
+ta1:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge(sc_ato
+ * in the custom syntax.
+ */
+texput("sc_atom",lambda([ex],sconcat("{\\textrm{",first(ex),"}}")));
+texput("sc_mult",lambda([ex],sconcat(tex1(first(ex)),"_{",tex1(second(ex)),"}")));
+texput("sc_group",lambda([ex],sconcat("\\left(",tex1(first(ex)),"\\right)")));
+texput("sc_groupb",lambda([ex],sconcat("\\left[",tex1(first(ex)),"\\right]")));
+texput("sc_molecule",lambda([ex],simplode(map(tex1,first(ex)))));
+texput("sc_reaction",lambda([ex],sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
+texput("sc_err",lambda([ex],sconcat(first(ex)[1], " --> ", first(ex)[2])));
+texput("electron","\\textrm{e}^-");
+
+texput("sc_charge",lambda([ex],sconcat(tex1(first(ex)),"^{", if ev(is(abs(second(ex))>1),simp) then ev(abs(second(ex)),simp) else "",if ev(is(second(ex)<0),simp) then "-" else "+","}")));
+
+/* 
+ * Then construct some extra validation logic, in our case not all "atoms" are atoms.
+ *  - A validator to check that the element names are valid
+ *  - A validation message to replace "variables used" with "elements used"
+ *
+ * Use the contrib chemistry library to check if an element is in the periodic table.
+ */
+stack_include("contribl://chemistry.mac");
+
+/* Utility function to extract the set of "elements" from an expression. 
+ * 'sc_molecule([sc_mult(sc_atom("H"),2),sc_atom("O")])' -> ["H","O"] */
+sc_elems(ex):= ev(setify(map(first,
+ extract_matching_parts(lambda([_x],is(safe_op(_x)="sc_atom")), ex)
+)),simp);
+
+/* Validate that we do not have a parse error from the other side */
+validate_err(ex) := block([simp],
+ if safe_op(ex) = "sc_err" then (
+   if not is(second(ex) = "") then (
+    return(castext("Parsing error: {@second(ex)@}"))
+   ) else (
+    return("Incomplete answer, fill in the other side as well.")
+   )
+ ),
+ return(true)
+);
+
+validate_elements(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Unknown elements: [[/lang]][[lang code='fi']]Tuntemattomat alkuaineet: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name=false) then (
+   %_els: append(%_els, [%_el])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+ans1_validator(ex) := stack_seq_validator(ex, [validate_err, validate_elements]);
+
+feedback_elems(ex):=block([%_el,%_name,%_output,%_els],
+ %_output: castext("[[lang code='en,other']]Elements present: [[/lang]][[lang code='fi']]Alkuaineet vastauksessa: [[/lang]]"),
+ %_els: [],
+ for %_el in sc_elems(ex) do (
+  %_name: chem_data(%_el, "Name"),
+  if is(%_name#false) then (
+   %_els: append(%_els, [%_name])
+  )
+ ),
+ if is(length(%_els) = 0) then return(""),
+ %_output: castext_concat(%_output, simplode(%_els,", ")),
+ return(%_output)
+);
+
+%_stack_preamble_end;
+
+/* 
+ * Extracts the counts of elements from an expression. Returns a bag.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ * The bag will not contain elements that might have 0 counts after such subtraction.
+ * Set the second argument to 1 to init recursion correctly.
+ *
+ * Note that will not track charge.
+ */
+sc_elem_counts(ex,mult):= block([%_bag,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_bag:[],
+ if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_bag: sc_elem_counts(args(ex)[1],mult),
+  %_a: sc_elem_counts(apply("+",rest(args(ex))),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   if is(%_c=0) then (
+    %_bag: append(%_bag, [[first(%_pair),second(%_pair)]])
+   ) else (
+    %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+    %_bag: append(%_bag, [[first(%_pair),(second(%_pair)+%_c)]])
+   )
+  )
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_elem_counts(sc_mult(%_b,%_a),mult)) else
+  %_bag:sc_elem_counts(sc_mult(%_a,%_b),mult)
+ ) else if is(safe_op(ex) = "sc_atom") then %_bag: [[first(ex),mult]]
+ else if is(safe_op(ex) = "sc_charge") then %_bag: 
+sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_group") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_bag: sc_elem_counts(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_bag: sc_elem_counts(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_a: sc_elem_counts(first(ex),mult),
+  %_bag: sc_elem_counts(second(ex),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+   if is((%_c-second(%_pair))#0) then (
+    %_bag: append(%_bag,[[first(%_pair),%_c-second(%_pair)]])
+   )
+  )
+ ),
+ return(%_bag)
+);
+
+/* 
+ * Counts charges of all `sc_charge` and electron` elements in the inputs.
+ * If the expression is a `sc_reaction` subtracts the left side from the right side.
+ *
+ * Set the second argument to 1 to init recursion correctly.
+ */
+sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_charge:0,
+ if is(ex = electron) then (
+  %_charge: -1*mult
+ ) else if is(safe_op(ex) = "+") then (
+  /* N-ary addition. */
+  %_charge: sc_total_charge(args(ex)[1],mult) +  sc_total_charge(apply("+",rest(args(ex))),mult)
+ ) else if is(safe_op(ex) = "*") then (
+  /* The assumption is that we have no N-ary multiplication present. */
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_total_charge(%_b, mult* %_a)) else
+  %_charge:sc_total_charge(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_charge:0
+ else if is(safe_op(ex) = "sc_charge") then %_charge: mult*second(ex)
+ else if is(safe_op(ex) = "sc_group") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_charge: sc_total_charge(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_charge: sc_total_charge(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_charge: sc_total_charge(second(ex),mult) - sc_total_charge(first(ex),mult)
+ ),
+ return(%_charge)
+);
+
+
+
+/* Permanganat- und Chlorid-Ionen, Verwendet H+ als Schreibweise */
+
+ta1:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge(sc_atom("H"),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 8*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* Alternative Lösung, mit H3O+-Ionen statt H+ */
+
+ta1_alt:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge( sc_molecule([ sc_mult(sc_atom("H"),3), sc_atom("O")]),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 24*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* ********** Testfälle ********** */
+
+/* Testfall 1: Seiten der Reaktionsgleichung getauscht */ 
+pa1: sc_reaction(second(ta1), first(ta1));
+
+
+/* Testfall 2: alle stöchiometrischen Koeffizienten skaliert */ 
+pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));m("H"),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 8*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* Alternative Lösung, mit H3O+-Ionen statt H+ */
+
+ta1_alt:  sc_reaction(
+2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
++  10*sc_charge(sc_atom("Cl"),-1)
++ 16*sc_charge( sc_molecule([ sc_mult(sc_atom("H"),3), sc_atom("O")]),1)
+,
+  2*sc_charge(sc_atom("Mn"),+2)
++  5*sc_mult(sc_atom("Cl"),2)
++ 24*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+);
+
+/* ********** Testfälle ********** */
+
+/* Testfall 1: Seiten der Reaktionsgleichung getauscht */ 
+pa1: sc_reaction(second(ta1), first(ta1));
+
+
+/* Testfall 2: alle stöchiometrischen Koeffizienten skaliert */ 
+pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));
+<ul>
+ <li>Use parser syntax, e.g. <code>2H2 + O2</code> on the left and <code>2H2O</code> on the right.</li>
+ <li>Charges are allowed, e.g. <code>Cl^-</code>, <code>Mn^2+</code>.</li>
+ <li>Swapped sides and globally scaled coefficients are accepted as correct.</li>
+</ul>
+[[/lang]]
+
+<div style="display: flex; justify-content: center; align-items: center; width:100%;">
+ <table><tr>
+  <td><input id="fake1" style="width:100%;"/></td>
+  <td><b style="font-size: x-large;">→</b></td>
+  <td><input id="fake2" style="width:100%;"/></td>
+ </tr></table>
+</div>
+
+<div style="display:flex; justify-content:center; align-items:center;">
+ [[validation:ans1]]
+</div>
+
+<div style="display:flex; justify-content:center; align-items:center;">
+ [[feedback:prt1]]
+</div>
+
+<div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
+
+<p hidden>[[input:ans1]]</p>
+
+[[javascript]]
+/* Client-side parser: same structure as Matti's approach. */
+Promise.all([
+ stack_js.request_access_to_input('ans1', true)
+]).then(async ([ans1ref]) => {
+
+const parserStatus = document.getElementById('parser-validation');
+if (parserStatus) parserStatus.textContent = 'Loading parser...';
+
+let peggy, stack_mp;
+try {
+ peggy = await import('https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js');
+ stack_mp = await import('https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js');
+ peggy = peggy.default ? peggy.default : peggy;
+ stack_mp = stack_mp.default ? stack_mp.default : stack_mp;
+} catch(e) {
+ const real = document.getElementById(ans1ref);
+ if (parserStatus) parserStatus.textContent = 'Parser load failed: ' + (e && e.message ? e.message : 'unknown error');
+ if (real) {
+  real.value = 'sc_err(["",""] ,"JS module load failed")';
+  real.dispatchEvent(new Event('input', { bubbles: true }));
+  real.dispatchEvent(new Event('change', { bubbles: true }));
+ }
+ return;
+}
+
+stack_mp.MPString.prototype.toString = function() {
+ return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
+};
+
+const chem_parser = peggy.generate(`
+Expression
+  = _ ex:Addition _ { return ex;}
+  / _ ex:TermA _ { return ex;}
+
+TermA = Multiplied
+  / Component
+  / Group
+  / Electron
+
+Addition = a:TermA b:AdditionTail { return [a, ...b].join(' + '); }
+AdditionTail = _ '+' _ a:TermA b:AdditionTail { return [a, ...b]; }
+  / _ '+' _ a:TermA { return [a]; }
+
+Multiplied = a:Multiplier _ [*]? _ b:Component { return a + ' * ' + b; }
+  / a:Multiplier _ [*]? _ b:Electron { return a + ' * ' + b; }
+
+Component = a:BaseComponent _ StateSuffix? { return a; }
+
+BaseComponent = PolyatomicIon
+  / Molecule
+  / Group
+  / Ion
+  / Atom
+
+StateSuffix = '{' _ StateToken _ '}'
+StateToken = [A-Za-z][A-Za-z0-9]*
+
+Atom = [A-Z][a-z]* { return 'sc_atom("' + text() + '")'; }
+
+Ion = a:Atom c:ChargeSuffix { return 'sc_charge(' + a + ',' + c + ')'; }
+
+PolyatomicIon = a:(Molecule / Group) c:ChargeSuffix { return 'sc_charge(' + a + ',' + c + ')'; }
+
+ChargeSuffix
+  = '^+' { return '1'; }
+  / '^-' { return '-1'; }
+  / '^' b:Integer '-' { return '-' + b; }
+  / '^' b:Integer '+' { return b; }
+  / '^{' _ b:IntegerPlain _ '+' _ '}' { return b; }
+  / '^{' _ b:IntegerPlain _ '-' _ '}' { return '-' + b; }
+  / '^{' _ '+' _ '}' { return '1'; }
+  / '^{' _ '-' _ '}' { return '-1'; }
+
+Electron = 'e^-' { return 'electron'; }
+
+Group = '(' _ a:Component _ ')' { return 'sc_group(' + a + ')'; }
+  / '[' _ a:Component _ ']' { return 'sc_groupb(' + a + ')'; }
+
+Multiple = a:Atom [_]? b:Multiplier { return 'sc_mult(' + a + ',' + b + ')'; }
+  / a:Group [_]? b:Multiplier { return 'sc_mult(' + a + ',' + b + ')'; }
+
+Molecule = a:MoleculeComponent b:MoleculeTail { return 'sc_molecule([' + a + ',' + b.join(',') + '])'; }
+  / Multiple
+
+MoleculeComponent = Multiple
+  / Group
+  / Atom
+
+MoleculeTail = a:MoleculeComponent b:MoleculeTail { return [a, ...b]; }
+  / a:MoleculeComponent { return [a]; }
+
+Multiplier = Integer
+  / '?' { return '?'; }
+
+Integer "integer" = BracedInteger
+  / IntegerPlain
+BracedInteger "integer" = '{' _ n:IntegerPlain _ '}' { return n; }
+IntegerPlain "integer" = [0-9]+ { return text(); }
+_ "whitespace" = [ \t\n\r]*
+`);
+
+const leftside = document.getElementById('fake1');
+const rightside = document.getElementById('fake2');
+const real = document.getElementById(ans1ref);
+
+const listener = () => {
+ let raw = "[" + (new stack_mp.MPString(leftside.value.trim())).toString() + "," + (new stack_mp.MPString(rightside.value.trim())).toString() + "]";
+
+ if (raw === '["",""]') {
+  real.value = '';
+  real.dispatchEvent(new Event('input', { bubbles: true }));
+  real.dispatchEvent(new Event('change', { bubbles: true }));
+  if (parserStatus) parserStatus.textContent = '';
+  return;
+ }
+
+ let left_err = null, right_err = null, left_parsed = null, right_parsed = null;
+
+ if (leftside.value.trim() !== '') {
+  try { left_parsed = chem_parser.parse(leftside.value.trim()); } catch(e) { left_err = e.message; }
+ }
+ if (rightside.value.trim() !== '') {
+  try { right_parsed = chem_parser.parse(rightside.value.trim()); } catch(e) { right_err = e.message; }
+ }
+
+ if (left_err !== null || right_err !== null || left_parsed === null || right_parsed === null) {
+  raw = 'sc_err(' + raw + ',';
+  let err = '';
+  if (left_err !== null) err = left_err;
+  if (right_err !== null) err += ' ' + right_err;
+  raw += (new stack_mp.MPString(err.trim())).toString() + ')';
+  if (parserStatus) parserStatus.textContent = (err.trim() === '' ? 'Incomplete answer.' : ('Parser error: ' + err.trim()));
+ } else {
+  raw = 'sc_reaction(' + left_parsed + ',' + right_parsed + ')';
+  if (parserStatus) parserStatus.textContent = 'Parser OK.';
+ }
+
+ real.value = raw;
+ real.dispatchEvent(new Event('input', { bubbles: true }));
+ real.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
+leftside.addEventListener('change', listener);
+rightside.addEventListener('change', listener);
+leftside.addEventListener('input', listener);
+rightside.addEventListener('input', listener);
+leftside.addEventListener('blur', listener);
+rightside.addEventListener('blur', listener);
+
+if (real.value !== '' && real.value !== undefined && real.value !== null) {
+ let mp_parsed = stack_mp.parse_decimal_dot(real.value);
+ let translation_options = {
+  functions: {
+   'sc_atom' : (args, opt) => args[0].value,
+   'sc_mult' : (args, opt) => args[0].translate(opt) + '_' + args[1].translate(opt),
+   'sc_group' : (args, opt) => '(' + args[0].translate(opt) + ')',
+   'sc_groupb' : (args, opt) => '[' + args[0].translate(opt) + ']',
+   'sc_reaction' : (args, opt) => {
+    let left = args[0].translate(opt);
+    leftside.value = left;
+    let right = args[1].translate(opt);
+    rightside.value = right;
+    return left + ' --> ' + right;
+   },
+   'sc_err' : (args, opt) => {
+    let left = args[0].items[0].value;
+    leftside.value = left;
+    let right = args[0].items[1].value;
+    rightside.value = right;
+    return 'nope';
+   },
+   'sc_molecule': (args, opt) => {
+     let r = '';
+     for (let i = 0; i < args[0].items.length; i++) r += args[0].items[i].translate(opt);
+     return r;
+   },
+   'sc_charge': (args, opt) => {
+     let r = args[0].translate(opt) + '^';
+     let c = parseInt(args[1].translate(opt));
+     if (c < -1) r += (-c) + '-';
+     else if (c === -1) r += '-';
+     else if (c === 1) r += '+';
+     else if (c > 1) r += c + '+';
+     return r;
+   }
+  },
+  operators: {
+   '*': (lhs, rhs, opt) => lhs.translate(opt) + ' ' + rhs.translate(opt),
+   '+': (lhs, rhs, opt) => lhs.translate(opt) + ' + ' + rhs.translate(opt)
+  },
+  variables: { 'electron': 'e^-' }
+ };
+ mp_parsed.translate(translation_options);
+ leftside.dispatchEvent(new Event('change'));
+ rightside.dispatchEvent(new Event('change'));
+}
+
+});
+[[/javascript]]]]></text>
+    </questiontext>
+    <generalfeedback format="moodle_auto_format">
+      <text></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion>
+      <text>2026010500</text>
+    </stackversion>
+    <questionvariables>
+      <text><![CDATA[/* Reaction parser question code.
+   Single stack_include: load reactions database only.
+   Client-side JS builds ans1 as sc_reaction(...); Maxima handles equivalence/scoring helpers.
+*/
+
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stackfltfmt:"~f";
+
+extract_matching_parts(predicate, expression) := block([out,sub_ex],
+      out : if is(predicate(expression) = true) then [expression] else [],
+    if not atom(expression) then (
+        for sub_ex in args(expression) do out : append(out, extract_matching_parts(predicate, sub_ex))
+    ),
+    return(out)
+);
+
+texput("sc_atom",lambda([ex],sconcat("{\\textrm{",first(ex),"}}")));
+texput("sc_mult",lambda([ex],sconcat(tex1(first(ex)),"_{",tex1(second(ex)),"}")));
+texput("sc_group",lambda([ex],sconcat("\\left(",tex1(first(ex)),"\\right)")));
+texput("sc_groupb",lambda([ex],sconcat("\\left[",tex1(first(ex)),"\\right]")));
+texput("sc_molecule",lambda([ex],simplode(map(tex1,first(ex)))));
+texput("sc_reaction",lambda([ex],sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
+texput("sc_err",lambda([ex],sconcat(first(ex)[1], " --> ", first(ex)[2])));
+texput("electron","\\textrm{e}^-");
+texput("sc_state",lambda([ex],sconcat(tex1(first(ex)),"\\left(",second(ex),"\\right)")));
+texput("sc_charge",lambda([ex],sconcat(tex1(first(ex)),"^{", if ev(is(abs(second(ex))>1),simp) then ev(abs(second(ex)),simp) else "",if ev(is(second(ex)<0),simp) then "-" else "+","}")));
+
+validate_err(ex) := block([simp],
+ if safe_op(ex) = "sc_err" then (
+   if not is(second(ex) = "") then (
+    return(castext("Parsing error: {@second(ex)@}"))
+   ) else (
+    return("Incomplete answer, fill in both sides.")
+   )
+ ),
+ return(true)
+);
+
+ans1_validator(ex) := stack_seq_validator(ex, [validate_err]);
+feedback_elems(ex) := "";
+
+%_stack_preamble_end;
+
+%_UPPER_CHARS: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+%_LOWER_CHARS: ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+%_DIGIT_CHARS: ["0","1","2","3","4","5","6","7","8","9"];
+
+is_upper_char(c) := is(member(c, %_UPPER_CHARS));
+allowed_formula_char_p(c) := is(member(c, %_UPPER_CHARS) or member(c, %_LOWER_CHARS) or member(c, %_DIGIT_CHARS) or is(c = "+") or is(c = "-"));
+
+to_tokens(s):=block([simp:true,%_chars,%_tokens,%_token_boundaries,%_c,%_prev],
+ %_chars: charlist(s),
+ %_token_boundaries: [],
+ %_prev: false,
+ for i:1 thru length(%_chars) do (
+  %_c: %_chars[i],
+    if is_upper_char(%_c) then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "U"
+  ) else if digitcharp(%_c) and not is(%_prev="D") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "D"
+  ) else if is(%_c="+") and not is(%_prev="+") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "+"
+  ) else if is(%_c="-") and not is(%_prev="-") then (
+   %_token_boundaries: push(i, %_token_boundaries),
+   %_prev: "-"
+  )
+ ),
+ %_tokens: [substring(s, %_token_boundaries[1])],
+ for i:2 thru length(%_token_boundaries) do (
+  %_tokens: push(substring(s, %_token_boundaries[i],%_token_boundaries[i-1]),%_tokens)
+ ),
+ %_tokens
+);
+
+to_sc(s):=block([simp:true,%_tokens,%_c,%_is],
+ %_tokens: to_tokens(s),
+ for i:1 thru length(%_tokens) do (
+  %_c: charat(%_tokens[i], 1),
+  if digitcharp(%_c) then (
+   %_tokens[i]: stack_string_parse_number(%_tokens[i])
+  ) else if is(%_c="-") then (
+    %_tokens[i]: [-slength(%_tokens[i])]
+  ) else if is(%_c="+") then (
+    %_tokens[i]: [slength(%_tokens[i])]
+  ) else (
+    %_tokens[i]: sc_atom(%_tokens[i])
+  )
+ ),
+ %_is: sublist_indices(%_tokens, integerp),
+ while not emptyp(%_is) do (
+  %_tokens[%_is[1] - 1]: sc_mult(%_tokens[%_is[1] - 1],%_tokens[%_is[1]]),
+  %_tokens: append(firstn(%_tokens, %_is[1] - 1) , rest(%_tokens, %_is[1])),
+  %_is: sublist_indices(%_tokens, integerp)
+ ),
+ %_c: false,
+ if listp(last(%_tokens)) then (
+  %_c: first(last(%_tokens)),
+  %_tokens: firstn(%_tokens, length(%_tokens) - 1)
+ ),
+ %_is: if length(%_tokens) > 1 then sc_molecule(%_tokens) else first(%_tokens),
+ if is(%_c=false) then return(%_is) else return(sc_charge(%_is, %_c))
+);
+
+to_sc_reaction(l):= block([simp:true,lhs,rhs,%_map_species],
+ /* Ignore aggregate states for grading: use formula+stoichiometry only. */
+ %_map_species: lambda([x],x[3]*to_sc(x[1])),
+ lhs: map(%_map_species, l[2][1]),
+ rhs: map(%_map_species, l[2][2]),
+ if length(lhs) = 1 then lhs: lhs[1] else lhs : apply("+", lhs),
+ if length(rhs) = 1 then rhs: rhs[1] else rhs : apply("+", rhs),
+ sc_reaction(lhs,rhs)
+);
+
+sc_elem_counts(ex,mult):= block([%_bag,%_a,%_b,%_pair,%_ex,%_c,simp],
+ simp: true,
+ %_bag:[],
+ if is(safe_op(ex) = "+") then (
+  %_bag: sc_elem_counts(args(ex)[1],mult),
+  %_a: sc_elem_counts(apply("+",rest(args(ex))),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   if is(%_c=0) then (
+    %_bag: append(%_bag, [[first(%_pair),second(%_pair)]])
+   ) else (
+    %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+    %_bag: append(%_bag, [[first(%_pair),(second(%_pair)+%_c)]])
+   )
+  )
+ ) else if is(safe_op(ex) = "*") then (
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_elem_counts(%_b, mult* %_a)) else
+  %_bag:sc_elem_counts(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_bag: [[first(ex),mult]]
+ else if is(safe_op(ex) = "sc_charge") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_group") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_bag: sc_elem_counts(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_bag: sc_elem_counts(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_state") then %_bag: sc_elem_counts(first(ex),mult)
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_a: sc_elem_counts(first(ex),mult),
+  %_bag: sc_elem_counts(second(ex),mult),
+  for %_pair in %_a do (
+   %_c: assoc(first(%_pair), %_bag, 0),
+   %_bag: sublist(%_bag, lambda([%_ex], is(first(%_ex)#first(%_pair)))),
+   if is((%_c-second(%_pair))#0) then (
+    %_bag: append(%_bag,[[first(%_pair),%_c-second(%_pair)]])
+   )
+  )
+ ),
+ return(%_bag)
+);
+
+sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,simp],
+ simp: true,
+ %_charge:0,
+ if is(ex = electron) then (
+  %_charge: -1*mult
+ ) else if is(safe_op(ex) = "+") then (
+  %_charge: sc_total_charge(args(ex)[1],mult) +  sc_total_charge(apply("+",rest(args(ex))),mult)
+ ) else if is(safe_op(ex) = "*") then (
+  %_a: args(ex)[1],
+  %_b: args(ex)[2],
+  if numberp(%_a) then return(sc_total_charge(%_b, mult* %_a)) else
+  %_charge:sc_total_charge(%_a,mult*%_b)
+ ) else if is(safe_op(ex) = "sc_atom") then %_charge:0
+ else if is(safe_op(ex) = "sc_charge") then %_charge: mult*second(ex)
+ else if is(safe_op(ex) = "sc_group") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_groupb") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_molecule") then %_charge: sc_total_charge(apply("+",first(ex)),mult)
+ else if is(safe_op(ex) = "sc_mult") then %_charge: sc_total_charge(first(ex),mult*second(ex))
+ else if is(safe_op(ex) = "sc_state") then %_charge: sc_total_charge(first(ex),mult)
+ else if is(safe_op(ex) = "sc_reaction") then (
+  %_charge: sc_total_charge(second(ex),mult) - sc_total_charge(first(ex),mult)
+ ),
+ return(%_charge)
+);
+
+strip_sc_state(ex) := block([op],
+ if atom(ex) then return(ex),
+ op: safe_op(ex),
+ if is(op = "sc_state") then return(strip_sc_state(first(ex))),
+ if is(op = "+") then return(apply("+", map(strip_sc_state, args(ex)))),
+ if is(op = "*") then return(strip_sc_state(args(ex)[1]) * strip_sc_state(args(ex)[2])),
+ if is(op = "sc_reaction") then return(sc_reaction(strip_sc_state(first(ex)), strip_sc_state(second(ex)))),
+ if is(op = "sc_molecule") then return(sc_molecule(map(strip_sc_state, first(ex)))),
+ if is(op = "sc_mult") then return(sc_mult(strip_sc_state(first(ex)), second(ex))),
+ if is(op = "sc_charge") then return(sc_charge(strip_sc_state(first(ex)), second(ex))),
+ if is(op = "sc_group") then return(sc_group(strip_sc_state(first(ex)))),
+ if is(op = "sc_groupb") then return(sc_groupb(strip_sc_state(first(ex)))),
+ ex
+);
+
+collect_species_coeffs(ex, mult) := block([op, out, a, b],
+ if atom(ex) then return([[ex, mult]]),
+ op: safe_op(ex),
+ if is(op = "+") then (
+  out: [],
+  for a in args(ex) do out: append(out, collect_species_coeffs(a, mult)),
+  return(out)
+ ),
+ if is(op = "*") then (
+  a: args(ex)[1],
+  b: args(ex)[2],
+  if numberp(a) then return(collect_species_coeffs(b, mult * a)),
+  if numberp(b) then return(collect_species_coeffs(a, mult * b)),
+  return([[ex, mult]])
+ ),
+ [[ex, mult]]
+);
+
+aux_unify_lists(lst1, lst2) := block([aux, out1, out2],
+ out1: listify(setify(lst1)),
+ out2: 0 * out1,
+ for i:1 thru length(out1) do (
+  aux: sublist_indices(lst1, lambda([x], x = out1[i])),
+  for j:1 thru length(aux) do out2[i]: out2[i] + lst2[aux[j]]
+ ),
+ [out1, out2]
+);
+
+side_bag(ex) := block([pairs, species, coeffs, p],
+ pairs: collect_species_coeffs(ex, 1),
+ species: [],
+ coeffs: [],
+ for p in pairs do (
+  species: append(species, [first(p)]),
+  coeffs: append(coeffs, [second(p)])
+ ),
+ aux_unify_lists(species, coeffs)
+);
+
+side_scale(ans_side, ta_side) := block([ans_m, ans_c, ta_m, ta_c, idx, k, r],
+ ans_m: ans_side[1], ans_c: ans_side[2],
+ ta_m: ta_side[1], ta_c: ta_side[2],
+ if not is(setify(ans_m) = setify(ta_m)) then return(false),
+ if is(length(ta_m) = 0) then return(false),
+ idx: sublist_indices(ta_m, lambda([x], x = ans_m[1]))[1],
+ if is(ta_c[idx] = 0) then return(false),
+ k: ans_c[1] / ta_c[idx],
+ for i:1 thru length(ans_m) do (
+  idx: sublist_indices(ta_m, lambda([x], x = ans_m[i]))[1],
+  if is(ta_c[idx] = 0) then return(false),
+  r: ans_c[i] / ta_c[idx],
+  if not is(r = k) then return(false)
+ ),
+ k
+);
+
+reaction_equiv(ans, ta) := block([a, t, aL, aR, tL, tR, k1, k2],
+ if not is(safe_op(ans) = "sc_reaction") then return(false),
+ if not is(safe_op(ta) = "sc_reaction") then return(false),
+ a: strip_sc_state(ans),
+ t: strip_sc_state(ta),
+ aL: side_bag(first(a)),
+ aR: side_bag(second(a)),
+ tL: side_bag(first(t)),
+ tR: side_bag(second(t)),
+ k1: side_scale(aL, tL),
+ k2: side_scale(aR, tR),
+ if not is(k1 = false) and not is(k2 = false) and is(k1 = k2) then return(true),
+ k1: side_scale(aL, tR),
+ k2: side_scale(aR, tL),
+ if not is(k1 = false) and not is(k2 = false) and is(k1 = k2) then return(true),
+ false
+);
+
+simple_formula_p(s) := block([chars, c],
+ chars: charlist(s),
+ for c in chars do (
+  if not allowed_formula_char_p(c) then return(false)
+ ),
+ true
+);
+
+reaction_simple_p(rec) := block([left, right, sp],
+ left: rec[2][1],
+ right: rec[2][2],
+ for sp in left do if not simple_formula_p(sp[1]) then return(false),
+ for sp in right do if not simple_formula_p(sp[1]) then return(false),
+ true
+);
+
+rxn_names: chem_reaction_array();
+rxn_data: false;
+if listp(rxn_names) and is(length(rxn_names) > 0) then (
+ for i:1 thru 40 do (
+  if is(rxn_data = false) then block([cand_name, cand_data],
+   cand_name: rand(rxn_names),
+   cand_data: chem_reaction_data(cand_name),
+   if reaction_simple_p(cand_data) then rxn_data: cand_data
+  )
+ )
+);
+if is(rxn_data = false) then (
+ rxn_data: ["fallback_h2_o2",[[["H2","g",2],["O2","g",1]],[["H2O","l",2]]]]
+);
+lhs_unbalanced: simplode(map(lambda([x], x[1]), rxn_data[2][1]), " + ");
+rhs_unbalanced: simplode(map(lambda([x], x[1]), rxn_data[2][2]), " + ");
+
+ta1: to_sc_reaction(rxn_data);
+
+pa1: sc_reaction(second(strip_sc_state(ta1)), first(strip_sc_state(ta1)));
+pa2: sc_reaction(2*first(strip_sc_state(ta1)), 2*second(strip_sc_state(ta1)));]]></text>
+    </questionvariables>
+    <specificfeedback format="html">
+      <text></text>
+    </specificfeedback>
+    <questionnote format="html">
+      <text>{@ta1@}</text>
+    </questionnote>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span> Correct answer, well done!]]></text>
+    </prtcorrect>
+    <prtpartiallycorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i></span> Your answer is partially correct.]]></text>
+    </prtpartiallycorrect>
+    <prtincorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span> Wrong answer.]]></text>
+    </prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>none</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>ans1</name>
+      <type>algebraic</type>
+      <tans>ta1</tans>
+      <boxsize>40</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords>sc_atom,sc_mult,sc_group,sc_groupb,sc_molecule,sc_reaction,sc_err,sc_charge,sc_state,electron</allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>2</showvalidation>
+      <options>feedback:feedback_elems,validator:ans1_validator,hideanswer</options>
+    </input>
+    <prt>
+      <name>prt1</name>
+      <value>1.0000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text><![CDATA[balance: sc_elem_counts(strip_sc_state(ans1),1);
+appeared: map(lambda([x],first(x)), sublist(balance, lambda([x],is(second(x)>0))));
+disappeared: map(lambda([x],first(x)), sublist(balance, lambda([x],is(second(x)<0))));
+charge_balance: sc_total_charge(strip_sc_state(ans1),1);
+valid_equiv: reaction_equiv(ans1, ta1);
+debug_valid_equiv: valid_equiv;]]></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Parse error/incomplete check</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>is(safe_op(ans1)="sc_err")</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt1-1-T</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<p>Parsing error: {@second(ans1)@}</p>]]></text>
+        </truefeedback>
+        <falsescoremode>+</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>1</falsenextnode>
+        <falseanswernote>prt1-1-F</falseanswernote>
+        <falsefeedback format="html">
+          <text></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>1</name>
+        <description>Accept equivalent balanced reaction</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>valid_equiv</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt1-2-T</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<p>Equivalent balanced equation accepted.</p>]]></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0.1</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt1-2-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[[[if test="length(appeared)>0"]]<p>Extra on RHS: {@appeared@}</p>[[/if]]
+[[if test="length(disappeared)>0"]]<p>Missing on RHS: {@disappeared@}</p>[[/if]]
+[[if test="charge_balance#0"]]<p>Charge imbalance: {@charge_balance@}</p>[[/if]]
+<p>Debug valid_equiv: {@debug_valid_equiv@}</p>]]></text>
+        </falsefeedback>
+      </node>
+    </prt>
+    <qtest>
+      <testcase>1</testcase>
+      <description>Teacher answer</description>
+      <testinput>
+        <name>ans1</name>
+        <value>ta1</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-2-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>2</testcase>
+      <description>Swapped sides accepted</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa1</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-2-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>3</testcase>
+      <description>Scaled equation accepted</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa2</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-2-T</expectedanswernote>
+      </expected>
+    </qtest>
+  </question>
+</quiz>

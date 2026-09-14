@@ -1,0 +1,93 @@
+/* Reusable helpers for STACK reaction-balancing questions.
+   Load reactions.mac before this module when reaction_to_sc() is needed. */
+
+texput("sc_atom", lambda([ex], sconcat("{\\textrm{", first(ex), "}}")));
+texput("sc_mult", lambda([ex], sconcat(tex1(first(ex)), "_{", tex1(second(ex)), "}")));
+texput("sc_group", lambda([ex], sconcat("\\left(", tex1(first(ex)), "\\right)")));
+texput("sc_groupb", lambda([ex], sconcat("\\left[", tex1(first(ex)), "\\right]")));
+texput("sc_molecule", lambda([ex], simplode(map(tex1, first(ex)))));
+texput("sc_charge", lambda([ex], sconcat(tex1(first(ex)), "^{", abs(second(ex)), if is(second(ex) < 0) then "-" else "+", "}")));
+texput("sc_reaction", lambda([ex], sconcat(tex1(first(ex)), " \\to ", tex1(second(ex)))));
+texput("sc_err", lambda([ex], "Invalid equation input"));
+
+upper_chars: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
+record_tokens(s) := block([chars, result, starts, ch, previous],
+ chars: charlist(s), starts: [], previous: false,
+ for i:1 thru length(chars) do (
+  ch: chars[i],
+  if is(member(ch, upper_chars)) then (starts: push(i, starts), previous: "U")
+  else if digitcharp(ch) and not is(previous = "D") then (starts: push(i, starts), previous: "D")
+ ),
+ result: [substring(s, starts[1])],
+ for i:2 thru length(starts) do result: push(substring(s, starts[i], starts[i-1]), result),
+ result
+);
+
+formula_to_sc(s) := block([tokens, positions],
+ tokens: record_tokens(s),
+ for i:1 thru length(tokens) do if digitcharp(charat(tokens[i], 1)) then tokens[i]: stack_string_parse_number(tokens[i]) else tokens[i]: sc_atom(tokens[i]),
+ positions: sublist_indices(tokens, integerp),
+ while not emptyp(positions) do (
+  tokens[positions[1] - 1]: sc_mult(tokens[positions[1] - 1], tokens[positions[1]]),
+  tokens: append(firstn(tokens, positions[1] - 1), rest(tokens, positions[1])),
+  positions: sublist_indices(tokens, integerp)
+ ),
+ if is(length(tokens) = 1) then first(tokens) else sc_molecule(tokens)
+);
+
+species_to_sc(species) := if is(third(species) = 1) then formula_to_sc(first(species)) else third(species) * formula_to_sc(first(species));
+side_to_sc(side) := block([parts], parts: map(species_to_sc, side), if is(length(parts) = 1) then first(parts) else apply("+", parts));
+reaction_to_sc(name) := block([reaction], reaction: chem_reaction_data(name), sc_reaction(side_to_sc(first(reaction)), side_to_sc(second(reaction))));
+
+collect_species(ex, multiplier) := block([a, b, output],
+ if atom(ex) then return([[ex, multiplier]]),
+ if is(safe_op(ex) = "+") then (
+  output: [], for a in args(ex) do output: append(output, collect_species(a, multiplier)), return(output)
+ ),
+ if is(safe_op(ex) = "*") then (
+  a: args(ex)[1], b: args(ex)[2],
+  if numberp(a) then return(collect_species(b, multiplier * a)),
+  if numberp(b) then return(collect_species(a, multiplier * b))
+ ),
+ if is(safe_op(ex) = "/") and numberp(second(ex)) then return(collect_species(first(ex), multiplier / second(ex))),
+ [[ex, multiplier]]
+);
+
+side_bag(ex) := block([pairs, molecules, coefficients, pair, indices, out, out_coefficients],
+ pairs: collect_species(ex, 1), molecules: [], coefficients: [],
+ for pair in pairs do (molecules: append(molecules, [first(pair)]), coefficients: append(coefficients, [second(pair)])),
+ out: listify(setify(molecules)), out_coefficients: 0 * out,
+ for i:1 thru length(out) do (
+  indices: sublist_indices(molecules, lambda([x], x = out[i])),
+  for j in indices do out_coefficients[i]: out_coefficients[i] + coefficients[j]
+ ),
+ [out, out_coefficients]
+);
+
+side_scale(student_side, teacher_side) := block([student_molecules, teacher_molecules, student_coefficients, teacher_coefficients, index, scale, ratio, valid],
+ student_molecules: student_side[1], student_coefficients: student_side[2], teacher_molecules: teacher_side[1], teacher_coefficients: teacher_side[2],
+ if not is(length(student_molecules) = length(teacher_molecules)) then return(false),
+ if not is(setify(student_molecules) = setify(teacher_molecules)) then return(false),
+ if is(length(student_molecules) = 0) then return(false),
+ index: sublist_indices(teacher_molecules, lambda([x], x = student_molecules[1]))[1], scale: student_coefficients[1] / teacher_coefficients[index],
+ if is(scale = 0) then return(false), valid: true,
+ for i:1 thru length(student_molecules) do (
+  index: sublist_indices(teacher_molecules, lambda([x], x = student_molecules[i]))[1], ratio: student_coefficients[i] / teacher_coefficients[index],
+  if not is(abs(ratio - scale) < 1.0e-10) then valid: false
+ ),
+ if valid then scale else false
+);
+
+reaction_equivalent(student, teacher) := block([student_left, student_right, teacher_left, teacher_right, left_scale, right_scale],
+ if not is(safe_op(student) = "sc_reaction") then return(false),
+ student_left: side_bag(first(student)), student_right: side_bag(second(student)), teacher_left: side_bag(first(teacher)), teacher_right: side_bag(second(teacher)),
+ left_scale: side_scale(student_left, teacher_left), right_scale: side_scale(student_right, teacher_right),
+ if not is(left_scale = false) and not is(right_scale = false) and is(abs(left_scale - right_scale) < 1.0e-10) then return(true),
+ left_scale: side_scale(student_left, teacher_right), right_scale: side_scale(student_right, teacher_left),
+ if not is(left_scale = false) and not is(right_scale = false) and is(abs(left_scale - right_scale) < 1.0e-10) then return(true),
+ false
+);
+
+validate_input(ex) := if is(safe_op(ex) = "sc_err") then castext("Parsing error: {@second(ex)@}") else true;
+ans1_validator(ex) := stack_seq_validator(ex, [validate_input]);

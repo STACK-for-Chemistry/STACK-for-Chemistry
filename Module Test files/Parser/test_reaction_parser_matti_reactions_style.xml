@@ -3,10 +3,10 @@
 <!-- question: 2012112  -->
   <question type="stack">
     <name>
-      <text>Chemie Parser Matti (+Ladungen-) Kap. 4, A3a) Uni H, Kaliumpermanganat - No DemoButton</text>
+      <text>Chemie Parser Matti - reactions.mac record adapter</text>
     </name>
     <questiontext format="html">
-      <text><![CDATA[[[lang code ='de']]<p>Experimentell wurde festgestellt, dass Permanganat-Ionen in saurer Lösung aus Chloriden Chlorgas entstehen lassen und selber als \( Mn^{2+}\) in Lösung verbleiben.
+      <text><![CDATA[[[lang code='de']]<p>Experimentell wurde festgestellt, dass Permanganat-Ionen in saurer Lösung aus Chloriden Chlorgas entstehen lassen und selber als \( Mn^{2+}\) in Lösung verbleiben.
 <br>
 Geben Sie die zugehörige Redoxgleichung an.</p>
 [[/lang]]
@@ -79,9 +79,9 @@ Addition = a:TermA  b:AdditionTail {return [a, ...b].join(' + ');}
 AdditionTail = _ '+' _ a:TermA b:AdditionTail {return [a, ...b];}
   / _ '+' _ a:TermA {return [a];}
 
-/* 2O2 etc. */
-Multiplied = a:Multiplier _ [*]? _ b:Component {return a + ' * ' + b;}
-  / a:Multiplier _ [*]? _ b:Electron {return a + ' * ' + b;}
+/* Stoichiometric coefficients may be integers, decimals, or fractions. */
+Multiplied = a:StoichiometricCoefficient _ [*]? _ b:Component {return a + ' * ' + b;}
+  / a:StoichiometricCoefficient _ [*]? _ b:Electron {return a + ' * ' + b;}
 
 /* Basic components */
 Component = PolyatomicIon
@@ -94,19 +94,20 @@ Component = PolyatomicIon
 Simply assume a capital letter followed by optional lower-case letters is an element.*/
 Atom = [A-Z][a-z]* {return 'sc_atom("' + text() + '")';}
 
-Ion = a:Atom '^+' {return 'sc_charge(' + a + ',1)';}
-  / a:Atom '^-' {return 'sc_charge(' + a + ',-1)';}
-  / a:Atom '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
-  / a:Atom '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
+Ion = a:Atom c:Charge {return 'sc_charge(' + a + ',' + c + ')';}
 
-PolyatomicIon = a:Molecule '^+' {return 'sc_charge(' + a + ',1)';}
-  / a:Molecule '^-' {return 'sc_charge(' + a + ',-1)';}
-  / a:Molecule '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
-  / a:Molecule '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
-  / a:Group '^+' {return 'sc_charge(' + a + ',1)';}
-  / a:Group '^-' {return 'sc_charge(' + a + ',-1)';}
-  / a:Group '^'  b:Integer  '-' {return 'sc_charge(' + a + ',-' + b + ')';}
-  / a:Group '^'  b:Integer  '+' {return 'sc_charge(' + a + ',' + b + ')';}
+PolyatomicIon = a:Molecule c:Charge {return 'sc_charge(' + a + ',' + c + ')';}
+  / a:Group c:Charge {return 'sc_charge(' + a + ',' + c + ')';}
+
+/* Charges may be entered as ^2-, ^-, ^{2-}, or ^{-}. */
+Charge = '^' '{' b:Integer '-' '}' {return '-' + b;}
+  / '^' '{' b:Integer '+' '}' {return b;}
+  / '^' '{' '-' '}' {return '-1';}
+  / '^' '{' '+' '}' {return '1';}
+  / '^' b:Integer '-' {return '-' + b;}
+  / '^' b:Integer '+' {return b;}
+  / '^-' {return '-1';}
+  / '^+' {return '1';}
 
 
 /* To complete the charge logic we need electrons, simply map them to a variable. */
@@ -116,9 +117,12 @@ Electron = 'e^-' {return ' electron ';}
 Group = '(' _ a:Component _ ')' {return 'sc_group(' + a + ')';}
   / '[' _ a:Component _ ']' {return 'sc_groupb(' + a + ')';}
 
-/* O_2 or (XY)_2 etc. Not an ion... */   
-Multiple = a:Atom [_]? b:Multiplier {return 'sc_mult(' + a + ',' + b + ')';}
-  / a:Group [_]? b:Multiplier {return 'sc_mult(' + a + ',' + b + ')';}
+/* O2, O_2, O_{2}, (XY)_2, or (XY)_{2}; not an ion. */
+Multiple = a:Atom b:Subscript {return 'sc_mult(' + a + ',' + b + ')';}
+  / a:Group b:Subscript {return 'sc_mult(' + a + ',' + b + ')';}
+
+Subscript = '_' '{' b:SubscriptMultiplier '}' {return b;}
+  / [_]? b:SubscriptMultiplier {return b;}
 
 /* O_2 is also a molecule, but does not consist of multiple components. */
 Molecule = a:MoleculeComponent b:MoleculeTail {return 'sc_molecule([' + a + ',' + b.join(',') + '])';}
@@ -131,7 +135,15 @@ MoleculeComponent = Multiple
 MoleculeTail = a:MoleculeComponent b:MoleculeTail {return [a, ...b];}
   / a:MoleculeComponent {return [a];}
 
-Multiplier = Integer
+StoichiometricCoefficient = Fraction
+  / Decimal
+  / Integer
+
+Fraction = a:Integer _ '/' _ b:Integer {return a + '/' + b;}
+
+Decimal = [0-9]+ '.' [0-9]+ {return text();}
+
+SubscriptMultiplier = Integer
   / '?' {return '?';}
 
 Integer "integer"
@@ -359,7 +371,7 @@ validate_err(ex) := block([simp],
 );
 
 validate_elements(ex):=block([%_el,%_name,%_output,%_els],
- %_output: castext("[[lang code='en,other']]Unknown elements: [[/lang]][[lang code='fi']]Tuntemattomat alkuaineet: [[/lang]]"),
+ %_output: castext("[[lang code='de']]Unbekannte Elemente: [[/lang]][[lang code='en,other']]Unknown elements: [[/lang]]"),
  %_els: [],
  for %_el in sc_elems(ex) do (
   %_name: chem_data(%_el, "Name"),
@@ -375,7 +387,7 @@ validate_elements(ex):=block([%_el,%_name,%_output,%_els],
 ans1_validator(ex) := stack_seq_validator(ex, [validate_err, validate_elements]);
 
 feedback_elems(ex):=block([%_el,%_name,%_output,%_els],
- %_output: castext("[[lang code='en,other']]Elements present: [[/lang]][[lang code='fi']]Alkuaineet vastauksessa: [[/lang]]"),
+ %_output: castext("[[lang code='de']]Verwendete Elemente: [[/lang]][[lang code='en,other']]Elements present: [[/lang]]"),
  %_els: [],
  for %_el in sc_elems(ex) do (
   %_name: chem_data(%_el, "Name"),
@@ -475,29 +487,61 @@ sc_total_charge(ex,mult) := block([%_charge,%_a,%_b,%_pair,%_ex,%_c,simp],
 
 
 
-/* Permanganat- und Chlorid-Ionen, Verwendet H+ als Schreibweise */
+/*
+ * Fixed reaction in the reactions.mac record format:
+ * [name, [[formula, state, coefficient], ...], [[formula, state, coefficient], ...]].
+ * States are data in the record but are not represented in the student's parser input.
+ */
+rxn_data: ["PermanganateSodiumChloride", [
+    [["KMnO4", "aq", 2], ["NaCl", "aq", 6], ["H2O", "l", 4]],
+    [["MnO2", "s", 2], ["NaOH", "aq", 6], ["KOH", "aq", 2], ["Cl2", "g", 3]]
+]];
 
-ta1:  sc_reaction(
-2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
-+  10*sc_charge(sc_atom("Cl"),-1)
-+ 16*sc_charge(sc_atom("H"),1)
-,
-  2*sc_charge(sc_atom("Mn"),+2)
-+  5*sc_mult(sc_atom("Cl"),2)
-+ 8*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+%_REC_UPPER: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
+record_tokens(s) := block([chars, tokens, boundaries, c, previous],
+ chars: charlist(s), boundaries: [], previous: false,
+ for i:1 thru length(chars) do (
+  c: chars[i],
+  if is(member(c, %_REC_UPPER)) then (boundaries: push(i, boundaries), previous: "U")
+  else if digitcharp(c) and not is(previous = "D") then (boundaries: push(i, boundaries), previous: "D")
+ ),
+ tokens: [substring(s, boundaries[1])],
+ for i:2 thru length(boundaries) do tokens: push(substring(s, boundaries[i], boundaries[i-1]), tokens),
+ tokens
 );
 
-/* Alternative Lösung, mit H3O+-Ionen statt H+ */
-
-ta1_alt:  sc_reaction(
-2*sc_charge(sc_molecule([sc_atom("Mn"), sc_mult(sc_atom("O"),4)   ]),-1)
-+  10*sc_charge(sc_atom("Cl"),-1)
-+ 16*sc_charge( sc_molecule([ sc_mult(sc_atom("H"),3), sc_atom("O")]),1)
-,
-  2*sc_charge(sc_atom("Mn"),+2)
-+  5*sc_mult(sc_atom("Cl"),2)
-+ 24*sc_molecule([ sc_mult(sc_atom("H"),2), sc_atom("O")])
+record_formula_to_sc(s) := block([tokens, positions],
+ tokens: record_tokens(s),
+ for i:1 thru length(tokens) do (
+  if digitcharp(charat(tokens[i], 1)) then tokens[i]: stack_string_parse_number(tokens[i])
+  else tokens[i]: sc_atom(tokens[i])
+ ),
+ positions: sublist_indices(tokens, integerp),
+ while not emptyp(positions) do (
+  tokens[positions[1] - 1]: sc_mult(tokens[positions[1] - 1], tokens[positions[1]]),
+  tokens: append(firstn(tokens, positions[1] - 1), rest(tokens, positions[1])),
+  positions: sublist_indices(tokens, integerp)
+ ),
+ if is(length(tokens) = 1) then first(tokens) else sc_molecule(tokens)
 );
+
+record_species_to_sc(species) :=
+ if is(species[3] = 1) then record_formula_to_sc(species[1])
+ else species[3] * record_formula_to_sc(species[1]);
+
+record_side_to_sc(side) := block([parts],
+ parts: map(record_species_to_sc, side),
+ if is(length(parts) = 1) then first(parts) else apply("+", parts)
+);
+
+record_to_sc_reaction(record) :=
+ sc_reaction(record_side_to_sc(record[2][1]), record_side_to_sc(record[2][2]));
+
+ta1: record_to_sc_reaction(rxn_data);
+
+/* Kept because Matti's unchanged PRT selects between ta1 and ta1_alt. */
+ta1_alt: ta1;
 
 /* ********** Testfälle ********** */
 
@@ -506,7 +550,16 @@ pa1: sc_reaction(second(ta1), first(ta1));
 
 
 /* Testfall 2: alle stöchiometrischen Koeffizienten skaliert */ 
-pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));]]></text>
+pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));
+
+/* Testfall 3: dreifache, global skalierte Gleichung */
+pa3: sc_reaction(3*first(ta1), 3*second(ta1));
+
+/* Testfall 4: globaler Bruchfaktor */
+pa4: sc_reaction(3/2*first(ta1), 3/2*second(ta1));
+
+/* Testfall 5: globaler Dezimalfaktor */
+pa5: sc_reaction(1.5*first(ta1), 1.5*second(ta1));]]></text>
     </questionvariables>
     <specificfeedback format="html">
       <text></text>
@@ -515,15 +568,14 @@ pa2: sc_reaction(first(ta1)+first(ta1), second(ta1)+second(ta1));]]></text>
       <text>{@ta1@}</text>
     </questionnote>
     <questiondescription format="markdown">
-      <text><![CDATA[[[todo]] 
-- `molecules_l` und `molecules_r`-Funktionen stimmen noch nicht, wenn man Ausdrücke vom Typ `2*(mol_1 + mol_2)` hat ... 
-- Anpassen, dass Vielfache der Gleichungen tatsächlich volle Punktzahl, bzw. dies einstellbar ist.
-- Eingabehinweise überlegen 
-- Fehler: Situatives Vertauschen der Seiten der Gleichung funktioniert nicht
--  \( H^+\) oder \( H_3O^+\) die bessere Schreibweise ist, oder beides gleichwertig?
-- Anderen Reaktionspfeil (beide Richtungen)
-[[/todo]]
-**Quellen**
+      <text><![CDATA[**Eingabeformat**
+
+    - Stöchiometrische Faktoren können als ganze Zahlen, Dezimalzahlen oder Brüche eingegeben werden, z. B. <code>2 H2</code>, <code>1.5 O2</code> oder <code>3/2 O2</code>.
+    - Indizes können als <code>SO4</code>, <code>SO_4</code> oder <code>SO_{4}</code> eingegeben werden.
+    - Ladungen können als <code>Mn^2+</code>, <code>Mn^{2+}</code>, <code>Cl^-</code> oder <code>Cl^{-}</code> eingegeben werden.
+    - Geben Sie auf beiden Seiten die einzelnen Stoffe mit <code>+</code> getrennt ein; der Reaktionspfeil steht bereits zwischen den Eingabefeldern.
+
+    **Quellen**
 
 - <a href="https://de.chemicalaid.net/tools/equationbalancer.php?equation=KMnO4+%2B+NaCl+%2B+H2O+%3D+MnO2+%2B+NaOH+%2B+KOH+%2B+Cl2"> Link Chemicalaid</a>
 - Brieler, Allgemeine Chemie, Übungen S. 10 (Kapitel 4, Aufgabe 3a) - dort allgemeiner Permanganat-Ionen und Chlorid-Ionen in saurer Lösung)
@@ -554,14 +606,13 @@ Verwendet Template, das auf Teilpunkte optimiert ist:
     <assumepositive>0</assumepositive>
     <assumereal>0</assumereal>
     <prtcorrect format="html">
-      <text><![CDATA[<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span> [[lang code='de']]&nbsp;
-Richtige Antwort, gut gemacht![[/lang]][[lang code='en,other']]&nbsp;Correct answer, well done![[/lang]]]]></text>
+      <text><![CDATA[<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span>&nbsp;Correct answer, well done!]]></text>
     </prtcorrect>
     <prtpartiallycorrect format="html">
-      <text><![CDATA[<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i></span> [[lang code='de']]&nbsp;Ihre Antwort ist teilweise korrekt.[[/lang]][[lang code='en,other']]&nbsp;Your answer is partially correct.[[/lang]]]]></text>
+      <text><![CDATA[<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i></span>&nbsp;Your answer is partially correct.]]></text>
     </prtpartiallycorrect>
     <prtincorrect format="html">
-      <text><![CDATA[<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span> [[lang code='de']]&nbsp;Falsche Antwort.[[/lang]][[lang code='en,other']]&nbsp;Wrong answer.[[/lang]]</p>]]></text>
+      <text><![CDATA[<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span>&nbsp;Wrong answer.]]></text>
     </prtincorrect>
     <decimals>.</decimals>
     <scientificnotation>*10</scientificnotation>
@@ -584,7 +635,7 @@ Richtige Antwort, gut gemacht![[/lang]][[lang code='en,other']]&nbsp;Correct ans
       <syntaxattribute>0</syntaxattribute>
       <forbidwords></forbidwords>
       <allowwords>sc_atom,sc_mult,sc_group,sc_groupb,sc_molecule,sc_reaction,sc_err,sc_charge,electron</allowwords>
-      <forbidfloat>1</forbidfloat>
+      <forbidfloat>0</forbidfloat>
       <requirelowestterms>0</requirelowestterms>
       <checkanswertype>0</checkanswertype>
       <mustverify>1</mustverify>
@@ -601,9 +652,13 @@ Richtige Antwort, gut gemacht![[/lang]][[lang code='en,other']]&nbsp;Correct ans
 balance: sc_elem_counts(ans1,1);
 appeared: map(lambda([x],chem_data(first(x), "Name")), sublist(balance, lambda([x],is(second(x)>0))));
 disappeared: map(lambda([x],chem_data(first(x), "Name")), sublist(balance, lambda([x],is(second(x)<0))));
+balance_feedback: "";
+if is(length(appeared) > 0) then balance_feedback: sconcat(balance_feedback, "<p>There are extra ", simplode(appeared, ", "), " on the right side.</p>");
+if is(length(disappeared) > 0) then balance_feedback: sconcat(balance_feedback, "<p>There seem to be some ", simplode(disappeared, ", "), " missing on the right side.</p>");
 
 /* LAdungen ausgeglichen? */
-charge_balance: sc_total_charge(ans1,1); 
+charge_balance: sc_total_charge(ans1,1);
+charge_feedback: if is(charge_balance > 0) then "<p>There seem to be more electrons on the left side.</p>" else "<p>There seem to be more electrons on the right side.</p>";
 
 /* Antwort-Überprüfungen und Teilpunkte */
 
@@ -611,31 +666,49 @@ charge_balance: sc_total_charge(ans1,1);
 /* ---- Hilfsfunktionen ---- */
 /* ****************************** */ 
 
-molecules_l(eing):= block([dummy, lhs, mult_lhs, molecules_lhs],
+/* Splits a term into [species, coefficient]. Fractions are stored by Maxima
+ * as a quotient, for example (3*species)/2, rather than as 3/2*species. */
+coefficient_parts(ex) := block([parts, part, result],
+ if is(safe_op(ex) = "*") then (
+  parts: args(ex),
+  result: [1, 1],
+  for part in parts do (
+   if numberp(part) then result[2]: result[2] * part
+   else result[1]: result[1] * part
+  ),
+  return(result)
+ ) else if is(safe_op(ex) = "/") and numberp(second(ex)) then (
+  result: coefficient_parts(first(ex)),
+  return([result[1], result[2] / second(ex)])
+ ) else return([ex, 1])
+);
+
+molecules_l(eing):= block([dummy, lhs, mult_lhs, molecules_lhs, part],
 dummy: sc_reaction(first(eing) + sc_atom("Dummy"), second(eing) + sc_atom("Dummy")),
-lhs: args(first(dummy)),
+lhs: args(expand(first(dummy))),
 mult_lhs: [], molecules_lhs: [],
-/* if listp(first(lhs)) then return([[first(args(dummy))], [1]]), 
-if is(length(lhs) = 1) then return([[first(args(dummy))], [1]]),
-if is(length(lhs) = 2) then (if integerp(second(lhs)) then return([[sc_mult(first(lhs), second(lhs)) ], [1]])), */
-if integerp(first(lhs)) then return([[second(lhs)], [first(lhs)]]) else 
-(for ex in lhs do if integerp(first(args(ex))) then 
-(mult_lhs: append(mult_lhs, [first(args(ex))]),  molecules_lhs: append(molecules_lhs, [second(args(ex))]) ) 
-else (if is(ex # sc_atom("Dummy")) then (mult_lhs: append(mult_lhs, [1]),   molecules_lhs: append(molecules_lhs, [ex])  )), 
+(for ex in lhs do (
+ part: coefficient_parts(ex),
+ if is(part[1] # sc_atom("Dummy")) then (
+  mult_lhs: append(mult_lhs, [part[2]]),
+  molecules_lhs: append(molecules_lhs, [part[1]])
+ )
+ ), 
 return([molecules_lhs, mult_lhs])));
 
 /* Moleküle mit Vielfachheiten von rechter Seite der Reaktionsgleichung */ 
 
-molecules_r(eing):=block([dummy, lhs, mult_lhs, molecules_lhs],
+molecules_r(eing):=block([dummy, lhs, mult_lhs, molecules_lhs, part],
 dummy: sc_reaction(first(eing) + sc_atom("Dummy"), second(eing) + sc_atom("Dummy")),
-lhs: args(second(dummy)),
+lhs: args(expand(second(dummy))),
 mult_lhs: [], molecules_lhs: [],
-/* if listp(first(lhs)) then return([[second(args(dummy))], [1]]),
-if is(length(lhs) = 2) then (if integerp(second(lhs)) then return([[sc_mult(first(lhs), second(lhs)) ], [1]])), */
-if integerp(first(lhs)) then return([[second(lhs)], [first(lhs)]]) else
-(for ex in lhs do  if integerp(first(args(ex))) then 
-(mult_lhs: append(mult_lhs, [first(args(ex))]),  molecules_lhs: append(molecules_lhs, [second(args(ex))]) ) 
-else (if is(ex # sc_atom("Dummy")) then (mult_lhs: append(mult_lhs, [1]),   molecules_lhs: append(molecules_lhs, [ex])  )), 
+(for ex in lhs do (
+ part: coefficient_parts(ex),
+ if is(part[1] # sc_atom("Dummy")) then (
+  mult_lhs: append(mult_lhs, [part[2]]),
+  molecules_lhs: append(molecules_lhs, [part[1]])
+ )
+ ), 
 return([molecules_lhs, mult_lhs])));
 
 /* Hilfsfunktion, um mehrfach auftretende Moleküle einer Seite zusammenzufassen */
@@ -688,10 +761,31 @@ num_correct_coeff: 0;
 for i:1 thru length(ANS_l[1]) do (aux_indices: sublist_indices(TA_l[1], lambda([x], x=ANS_l[1][i]) ), if is(aux_indices # []) then (if is(ANS_l[2][i]  =TA_l[2][aux_indices[1]] ) then num_correct_coeff: num_correct_coeff + 1));
 for i:1 thru length(ANS_r[1]) do (aux_indices: sublist_indices(TA_r[1], lambda([x], x=ANS_r[1][i]) ), if is(aux_indices # []) then (if is(ANS_r[2][i]  =TA_r[2][aux_indices[1]] ) then num_correct_coeff: num_correct_coeff + 1));
 
+/*
+ * A globally scaled equation is chemically equivalent when every species is
+ * present on the appropriate side and every coefficient has one common,
+ * non-zero ratio to the matching teacher-answer coefficient.
+ */
+global_scale: false;
+if is(length(ANS_l[1]) = length(TA_l[1])) and is(length(ANS_r[1]) = length(TA_r[1])) and is(setify(ANS_l[1]) = setify(TA_l[1])) and is(setify(ANS_r[1]) = setify(TA_r[1])) then block([ratios, aux_indices],
+ ratios: [],
+ for i:1 thru length(ANS_l[1]) do (
+  aux_indices: sublist_indices(TA_l[1], lambda([x], x = ANS_l[1][i])),
+  ratios: append(ratios, [ANS_l[2][i] / TA_l[2][aux_indices[1]]])
+ ),
+ for i:1 thru length(ANS_r[1]) do (
+  aux_indices: sublist_indices(TA_r[1], lambda([x], x = ANS_r[1][i])),
+  ratios: append(ratios, [ANS_r[2][i] / TA_r[2][aux_indices[1]]])
+ ),
+ if is(length(ratios) > 0) and is(first(ratios) # 0) then (
+  global_scale: true,
+  for i:2 thru length(ratios) do if not is(abs(ratios[i] - first(ratios)) < 1.0e-10) then global_scale: false
+ )
+);
 
 /* Test der Korrektheit der Lösung */ 
 
-full_correctness: is(num_correct_coeff = num_molecules) and is(num_malus = 0);
+full_correctness: (is(num_correct_coeff = num_molecules) and is(num_malus = 0)) or global_scale;
 
 /* num_correct ist die Anzahl der richtigen Moleküle, bei denen der Koeffizient falsch ist */
 num_correctmol_wrongcoeff: num_intersect - num_correct_coeff; 
@@ -728,9 +822,7 @@ mark: 1/num_molecules*(  num_correct_coeff +  weight_wrongcoeff*num_correctmol_w
         <falsenextnode>1</falsenextnode>
         <falseanswernote>prt1-1-F</falseanswernote>
         <falsefeedback format="html">
-          <text><![CDATA[[[if test="length(appeared)>0"]]<p>There are extra {@appeared@} on the right side.</p>[[/if]]
-
-[[if test="length(disappeared)>0"]]<p>There seems to be some {@disappeared@} missing on the right side.</p>[[/if]]]]></text>
+          <text>{@balance_feedback@}</text>
         </falsefeedback>
       </node>
       <node>
@@ -755,7 +847,7 @@ mark: 1/num_molecules*(  num_correct_coeff +  weight_wrongcoeff*num_correctmol_w
         <falsenextnode>2</falsenextnode>
         <falseanswernote>prt1-2-F</falseanswernote>
         <falsefeedback format="html">
-          <text><![CDATA[[[if test="charge_balance>0"]]<p>There seems to be more electrons on the left side.</p>[[else]]<p>There seems to be more electrons on the right side.</p>[[/if]]]]></text>
+          <text>{@charge_feedback@}</text>
         </falsefeedback>
       </node>
       <node>
@@ -818,6 +910,62 @@ mark: 1/num_molecules*(  num_correct_coeff +  weight_wrongcoeff*num_correctmol_w
       <testinput>
         <name>ans1</name>
         <value>ta1_alt</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>4</testcase>
+      <description>Globally doubled equation</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa2</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>5</testcase>
+      <description>Globally tripled equation</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa3</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>6</testcase>
+      <description>Globally scaled by three halves</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa4</value>
+      </testinput>
+      <expected>
+        <name>prt1</name>
+        <expectedscore>1.0000000</expectedscore>
+        <expectedpenalty>0.0000000</expectedpenalty>
+        <expectedanswernote>prt1-3-T</expectedanswernote>
+      </expected>
+    </qtest>
+    <qtest>
+      <testcase>7</testcase>
+      <description>Globally scaled by one point five</description>
+      <testinput>
+        <name>ans1</name>
+        <value>pa5</value>
       </testinput>
       <expected>
         <name>prt1</name>

@@ -847,6 +847,28 @@ chem_reaction_equation(reaction_name) := block([reactants, products, rxn_str],
     return(rxn_str)
 )$
 
+/* Returns a LaTeX-formatted equation without stoichiometric coefficients.
+   This is useful for balancing questions, where the species and phases must
+   be shown using mhchem but the coefficients must remain unknown. */
+chem_reaction_equation_without_coefficients(reaction_name) := block([reactants, products, rxn_str],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+
+    if is(reactants = false) or is(products = false) then return(false),
+
+    rxn_str: "\\ce{",
+    for i:1 thru length(reactants) do (
+        rxn_str: sconcat(rxn_str, first(reactants[i]), "(", second(reactants[i]), ")"),
+        if i < length(reactants) then rxn_str: sconcat(rxn_str, " + ")
+    ),
+    rxn_str: sconcat(rxn_str, " -> "),
+    for i:1 thru length(products) do (
+        rxn_str: sconcat(rxn_str, first(products[i]), "(", second(products[i]), ")"),
+        if i < length(products) then rxn_str: sconcat(rxn_str, " + ")
+    ),
+    sconcat(rxn_str, "}")
+)$
+
 /****************************************************************/
 /*                                                              */
 /*  Reaction Navigation Functions                               */

@@ -24,9 +24,9 @@
 
 <div style="display: flex; justify-content: center; align-items: center; width:100%;">
  <table><tr>
-  <td><input id="[[quid id='_fake1'/]]" style="width:100%;"/></td>
+  <td><input id="fake1" style="width:100%;"/></td>
   <td><b style="font-size: x-large;">→</b></td>
-  <td><input id="[[quid id='_fake2'/]]" style="width:100%;"/></td>
+  <td><input id="fake2" style="width:100%;"/></td>
  </tr></table>
 </div>
 
@@ -38,24 +38,41 @@
  [[feedback:prt1]]
 </div>
 
+<div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
+
 <p hidden>[[input:ans1]]</p>
 
 [[javascript]]
 /* Client-side parser: same structure as Matti's approach. */
-import * as peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js';
-import * as stack_mp from 'https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js';
+Promise.all([
+ stack_js.request_access_to_input('ans1', true)
+]).then(async ([ans1ref]) => {
+
+const parserStatus = document.getElementById('parser-validation');
+if (parserStatus) parserStatus.textContent = 'Loading parser...';
+
+let peggy, stack_mp;
+try {
+ peggy = await import('https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js');
+ stack_mp = await import('https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js');
+ peggy = peggy.default ? peggy.default : peggy;
+ stack_mp = stack_mp.default ? stack_mp.default : stack_mp;
+} catch(e) {
+ const real = document.getElementById(ans1ref);
+ if (parserStatus) parserStatus.textContent = 'Parser load failed: ' + (e && e.message ? e.message : 'unknown error');
+ if (real) {
+  real.value = 'sc_err(["",""] ,"JS module load failed")';
+  real.dispatchEvent(new Event('input', { bubbles: true }));
+  real.dispatchEvent(new Event('change', { bubbles: true }));
+ }
+ return;
+}
 
 stack_mp.MPString.prototype.toString = function() {
-   return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
+ return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
 };
 
-Promise.all([
- stack_js.request_access_to_input('ans1', true),
- stack_js.request_access_to_input('fake1', true),
- stack_js.request_access_to_input('fake2', true)
-]).then(([ans1ref, fake1ref, fake2ref]) => {
-
-const chem_parser = window.peggy.generate(`
+const chem_parser = peggy.generate(`
 Expression
   = _ ex:Addition _ { return ex;}
   / _ ex:TermA _ { return ex;}
@@ -72,27 +89,32 @@ AdditionTail = _ '+' _ a:TermA b:AdditionTail { return [a, ...b]; }
 Multiplied = a:Multiplier _ [*]? _ b:Component { return a + ' * ' + b; }
   / a:Multiplier _ [*]? _ b:Electron { return a + ' * ' + b; }
 
-Component = PolyatomicIon
+Component = a:BaseComponent _ StateSuffix? { return a; }
+
+BaseComponent = PolyatomicIon
   / Molecule
   / Group
   / Ion
   / Atom
 
+StateSuffix = '{' _ StateToken _ '}'
+StateToken = [A-Za-z][A-Za-z0-9]*
+
 Atom = [A-Z][a-z]* { return 'sc_atom("' + text() + '")'; }
 
-Ion = a:Atom '^+' { return 'sc_charge(' + a + ',1)'; }
-  / a:Atom '^-' { return 'sc_charge(' + a + ',-1)'; }
-  / a:Atom '^' b:Integer '-' { return 'sc_charge(' + a + ',-' + b + ')'; }
-  / a:Atom '^' b:Integer '+' { return 'sc_charge(' + a + ',' + b + ')'; }
+Ion = a:Atom c:ChargeSuffix { return 'sc_charge(' + a + ',' + c + ')'; }
 
-PolyatomicIon = a:Molecule '^+' { return 'sc_charge(' + a + ',1)'; }
-  / a:Molecule '^-' { return 'sc_charge(' + a + ',-1)'; }
-  / a:Molecule '^' b:Integer '-' { return 'sc_charge(' + a + ',-' + b + ')'; }
-  / a:Molecule '^' b:Integer '+' { return 'sc_charge(' + a + ',' + b + ')'; }
-  / a:Group '^+' { return 'sc_charge(' + a + ',1)'; }
-  / a:Group '^-' { return 'sc_charge(' + a + ',-1)'; }
-  / a:Group '^' b:Integer '-' { return 'sc_charge(' + a + ',-' + b + ')'; }
-  / a:Group '^' b:Integer '+' { return 'sc_charge(' + a + ',' + b + ')'; }
+PolyatomicIon = a:(Molecule / Group) c:ChargeSuffix { return 'sc_charge(' + a + ',' + c + ')'; }
+
+ChargeSuffix
+  = '^+' { return '1'; }
+  / '^-' { return '-1'; }
+  / '^' b:Integer '-' { return '-' + b; }
+  / '^' b:Integer '+' { return b; }
+  / '^{' _ b:IntegerPlain _ '+' _ '}' { return b; }
+  / '^{' _ b:IntegerPlain _ '-' _ '}' { return '-' + b; }
+  / '^{' _ '+' _ '}' { return '1'; }
+  / '^{' _ '-' _ '}' { return '-1'; }
 
 Electron = 'e^-' { return 'electron'; }
 
@@ -115,12 +137,15 @@ MoleculeTail = a:MoleculeComponent b:MoleculeTail { return [a, ...b]; }
 Multiplier = Integer
   / '?' { return '?'; }
 
-Integer "integer" = [0-9]+ { return text(); }
+Integer "integer" = BracedInteger
+  / IntegerPlain
+BracedInteger "integer" = '{' _ n:IntegerPlain _ '}' { return n; }
+IntegerPlain "integer" = [0-9]+ { return text(); }
 _ "whitespace" = [ \t\n\r]*
 `);
 
-const leftside = document.getElementById(fake1ref);
-const rightside = document.getElementById(fake2ref);
+const leftside = document.getElementById('fake1');
+const rightside = document.getElementById('fake2');
 const real = document.getElementById(ans1ref);
 
 const listener = () => {
@@ -128,7 +153,9 @@ const listener = () => {
 
  if (raw === '["",""]') {
   real.value = '';
-  real.dispatchEvent(new Event('change'));
+  real.dispatchEvent(new Event('input', { bubbles: true }));
+  real.dispatchEvent(new Event('change', { bubbles: true }));
+  if (parserStatus) parserStatus.textContent = '';
   return;
  }
 
@@ -147,16 +174,23 @@ const listener = () => {
   if (left_err !== null) err = left_err;
   if (right_err !== null) err += ' ' + right_err;
   raw += (new stack_mp.MPString(err.trim())).toString() + ')';
+  if (parserStatus) parserStatus.textContent = (err.trim() === '' ? 'Incomplete answer.' : ('Parser error: ' + err.trim()));
  } else {
   raw = 'sc_reaction(' + left_parsed + ',' + right_parsed + ')';
+  if (parserStatus) parserStatus.textContent = 'Parser OK.';
  }
 
  real.value = raw;
- real.dispatchEvent(new Event('change'));
+ real.dispatchEvent(new Event('input', { bubbles: true }));
+ real.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
 leftside.addEventListener('change', listener);
 rightside.addEventListener('change', listener);
+leftside.addEventListener('input', listener);
+rightside.addEventListener('input', listener);
+leftside.addEventListener('blur', listener);
+rightside.addEventListener('blur', listener);
 
 /* Restore fake inputs from ans1 for review/edit. */
 if (real.value !== '' && real.value !== undefined && real.value !== null) {
