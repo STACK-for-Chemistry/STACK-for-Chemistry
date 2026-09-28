@@ -51,16 +51,16 @@
 %_ELECTROCHEM_REDUCTANTS: []$
 %_ELECTROCHEM_PAIRS: []$
 
-block([i, n, ox, red, key],
+block([i, n, ox, red, pair_index],
     n: length(%_ELECTROCHEM_DATA),
     i: 1,
     while i <= n do (
         ox: %_ELECTROCHEM_DATA[i],
         red: %_ELECTROCHEM_DATA[i + 1],
-        key: sconcat(ox, "||", red),
+        pair_index: sconcat(ox, "||", red),
         %_ELECTROCHEM_INDEX_BY_OXIDANT[ox] : i,
         %_ELECTROCHEM_INDEX_BY_REDUCTANT[red] : i,
-        %_ELECTROCHEM_INDEX_BY_PAIR[key] : i,
+        %_ELECTROCHEM_INDEX_BY_PAIR[pair_index] : i,
         %_ELECTROCHEM_OXIDANTS: cons(ox, %_ELECTROCHEM_OXIDANTS),
         %_ELECTROCHEM_REDUCTANTS: cons(red, %_ELECTROCHEM_REDUCTANTS),
         %_ELECTROCHEM_PAIRS: cons([ox, red], %_ELECTROCHEM_PAIRS),

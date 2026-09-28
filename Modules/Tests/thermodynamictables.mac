@@ -66,7 +66,7 @@
 /*                                                              */
 /****************************************************************/
 
-/* zip_pair: combines two lists into a list of [key, value] pairs */
+/* zip_pair: combines two lists into a list of [index, value] pairs */
 zip_pair(l1, l2) := block([n],
     n: min(length(l1), length(l2)),
     makelist([l1[i], l2[i]], i, 1, n)

@@ -6,7 +6,7 @@
     Analogous structure to acidbase.mac.
 
     Database format: association list
-      key = salt (string, mhchem-compatible)
+    index = salt (string, mhchem-compatible)
       value = [pKsp, cation, cation_count, anion, anion_count]
 
     Ksp is always computed from pKsp: Ksp = 10^(-pKsp)

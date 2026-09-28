@@ -66,7 +66,7 @@
 /*                                                              */
 /****************************************************************/
 
-/* zip_pair: combines two lists into a list of [key, value] pairs */
+/* zip_pair: combines two lists into a list of [index, value] pairs */
 zip_pair(l1, l2) := block([n],
     n: min(length(l1), length(l2)),
     makelist([l1[i], l2[i]], i, 1, n)
@@ -465,14 +465,14 @@ unique_strings(lst) := block([result],
    multiple entries per substance for different states, so it cannot become a
    simple substance-keyed hashed array), but every direct-lookup access pattern
    is now O(1) instead of a linear sublist()/assoc() scan. */
-%_THERMO_BY_KEY: block([entry, substance, rawdata, key],
+%_THERMO_BY_KEY: block([entry, substance, rawdata, state_index],
     for entry in %_THERMO_DATA do (
         substance: first(entry), rawdata: second(entry),
-        key: sconcat(substance, "|", fifth(rawdata)),
+        state_index: sconcat(substance, "|", fifth(rawdata)),
         /* Preserve "first match wins" semantics (matching the original
-           sublist(...)/first(...) scan) in case of duplicate substance+state keys. */
-        if subvarp(%_THERMO_BY_KEY[key]) then
-            %_THERMO_BY_KEY[key] : rawdata
+           sublist(...)/first(...) scan) in case of duplicate substance+state indexes. */
+        if subvarp(%_THERMO_BY_KEY[state_index]) then
+            %_THERMO_BY_KEY[state_index] : rawdata
     )
 )$
 

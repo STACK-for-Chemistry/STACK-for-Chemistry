@@ -47,6 +47,30 @@
     "Cu+", "Cu", 1, 0.52
 ]$
 
+%_ELECTROCHEM_OXIDANTS: []$
+%_ELECTROCHEM_REDUCTANTS: []$
+%_ELECTROCHEM_PAIRS: []$
+
+block([i, n, ox, red, pair_index],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        ox: %_ELECTROCHEM_DATA[i],
+        red: %_ELECTROCHEM_DATA[i + 1],
+        pair_index: sconcat(ox, "||", red),
+        %_ELECTROCHEM_INDEX_BY_OXIDANT[ox] : i,
+        %_ELECTROCHEM_INDEX_BY_REDUCTANT[red] : i,
+        %_ELECTROCHEM_INDEX_BY_PAIR[pair_index] : i,
+        %_ELECTROCHEM_OXIDANTS: cons(ox, %_ELECTROCHEM_OXIDANTS),
+        %_ELECTROCHEM_REDUCTANTS: cons(red, %_ELECTROCHEM_REDUCTANTS),
+        %_ELECTROCHEM_PAIRS: cons([ox, red], %_ELECTROCHEM_PAIRS),
+        i: i + 4
+    ),
+    %_ELECTROCHEM_OXIDANTS: reverse(%_ELECTROCHEM_OXIDANTS),
+    %_ELECTROCHEM_REDUCTANTS: reverse(%_ELECTROCHEM_REDUCTANTS),
+    %_ELECTROCHEM_PAIRS: reverse(%_ELECTROCHEM_PAIRS)
+)$
+
 /* Normalize common notation variants used in question strings. */
 _electrochem_normalize_species(s) := block([x],
     x: s,
@@ -61,44 +85,29 @@ _electrochem_contains(haystack, needle) := block([p],
     if is(length(p) = 0) then false else is(first(p) # false)
 )$
 
-/* Helper: find index of oxidant (returns position of oxidant, or 0 if not found) */
-_electrochem_find_oxidant(oxidant) := block([i, n, result],
+/* Helper: find index of oxidant (returns position of oxidant, or 0 if not found).
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+_electrochem_find_oxidant(oxidant) := block([result],
     oxidant: _electrochem_normalize_species(oxidant),
-    n: length(%_ELECTROCHEM_DATA),
-    result: 0,
-    i: 1,
-    while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = oxidant) then (result: i, return(result)),
-        i: i + 4
-    ),
-    result
+    result: %_ELECTROCHEM_INDEX_BY_OXIDANT[oxidant],
+    if subvarp(result) then 0 else result
 )$
 
-/* Helper: find index of reductant (returns starting position of entry, or 0 if not found) */
-_electrochem_find_reductant(reductant) := block([i, n, result],
+/* Helper: find index of reductant (returns starting position of entry, or 0 if not found).
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+_electrochem_find_reductant(reductant) := block([result],
     reductant: _electrochem_normalize_species(reductant),
-    n: length(%_ELECTROCHEM_DATA),
-    result: 0,
-    i: 2,
-    while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = reductant) then (result: i - 1, return(result)),
-        i: i + 4
-    ),
-    result
+    result: %_ELECTROCHEM_INDEX_BY_REDUCTANT[reductant],
+    if subvarp(result) then 0 else result
 )$
 
-/* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found) */
-_electrochem_find_pair(oxidant, reductant) := block([i, n, result],
+/* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found).
+   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
+_electrochem_find_pair(oxidant, reductant) := block([result],
     oxidant: _electrochem_normalize_species(oxidant),
     reductant: _electrochem_normalize_species(reductant),
-    n: length(%_ELECTROCHEM_DATA),
-    result: 0,
-    i: 1,
-    while i <= n do (
-        if is(%_ELECTROCHEM_DATA[i] = oxidant) and is(%_ELECTROCHEM_DATA[i + 1] = reductant) then (result: i, return(result)),
-        i: i + 4
-    ),
-    result
+    result: %_ELECTROCHEM_INDEX_BY_PAIR[sconcat(oxidant, "||", reductant)],
+    if subvarp(result) then 0 else result
 )$
 
 /* Get E0 for an oxidant/reductant pair - returns null if not found */
@@ -200,36 +209,15 @@ chem_electrochem_Hplus_count(oxidant, reductant) := block(
 
 /* Navigation arrays */
 chem_electrochem_oxidant_array() := block([result, i, n],
-    result: [],
-    n: length(%_ELECTROCHEM_DATA),
-    i: 1,
-    while i <= n do (
-        result: append(result, [%_ELECTROCHEM_DATA[i]]),
-        i: i + 4
-    ),
-    result
+    %_ELECTROCHEM_OXIDANTS
 )$
 
 chem_electrochem_reductant_array() := block([result, i, n],
-    result: [],
-    n: length(%_ELECTROCHEM_DATA),
-    i: 2,
-    while i <= n do (
-        result: append(result, [%_ELECTROCHEM_DATA[i]]),
-        i: i + 4
-    ),
-    result
+    %_ELECTROCHEM_REDUCTANTS
 )$
 
 chem_electrochem_pairs_array() := block([result, i, n],
-    result: [],
-    n: length(%_ELECTROCHEM_DATA),
-    i: 1,
-    while i <= n do (
-        result: append(result, [[%_ELECTROCHEM_DATA[i], %_ELECTROCHEM_DATA[i + 1]]]),
-        i: i + 4
-    ),
-    result
+    %_ELECTROCHEM_PAIRS
 )$
 
 chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
@@ -238,10 +226,10 @@ chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
     i: 1,
     while i <= n do (
         E0: %_ELECTROCHEM_DATA[i + 3],
-        if numberp(E0) and is(E0 >= E_min) then result: append(result, [%_ELECTROCHEM_DATA[i]]),
+        if numberp(E0) and is(E0 >= E_min) then result: cons(%_ELECTROCHEM_DATA[i], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
@@ -250,10 +238,10 @@ chem_electrochem_strong_reductant_array(E_max) := block([result, i, n, E0],
     i: 1,
     while i <= n do (
         E0: %_ELECTROCHEM_DATA[i + 3],
-        if numberp(E0) and is(E0 <= E_max) then result: append(result, [%_ELECTROCHEM_DATA[i + 1]]),
+        if numberp(E0) and is(E0 <= E_max) then result: cons(%_ELECTROCHEM_DATA[i + 1], result),
         i: i + 4
     ),
-    result
+    reverse(result)
 )$
 
 /* Cell voltage (standard conditions):

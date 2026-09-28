@@ -141,7 +141,7 @@ chem_decimal_places(xstr) := block(
 	/* Count digits after decimal point until 'e' or end of string */
 	count: 0,
 	for i: decimal_index + 1 thru n do (
-		if sequal(chars[i], "e") or sequal(chars[i], "e") then
+		if sequal(chars[i], "e") then
 			return(count),
 		if (cgreaterp(chars[i], "/") and clessp(chars[i], ":")) then
 			count: count + 1
