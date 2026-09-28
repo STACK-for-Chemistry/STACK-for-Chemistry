@@ -12,10 +12,10 @@
 </div>
 <div style="text-align:center;">[[validation:ans1]]</div>
 <div style="text-align:center;">[[feedback:prt1]]</div>
-<div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;"></div>
+<div id="parser-validation" style="text-align:center; margin-top:8px; min-height:1.2em; color:#555;">Parser loading…</div>
 <p>The real input is here; it shows the STACK expression generated from the two fields. [[input:ans1]]</p>
 [[javascript]]
-import peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/+esm';
+import * as peggy from 'https://cdn.jsdelivr.net/npm/peggy@5.1.0/browser/peggy.min.js';
 import * as stack_mp from 'https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/corsscripts/cors.php?name=stackmplite.min.js';
 
 Promise.all([
@@ -28,7 +28,9 @@ Promise.all([
   return '"' + this.value.replaceAll("\\", "\\\\").replaceAll('"', '\\"') + '"';
  };
 
- const chem_parser = peggy.generate(`
+ let chem_parser;
+ try {
+  chem_parser = window.peggy.generate(`
 Expression = _ ex:Addition _ { return ex; } / _ ex:Term _ { return ex; }
 Addition = a:Term b:AdditionTail { return [a, ...b].join(' + '); }
 AdditionTail = _ '+' _ a:Term b:AdditionTail { return [a, ...b]; } / _ '+' _ a:Term { return [a]; }
@@ -57,10 +59,18 @@ Fraction = a:Integer _ '/' _ b:Integer { return a + '/' + b; }
 Decimal = [0-9]+ '.' [0-9]+ { return text(); }
 Integer = [0-9]+ { return text(); }
 _ = [ \t\n\r]*
- `);
+  `);
+ } catch (error) {
+  if (parserStatus) parserStatus.textContent = 'Parser setup failed: ' + (error.message || error);
+  return;
+ }
  const leftside = document.getElementById(fake1ref);
  const rightside = document.getElementById(fake2ref);
  const real = document.getElementById(ans1ref);
+ if (!leftside || !rightside || !real) {
+  if (parserStatus) parserStatus.textContent = 'Input binding failed.';
+  return;
+ }
  if (parserStatus) parserStatus.textContent = 'Parser ready.';
  const notifyStack = () => {
   real.dispatchEvent(new Event('input', { bubbles: true }));
@@ -119,6 +129,14 @@ _ = [ \t\n\r]*
  restoreVisibleInputs();
  real.addEventListener('input', restoreVisibleInputs);
  real.addEventListener('change', restoreVisibleInputs);
+}).catch((error) => {
+ const parserStatus = document.getElementById('parser-validation');
+ if (parserStatus) parserStatus.textContent = 'STACK input access failed: ' + (error.message || error);
+});
+
+window.addEventListener('error', (event) => {
+ const parserStatus = document.getElementById('parser-validation');
+ if (parserStatus) parserStatus.textContent = 'Browser parser error: ' + event.message;
 });
 [[/javascript]]]]></text>
     </questiontext>

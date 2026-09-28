@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="stack">
+    <name>
+      <text>Nuclide ion: protons, electrons, and neutrons</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[\(\require{mhchem}\)
+<p>For the ion \( {@ion_display@} \), determine the numbers of protons, electrons, and neutrons.</p>
+<p>Enter non-negative integers.</p>
+<table style="margin: 1em auto; border-collapse: collapse;">
+  <tr>
+    <th style="padding: 0.35em 0.8em; text-align: left;">Protons</th>
+    <td style="padding: 0.35em 0.8em;">[[input:ans_protons]]</td>
+    <td style="padding: 0.35em 0.8em;">[[validation:ans_protons]]</td>
+  </tr>
+  <tr>
+    <th style="padding: 0.35em 0.8em; text-align: left;">Electrons</th>
+    <td style="padding: 0.35em 0.8em;">[[input:ans_electrons]]</td>
+    <td style="padding: 0.35em 0.8em;">[[validation:ans_electrons]]</td>
+  </tr>
+  <tr>
+    <th style="padding: 0.35em 0.8em; text-align: left;">Neutrons</th>
+    <td style="padding: 0.35em 0.8em;">[[input:ans_neutrons]]</td>
+    <td style="padding: 0.35em 0.8em;">[[validation:ans_neutrons]]</td>
+  </tr>
+</table>
+<div style="text-align: center;">[[feedback:prt_protons]] [[feedback:prt_electrons]] [[feedback:prt_neutrons]]</div>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text><![CDATA[<p>For \( {@ion_display@} \), the atomic number gives \({@num_protons@}\) protons and the nuclide table gives \({@num_neutrons@}\) neutrons. A charge of \({@charge@}\) means that the ion has \({@num_electrons@}\) electrons.</p>]]></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion>
+      <text>2026010500</text>
+    </stackversion>
+    <questionvariables>
+      <text><![CDATA[/* Load the periodic-table module before nuclidetable: the latter uses
+   chem_data(..., "OxidationStates") for the common ion charge. */
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
+
+/* Keep only nuclides whose first common oxidation state is a non-zero,
+   physically possible ionic charge. The sole random selection is here. */
+eligible_nuclides: sublist(
+    chem_nuc_all_ids(),
+    lambda([id], block([q],
+        q: chem_nuc_typical_charge(id),
+        is(q # false and q # 0 and abs(q) <= chem_nuc_Z(id))
+    ))
+);
+nuclide_id: rand(eligible_nuclides);
+charge: chem_nuc_typical_charge(nuclide_id);
+ion_display: chem_display(chem_nuc_ionize(nuclide_id, charge));
+
+num_protons: chem_nuc_Z(nuclide_id);
+num_electrons: num_protons - charge;
+num_neutrons: chem_nuc_N(nuclide_id);]]></text>
+    </questionvariables>
+    <specificfeedback format="html"><text></text></specificfeedback>
+    <questionnote format="html"><text>{@ion_display@}: p={@num_protons@}, e={@num_electrons@}, n={@num_neutrons@}</text></questionnote>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html"><text>Correct.</text></prtcorrect>
+    <prtpartiallycorrect format="html"><text>Partially correct.</text></prtpartiallycorrect>
+    <prtincorrect format="html"><text>Incorrect.</text></prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>none</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>ans_protons</name>
+      <type>algebraic</type>
+      <tans>num_protons</tans>
+      <boxsize>5</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint>integer</syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>ans_electrons</name>
+      <type>algebraic</type>
+      <tans>num_electrons</tans>
+      <boxsize>5</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint>integer</syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>ans_neutrons</name>
+      <type>algebraic</type>
+      <tans>num_neutrons</tans>
+      <boxsize>5</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint>integer</syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <prt>
+      <name>prt_protons</name>
+      <value>0.3333333</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables><text></text></feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Check protons</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>ans_protons</sans>
+        <tans>num_protons</tans>
+        <testoptions></testoptions>
+        <quiet>0</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt_protons-0-T</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>The number of protons is correct.</p>]]></text></truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt_protons-0-F</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>The number of protons equals the atomic number.</p>]]></text></falsefeedback>
+      </node>
+    </prt>
+    <prt>
+      <name>prt_electrons</name>
+      <value>0.3333333</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables><text></text></feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Check electrons</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>ans_electrons</sans>
+        <tans>num_electrons</tans>
+        <testoptions></testoptions>
+        <quiet>0</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt_electrons-0-T</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>The number of electrons is correct.</p>]]></text></truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt_electrons-0-F</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>For a positive charge, subtract the charge from the number of protons; for a negative charge, add its magnitude.</p>]]></text></falsefeedback>
+      </node>
+    </prt>
+    <prt>
+      <name>prt_neutrons</name>
+      <value>0.3333334</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables><text></text></feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Check neutrons</description>
+        <answertest>AlgEquiv</answertest>
+        <sans>ans_neutrons</sans>
+        <tans>num_neutrons</tans>
+        <testoptions></testoptions>
+        <quiet>0</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt_neutrons-0-T</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>The number of neutrons is correct.</p>]]></text></truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt_neutrons-0-F</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>The number of neutrons is the mass number minus the atomic number.</p>]]></text></falsefeedback>
+      </node>
+    </prt>
+    <qtest>
+      <testcase>1</testcase>
+      <description>Teacher answers are accepted.</description>
+      <testinput><name>ans_protons</name><value>num_protons</value></testinput>
+      <testinput><name>ans_electrons</name><value>num_electrons</value></testinput>
+      <testinput><name>ans_neutrons</name><value>num_neutrons</value></testinput>
+      <expected><name>prt_protons</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>prt_protons-0-T</expectedanswernote></expected>
+      <expected><name>prt_electrons</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>prt_electrons-0-T</expectedanswernote></expected>
+      <expected><name>prt_neutrons</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>prt_neutrons-0-T</expectedanswernote></expected>
+    </qtest>
+  </question>
+</quiz>
