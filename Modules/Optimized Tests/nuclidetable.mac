@@ -328,7 +328,7 @@ chem_nuc_get_entry(id) := block([d],
 
 /* Direct O(1) hashed-array lookup: %_NUCLIDE_DATA[id] replaces the former
    linear assoc() scan entirely. subvarp(...) detects an unresolved array
-   reference, which Maxima returns whenever the key was never assigned
+    reference, which Maxima returns whenever the requested index was never assigned
    (i.e. an unknown nuclide id), so this still safely yields false. */
 chem_nuc_get_data(id) := block([d],
     d: %_NUCLIDE_DATA[id],
@@ -392,9 +392,9 @@ chem_nuc_by_A(a) := block([results, cached, id, d],
     results
 )$
 
-chem_nuc_by_ZN(z, n) := block([results, key, cached, id, d],
-    key: sconcat(z, "|", n),
-    cached: assoc(key, %_NUC_CACHE_BY_ZN),
+chem_nuc_by_ZN(z, n) := block([results, cache_key, cached, id, d],
+    cache_key: sconcat(z, "|", n),
+    cached: assoc(cache_key, %_NUC_CACHE_BY_ZN),
     if not is(cached = false) then return(cached),
     results: [],
     for id in %_NUCLIDE_ALL_IDS do (
@@ -403,7 +403,7 @@ chem_nuc_by_ZN(z, n) := block([results, key, cached, id, d],
             results: cons(id, results)
     ),
     results: reverse(results),
-    %_NUC_CACHE_BY_ZN : cons([key, results], %_NUC_CACHE_BY_ZN),
+    %_NUC_CACHE_BY_ZN : cons([cache_key, results], %_NUC_CACHE_BY_ZN),
     results
 )$
 

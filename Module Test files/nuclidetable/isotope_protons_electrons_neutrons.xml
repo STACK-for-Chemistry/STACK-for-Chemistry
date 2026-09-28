@@ -43,15 +43,14 @@
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
 stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
 
-/* Keep only nuclides whose first common oxidation state is a non-zero,
-   physically possible ionic charge. The sole random selection is here. */
-eligible_nuclides: sublist(
-    chem_nuc_all_ids(),
-    lambda([id], block([q],
-        q: chem_nuc_typical_charge(id),
-        is(q # false and q # 0 and abs(q) <= chem_nuc_Z(id))
-    ))
-);
+/* Do not filter the full nuclide table at question-generation time: that
+   exhaustively evaluates the PSE lookup for every stored isotope and can time
+   out. These verified nuclides all have a non-zero, physically possible first
+   common oxidation state in pse.mac. The sole random selection is here. */
+eligible_nuclides: [
+  "^{14}C", "^{24}Na", "^{27}Mg", "^{28}Al",
+  "^{32}P", "^{35}S", "^{36}Cl"
+];
 nuclide_id: rand(eligible_nuclides);
 charge: chem_nuc_typical_charge(nuclide_id);
 ion_display: chem_display(chem_nuc_ionize(nuclide_id, charge));
