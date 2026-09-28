@@ -38,26 +38,28 @@
       <text>2026010500</text>
     </stackversion>
     <questionvariables>
-      <text><![CDATA[/* Load the periodic-table module before nuclidetable: the latter uses
-   chem_data(..., "OxidationStates") for the common ion charge. */
-stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
-stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
-
-/* Do not filter the full nuclide table at question-generation time: that
-   exhaustively evaluates the PSE lookup for every stored isotope and can time
-   out. These verified nuclides all have a non-zero, physically possible first
-   common oxidation state in pse.mac. The sole random selection is here. */
-eligible_nuclides: [
-  "^{14}C", "^{24}Na", "^{27}Mg", "^{28}Al",
-  "^{32}P", "^{35}S", "^{36}Cl"
-];
-nuclide_id: rand(eligible_nuclides);
-charge: chem_nuc_typical_charge(nuclide_id);
-ion_display: chem_display(chem_nuc_ionize(nuclide_id, charge));
-
-num_protons: chem_nuc_Z(nuclide_id);
-num_electrons: num_protons - charge;
-num_neutrons: chem_nuc_N(nuclide_id);]]></text>
+      <text><![CDATA[/* Each selected record contains [mass number, symbol, proton number,
+     neutron number, common charge].  The common charges are copied from the
+     PSE module's OxidationStates data.  Keeping this question self-contained
+     avoids loading the two large remote modules for every attempt. */
+  ion_records: [
+    [14, "C", 6, 8, 4],
+    [24, "Na", 11, 13, 1],
+    [27, "Mg", 12, 15, 2],
+    [28, "Al", 13, 15, 3],
+    [32, "P", 15, 17, 5],
+    [35, "S", 16, 19, 6],
+    [36, "Cl", 17, 19, 7]
+  ];
+  selected_ion: rand(ion_records);
+  mass_number: selected_ion[1];
+  element_symbol: selected_ion[2];
+  num_protons: selected_ion[3];
+  num_neutrons: selected_ion[4];
+  charge: selected_ion[5];
+  num_electrons: num_protons - charge;
+  charge_suffix: if charge = 1 then "+" else sconcat(charge, "+");
+  ion_display: sconcat("\\ce{^{", mass_number, "}", element_symbol, "^{", charge_suffix, "}}");]]></text>
     </questionvariables>
     <specificfeedback format="html"><text></text></specificfeedback>
     <questionnote format="html"><text>{@ion_display@}: p={@num_protons@}, e={@num_electrons@}, n={@num_neutrons@}</text></questionnote>
