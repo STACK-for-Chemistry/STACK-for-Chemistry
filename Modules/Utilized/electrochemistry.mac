@@ -81,33 +81,48 @@ _electrochem_normalize_species(s) := block([x],
 
 /* Robust substring detection helper (returns true/false, never throws). */
 _electrochem_contains(haystack, needle) := block([p],
-    p: errcatch(sposition(needle, haystack)),
+    p: errcatch(ssearch(needle, haystack)),
     if is(length(p) = 0) then false else is(first(p) # false)
 )$
 
-/* Helper: find index of oxidant (returns position of oxidant, or 0 if not found).
-   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
-_electrochem_find_oxidant(oxidant) := block([result],
+/* Helper: find index of oxidant (returns position of oxidant, or 0 if not found). */
+_electrochem_find_oxidant(oxidant) := block([i, n, result],
     oxidant: _electrochem_normalize_species(oxidant),
-    result: %_ELECTROCHEM_INDEX_BY_OXIDANT[oxidant],
-    if subvarp(result) then 0 else result
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    result: 0,
+    while i <= n and is(result = 0) do (
+        if sequal(%_ELECTROCHEM_DATA[i], oxidant) then result: i,
+        i: i + 4
+    ),
+    result
 )$
 
-/* Helper: find index of reductant (returns starting position of entry, or 0 if not found).
-   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
-_electrochem_find_reductant(reductant) := block([result],
+/* Helper: find index of reductant (returns starting position of entry, or 0 if not found). */
+_electrochem_find_reductant(reductant) := block([i, n, result],
     reductant: _electrochem_normalize_species(reductant),
-    result: %_ELECTROCHEM_INDEX_BY_REDUCTANT[reductant],
-    if subvarp(result) then 0 else result
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    result: 0,
+    while i <= n and is(result = 0) do (
+        if sequal(%_ELECTROCHEM_DATA[i + 1], reductant) then result: i,
+        i: i + 4
+    ),
+    result
 )$
 
-/* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found).
-   Direct O(1) hashed-array lookup replaces the former assoc() linear scan. */
-_electrochem_find_pair(oxidant, reductant) := block([result],
+/* Helper: find oxidant/reductant pair (returns position of oxidant, or 0 if not found). */
+_electrochem_find_pair(oxidant, reductant) := block([i, n, result],
     oxidant: _electrochem_normalize_species(oxidant),
     reductant: _electrochem_normalize_species(reductant),
-    result: %_ELECTROCHEM_INDEX_BY_PAIR[sconcat(oxidant, "||", reductant)],
-    if subvarp(result) then 0 else result
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    result: 0,
+    while i <= n and is(result = 0) do (
+        if sequal(%_ELECTROCHEM_DATA[i], oxidant) and sequal(%_ELECTROCHEM_DATA[i + 1], reductant) then result: i,
+        i: i + 4
+    ),
+    result
 )$
 
 /* Get E0 for an oxidant/reductant pair - returns null if not found */
@@ -196,15 +211,16 @@ chem_electrochem_Hplus_species(oxidant, reductant) := block(
 
 /* Return stoichiometric coefficient of H+ in oxidant string (0 if absent). */
 chem_electrochem_Hplus_count(oxidant, reductant) := block(
-    [x],
+    [x, result],
     oxidant: _electrochem_normalize_species(oxidant),
     x: ssubst("", " ", oxidant),
-    if _electrochem_contains(x, "14H+") then return(14),
-    if _electrochem_contains(x, "8H+") then return(8),
-    if _electrochem_contains(x, "4H+") then return(4),
-    if _electrochem_contains(x, "2H+") then return(2),
-    if _electrochem_contains(x, "H+") then return(1),
-    0
+    result: 0,
+    if _electrochem_contains(x, "14H+") then result: 14
+    else if _electrochem_contains(x, "8H+") then result: 8
+    else if _electrochem_contains(x, "4H+") then result: 4
+    else if _electrochem_contains(x, "2H+") then result: 2
+    else if _electrochem_contains(x, "H+") then result: 1,
+    result
 )$
 
 /* Navigation arrays */
