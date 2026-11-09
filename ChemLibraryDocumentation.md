@@ -261,6 +261,8 @@ The periodic table module provides comprehensive data for all 118 elements, incl
 | `chem_units(dp)` | Get unit for a field | `chem_units("AtomicMass")` → `g*mol^(-1)` |
 | `chem_element_array()` | All element symbols | `rand(chem_element_array())` |
 | `chem_element_array_maingroup()` | Main group elements | `chem_element_array_maingroup()` |
+| `chem_element_species(element)` | Naturally occurring elemental formula | `chem_element_species("O")` → `"O2"` |
+| `chem_element_phase(phase)` | Elements in a room-temperature phase | `chem_element_phase("Liquid")` → `[...]` |
 | `chem_element_period(period)` | Elements in period | `chem_element_period(3)` → `["Na", "Mg", ...]` |
 | `chem_element_group(group)` | Elements in IUPAC group | `chem_element_group(17)` → `["F", "Cl", ...]` |
 | `chem_element_maingroup(mg)` | Elements in main group | `chem_element_maingroup(1)` → `["H", "Li", ...]` |
@@ -407,6 +409,43 @@ maingroup_elements: chem_element_array_maingroup();
 /* Returns ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", ...] */
 
 element: rand(chem_element_array_maingroup());
+```
+
+---
+
+#### `chem_element_species(element)`
+
+**Description:** Returns the molecular formula of the elemental substance that occurs naturally at room temperature. The diatomic elements are returned as `H2`, `N2`, `O2`, `F2`, `Cl2`, `Br2`, and `I2`; phosphorus and sulfur are returned as `P4` and `S8`. All other elements, including mercury, are returned as their atomic symbol.
+
+**Parameters:**
+- `element` (string): Element symbol
+
+**Returns:** Elemental formula string, or `false` if the element is not found
+
+**Example:**
+```maxima
+oxygen: chem_element_species("O");     /* Returns "O2" */
+phosphorus: chem_element_species("P"); /* Returns "P4" */
+mercury: chem_element_species("Hg");   /* Returns "Hg" */
+iron: chem_element_species("Fe");      /* Returns "Fe" */
+```
+
+---
+
+#### `chem_element_phase(phase)`
+
+**Description:** Returns the symbols of elements that are solids, liquids, or gases at room temperature. Use the exact phase strings `"Solid"`, `"Liquid"`, or `"Gas"`.
+
+**Parameters:**
+- `phase` (string): Room-temperature phase (`"Solid"`, `"Liquid"`, or `"Gas"`)
+
+**Returns:** List of matching element symbols; an empty list if no phase matches
+
+**Example:**
+```maxima
+liquids: chem_element_phase("Liquid"); /* Returns ["Br", "Hg"] */
+gases: chem_element_phase("Gas");      /* Returns ["H", "He", "N", ...] */
+solids: chem_element_phase("Solid");   /* Returns ["Li", "Be", "B", ...] */
 ```
 
 ---
@@ -761,6 +800,7 @@ The following data fields can be retrieved with `chem_data()` or `chem_data_unit
 | `BoilingPoint` | Float | K | Boiling point |
 | `Density` | Float | g/cm³ | Density |
 | `GroupBlock` | String | — | Element category (e.g., "Nonmetal", "Halogen") |
+| `Species` | String | — | Naturally occurring elemental formula at room temperature |
 | `YearDiscovered` | Integer/String | — | Year of discovery |
 
 **Note:** Missing numerical data is indicated by the atom `null` rather than a zero.

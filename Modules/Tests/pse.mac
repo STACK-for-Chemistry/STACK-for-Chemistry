@@ -105,6 +105,14 @@ chem_element_array() := %_CHEM_ELEMENT_SYMBOLS$
 /* This function returns an array of main group element symbols (MainGroup > 0). */
 chem_element_array_maingroup() := chem_internal_element_list_by_positive_field(4)$
 
+/* This function returns the elemental species naturally occurring at room temperature.
+    Diatomic elements are returned as X2; phosphorus and sulfur are returned as P4 and S8. */
+chem_element_species(element) := chem_data(element, "Species")$
+
+/* This function returns element symbols whose room-temperature phase matches "phase".
+    Valid phase names are "Solid", "Liquid", and "Gas". */
+chem_element_phase(phase) := chem_internal_element_list_by_field(13, phase)$
+
 /* This function returns an array of element symbols for a given period. */
 chem_element_period(period_num) := chem_internal_element_list_by_field(3, period_num)$
 
@@ -350,7 +358,7 @@ chem_const_units(name) := block([val, unt],
     "ElectronConfiguration", "Electronegativity", "AtomicRadius",
     "IonizationEnergy", "ElectronAffinity", "OxidationStates",
     "StandardState", "MeltingPoint", "BoilingPoint", "Density",
-    "GroupBlock"
+    "GroupBlock", "Species"
 ]$
 
 %_CHEM_UNITS : [
@@ -358,7 +366,7 @@ chem_const_units(name) := block([val, unt],
     null, null, pm,
     J, null, null,
     null, K, K, g/cm^3,
-    null
+    null, null
 ]$
 
 %_CHEM_FIELD_INDEX : [
@@ -366,7 +374,7 @@ chem_const_units(name) := block([val, unt],
     ["ElectronConfiguration", 7], ["Electronegativity", 8], ["AtomicRadius", 9],
     ["IonizationEnergy", 10], ["ElectronAffinity", 11], ["OxidationStates", 12],
     ["StandardState", 13], ["MeltingPoint", 14], ["BoilingPoint", 15], ["Density", 16],
-    ["GroupBlock", 17]
+    ["GroupBlock", 17], ["Species", 18]
 ]$
 
 %_CHEM_FIELD_UNIT_DATA : zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)$
@@ -500,5 +508,20 @@ chem_const_units(name) := block([val, unt],
   ["Ts", [117, "Tennessine", 7, 7, 17, 294, "[Rn] 7s2 5f14 6d10 7p5", null, null, null, null, "+5, +3, +1, -1", "Expected to be a Solid", null, null, null, "Halogen"]],
   ["Og", [118, "Oganesson", 7, 8, 18, 294, "[Rn] 7s2 5f14 6d10 7p6", null, null, null, null, "+6, +4, +2, +1, 0, -1", "Expected to be a Gas", null, null, null, "Noble gas"]]
 ]$
+
+/* Elemental molecular formulas at room temperature. All other elements are monatomic. */
+%_CHEM_ELEMENT_SPECIES_DATA : [
+    ["H", "H2"], ["N", "N2"], ["O", "O2"], ["F", "F2"], ["Cl", "Cl2"],
+    ["Br", "Br2"], ["I", "I2"], ["P", "P4"], ["S", "S8"]
+]$
+
+/* Append the elemental species to each element's compact data entry. */
+%_CHEM_ELEMENTS : map(lambda([element_entry], block([species],
+    species : assoc(first(element_entry), %_CHEM_ELEMENT_SPECIES_DATA),
+    if is(species = false) then
+        [first(element_entry), append(second(element_entry), [first(element_entry)])]
+    else
+        [first(element_entry), append(second(element_entry), [species])]
+)), %_CHEM_ELEMENTS)$
 
 %_CHEM_ELEMENT_SYMBOLS : map(first, %_CHEM_ELEMENTS)$

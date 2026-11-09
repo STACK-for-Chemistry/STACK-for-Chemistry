@@ -1,0 +1,43 @@
+/* pse tests */
+load("/home/alexander/Dokumente/STACK-for-Chemistry/Modules/Tests/pse.mac");
+stackfltfmt:"~f";
+
+bool_to_score(b) := if is(b) then 1 else 0;
+false_to_score(x) := if is(x = false) then 1 else 0;
+passfail(s) := if is(s = 1) then "PASS" else "FAIL";
+
+t_1: chem_element_species("H");
+t_2: chem_element_species("O");
+t_3: chem_element_species("Cl");
+t_4: chem_element_species("P");
+t_5: chem_element_species("S");
+t_6: chem_element_species("Hg");
+t_7: chem_element_species("Fe");
+t_8: chem_element_species("Xx");
+t_9: chem_element_phase("Solid");
+t_10: chem_element_phase("Liquid");
+t_11: chem_element_phase("Gas");
+t_12: chem_element_phase("Plasma");
+
+s_1: bool_to_score(t_1 = "H2");
+s_2: bool_to_score(t_2 = "O2");
+s_3: bool_to_score(t_3 = "Cl2");
+s_4: bool_to_score(t_4 = "P4");
+s_5: bool_to_score(t_5 = "S8");
+s_6: bool_to_score(t_6 = "Hg");
+s_7: bool_to_score(t_7 = "Fe");
+s_8: false_to_score(t_8);
+s_9: bool_to_score(member("Fe", t_9) and not member("Hg", t_9));
+s_10: bool_to_score(t_10 = ["Br", "Hg"]);
+s_11: bool_to_score(member("O", t_11) and member("N", t_11) and not member("Br", t_11));
+s_12: bool_to_score(t_12 = []);
+
+max_score:12;
+total_score:s_1+s_2+s_3+s_4+s_5+s_6+s_7+s_8+s_9+s_10+s_11+s_12;
+score_pct:round(float(100*total_score/max_score));
+
+p_1:passfail(s_1); p_2:passfail(s_2); p_3:passfail(s_3); p_4:passfail(s_4);
+p_5:passfail(s_5); p_6:passfail(s_6); p_7:passfail(s_7); p_8:passfail(s_8);
+p_9:passfail(s_9); p_10:passfail(s_10); p_11:passfail(s_11); p_12:passfail(s_12);
+
+ta1:10;

@@ -82,6 +82,8 @@ Functions for accessing periodic table data:
 - `chem_data_all` - Access complete element information
 - `chem_element` - Get element symbol by atomic number
 - `chem_element_array` - Get arrays of elements by various criteria
+- `chem_element_species` - Get the naturally occurring elemental formula
+- `chem_element_phase` - Get elements by room-temperature phase
 - `chem_electron_config` - Get formatted electron configurations
 - `chem_units` - Get units for specific properties
 - `chem_parse_formula` - Parse chemical formula into element-count pairs
@@ -122,6 +124,10 @@ elem_period4_group6: chem_element_period_group(4, 6);  /* Returns "Cr" */
 
 /* Get element by period and main group */
 elem_p3_mg1: chem_element_period_maingroup(3, 1);  /* Returns "Na" */
+
+/* Get an elemental formula and elements by room-temperature phase */
+oxygen_species: chem_element_species("O");  /* Returns "O2" */
+liquids: chem_element_phase("Liquid");      /* Returns ["Br", "Hg"] */
 
 /* Parse a chemical formula */
 parsed: chem_parse_formula("H2SO4");  /* Returns [["H", 2], ["S", 1], ["O", 4]] */
