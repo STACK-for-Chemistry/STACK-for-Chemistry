@@ -248,6 +248,24 @@ chem_electrochem_pairs_array() := block([result, i, n],
     %_ELECTROCHEM_PAIRS
 )$
 
+/* Return database records [metal ion, metal, n_e, E0] for reductions of the
+   form M^n+ + n e^- -> M. This excludes entries involving H+, H2O, OH- or
+   other non-metal redox species. */
+chem_electrochem_metal_pairs_array() := block([result, metals, i, n, oxidant, reductant],
+    metals: ["Ag", "Al", "Au", "Ba", "Ca", "Cd", "Co", "Cu", "Fe", "Hg", "K", "Li", "Mg", "Mn", "Na", "Ni", "Pb", "Sn", "Zn"],
+    result: [],
+    n: length(%_ELECTROCHEM_DATA),
+    i: 1,
+    while i <= n do (
+        oxidant: %_ELECTROCHEM_DATA[i],
+        reductant: %_ELECTROCHEM_DATA[i + 1],
+        if member(reductant, metals) then
+            result: cons([oxidant, reductant, %_ELECTROCHEM_DATA[i + 2], %_ELECTROCHEM_DATA[i + 3]], result),
+        i: i + 4
+    ),
+    reverse(result)
+)$
+
 chem_electrochem_strong_oxidant_array(E_min) := block([result, i, n, E0],
     result: [],
     n: length(%_ELECTROCHEM_DATA),

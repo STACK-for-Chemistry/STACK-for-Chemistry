@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: Standardpotential bei Standard- und Nicht-Standardbedingungen -->
+  <question type="stack">
+    <name>
+      <text>Standard- und Nicht-Standardpotential: zufälliges Metall-Element</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>\(\require{mhchem}\)</p>
+    <h3>Galvanisches Element aus zwei Metallen</h3>
+
+<p>Für die folgenden <strong>Reduktions-Halbzellengleichungen</strong> sind die Standardpotentiale aus der Datenbank gegeben:</p>
+
+<table style="border-collapse: collapse; margin: 1em 0;">
+  <thead>
+    <tr>
+      <th style="border: 1px solid #999; padding: 0.45em 0.7em; text-align: left;">Reduktions-Halbzellengleichung</th>
+      <th style="border: 1px solid #999; padding: 0.45em 0.7em; text-align: left;">\(E^\circ\)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border: 1px solid #999; padding: 0.45em 0.7em;">\({@cathode_half_equation@}\)</td>
+      <td style="border: 1px solid #999; padding: 0.45em 0.7em;">\({@E_cathode@}\;\mathrm{V}\)</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #999; padding: 0.45em 0.7em;">\({@anode_half_equation@}\)</td>
+      <td style="border: 1px solid #999; padding: 0.45em 0.7em;">\({@E_anode@}\;\mathrm{V}\)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Für die Konzentrationsabhängigkeit gelten außerdem bei \(T=298{,}15\;\mathrm{K}\):</p>
+<ul>
+  <li>\(c({@anode_ion_display@})={@c_anode@}\;\mathrm{mol\,L^{-1}}\),</li>
+  <li>\(c({@cathode_ion_display@})={@c_cathode@}\;\mathrm{mol\,L^{-1}}\).</li>
+</ul>
+<p>Die Aktivitäten der festen Metalle sind jeweils \(1\).</p>
+
+<h4>Teil 1: Gesamtreaktion ausgleichen</h4>
+<p>Die spontan ablaufende Gesamtreaktion lautet:</p>
+<div style="display: flex; flex-wrap: nowrap; align-items: center; gap: 0.35em; white-space: nowrap;">
+  <span>[[input:coef_anode_metal]][[validation:coef_anode_metal]]</span>
+  <span>\({@anode_metal_display@}\)</span>
+  <span>+</span>
+  <span>[[input:coef_cathode_ion]][[validation:coef_cathode_ion]]</span>
+  <span>\({@cathode_ion_aq_display@}\)</span>
+  <span>\(\longrightarrow\)</span>
+  <span>[[input:coef_anode_ion]][[validation:coef_anode_ion]]</span>
+  <span>\({@anode_ion_aq_display@}\)</span>
+  <span>+</span>
+  <span>[[input:coef_cathode_metal]][[validation:coef_cathode_metal]]</span>
+  <span>\({@cathode_metal_display@}\)</span>
+</div>
+<p>Tragen Sie auch den Koeffizienten \(1\) ein.</p>
+[[feedback:prt_coefficients]]
+
+<h4>Teil 2: Standardpotential</h4>
+<p>Berechnen Sie das Standardpotential \(E^\circ_\text{Zelle}\).</p>
+<p>Geben Sie das Ergebnis <strong>mit Einheit</strong> ein. Eine Zahl ohne Einheit wird nicht als vollständig richtig gewertet.</p>
+<p>\(E^\circ_\text{Zelle}=\) [[input:estd]][[validation:estd]]</p>
+[[feedback:prt_standard]]
+
+<h4>Teil 3: Konzentrationsabhängiges Potential</h4>
+<p>Bestimmen Sie für die angegebene Gesamtreaktion das Zellpotential \(E\) bei den gegebenen Bedingungen. Runden Sie das Potential auf zwei Nachkommastellen und geben Sie es <strong>mit Einheit</strong> ein.</p>
+<p>\(E=\) [[input:enernst]][[validation:enernst]]</p>
+[[feedback:prt_nernst]]]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text><![CDATA[<p><strong>Lösung:</strong></p>
+    <p>\[E^\circ_\text{Zelle}={@E_cathode@}\;\mathrm{V}-({@E_anode@}\;\mathrm{V})={@E_standard@}\;\mathrm{V}\]</p>
+    <p>Für die Gesamtreaktion ist \(z={@z@}\) und \(Q={@Q_reaction@}\). Mit der Nernst-Gleichung ergibt sich:</p>
+    <p>\[E={@E_standard@}\;\mathrm{V}-\frac{8{,}314\cdot298{,}15}{{@z@}\cdot96485}\ln({@Q_reaction@})={@E_nernst@}\;\mathrm{V}.\]</p>]]></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion>
+      <text>2025080100</text>
+    </stackversion>
+    <questionvariables>
+        <text><![CDATA[stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+      stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/electrochemistry.mac");
+      stack_unit_si_declare(true);
+
+      /* Alle Datenbankeinträge der Form M^n+ + n e^- -> M.
+         Die lokale Filterung verwendet die bereits veröffentlichte API des
+         importierten Elektrochemie-Moduls. */
+      metal_reductants: ["Ag", "Al", "Au", "Ba", "Ca", "Cd", "Co", "Cu", "Fe", "Hg", "K", "Li", "Mg", "Mn", "Na", "Ni", "Pb", "Sn", "Zn"];
+      all_pairs: chem_electrochem_pairs_array();
+      metal_pairs: [];
+      pair_index: 1;
+      while pair_index <= length(all_pairs) do (
+        current_pair: all_pairs[pair_index],
+        if member(second(current_pair), metal_reductants) then
+          metal_pairs: endcons([
+            first(current_pair),
+            second(current_pair),
+            chem_electrochem_n(first(current_pair), second(current_pair)),
+            chem_electrochem_E0(first(current_pair), second(current_pair))
+          ], metal_pairs),
+        pair_index: pair_index + 1
+      );
+
+    /* Zwei unterschiedliche Metalle auswählen; die Richtung wird erst danach über E0 festgelegt. */
+    pair_one: rand(metal_pairs);
+    pair_two: rand(metal_pairs);
+    while sequal(second(pair_one), second(pair_two)) or is(third(pair_one) = third(pair_two)) do pair_two: rand(metal_pairs);
+
+    if is(fourth(pair_one) > fourth(pair_two)) then (
+      cathode_pair: pair_one,
+      anode_pair: pair_two
+    ) else (
+      cathode_pair: pair_two,
+      anode_pair: pair_one
+    );
+
+    cathode_ion: first(cathode_pair);
+    cathode_metal: second(cathode_pair);
+    n_cathode: third(cathode_pair);
+    E_cathode: fourth(cathode_pair);
+    anode_ion: first(anode_pair);
+    anode_metal: second(anode_pair);
+    n_anode: third(anode_pair);
+    E_anode: fourth(anode_pair);
+
+    g: gcd(n_cathode, n_anode);
+    coefficient_cathode: n_anode/g;
+    coefficient_anode: n_cathode/g;
+    z: n_cathode*n_anode/g;
+    coefficient_text(x) := if is(x = 1) then "" else string(x);
+    term(x, species) := sconcat(coefficient_text(x), species);
+
+    cathode_ion_aq: sconcat(cathode_ion, "(aq)");
+    anode_ion_aq: sconcat(anode_ion, "(aq)");
+    cathode_ion_display: chem_display(cathode_ion);
+    anode_ion_display: chem_display(anode_ion);
+    cathode_ion_aq_display: chem_display(cathode_ion_aq);
+    anode_ion_aq_display: chem_display(anode_ion_aq);
+    cathode_metal_display: chem_display(sconcat(cathode_metal, "(s)"));
+    anode_metal_display: chem_display(sconcat(anode_metal, "(s)"));
+    cathode_half_equation: chem_display(sconcat(cathode_ion_aq, " + ", string(n_cathode), "e^- -> ", cathode_metal, "(s)"));
+    anode_half_equation: chem_display(sconcat(anode_ion_aq, " + ", string(n_anode), "e^- -> ", anode_metal, "(s)"));
+    overall_reaction: sconcat("\\ce{", term(coefficient_anode, sconcat(anode_metal, "(s)")), " + ", term(coefficient_cathode, cathode_ion_aq), " -> ", term(coefficient_anode, anode_ion_aq), " + ", term(coefficient_cathode, sconcat(cathode_metal, "(s)")), "}");
+
+    E_standard: float(E_cathode - E_anode);
+
+T: 298.15;
+R: 8.314;
+F: 96485;
+c_anode: rand([0.5, 1.0]);
+c_cathode: rand([0.5, 1.0]);
+Q_reaction: float(c_anode^coefficient_anode/c_cathode^coefficient_cathode);
+E_nernst_raw: E_standard - R*T/(z*F)*log(Q_reaction);
+E_nernst: float(round(100*E_nernst_raw)/100);
+
+ta_standard: stackunits(E_standard, V);
+ta_nernst: stackunits(E_nernst, V);]]></text>
+    </questionvariables>
+    <specificfeedback format="html">
+      <text></text>
+    </specificfeedback>
+    <questionnote format="html">
+      <text>Zufällige spontane Metall-Redoxreaktion mit Standard- und Nernst-Potential; Volt-Einheit ist verpflichtend.</text>
+    </questionnote>
+    <questiondescription format="html">
+      <text><![CDATA[Deutsche Chemiefrage mit zufällig ausgewählten Metall/Metallion-Halbzellen und verpflichtender Einheit für beide Potentiale.]]></text>
+    </questiondescription>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color: green;"><i class="fa fa-check"></i></span> Richtig.]]></text>
+    </prtcorrect>
+    <prtpartiallycorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color: orange;"><i class="fa fa-adjust"></i></span> Teilweise richtig.]]></text>
+    </prtpartiallycorrect>
+    <prtincorrect format="html">
+      <text><![CDATA[<span style="font-size: 1.5em; color: red;"><i class="fa fa-times"></i></span> Noch nicht richtig.]]></text>
+    </prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>dot</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>coef_anode_metal</name>
+      <type>numerical</type>
+      <tans>coefficient_anode</tans>
+      <boxsize>3</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>coef_cathode_ion</name>
+      <type>numerical</type>
+      <tans>coefficient_cathode</tans>
+      <boxsize>3</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>coef_anode_ion</name>
+      <type>numerical</type>
+      <tans>coefficient_anode</tans>
+      <boxsize>3</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>coef_cathode_metal</name>
+      <type>numerical</type>
+      <tans>coefficient_cathode</tans>
+      <boxsize>3</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options>hideanswer</options>
+    </input>
+    <input>
+      <name>estd</name>
+      <type>units</type>
+      <tans>ta_standard</tans>
+      <boxsize>12</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords>V</allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>negpow,hideanswer</options>
+    </input>
+    <input>
+      <name>enernst</name>
+      <type>units</type>
+      <tans>ta_nernst</tans>
+      <boxsize>12</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords>V</allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>negpow,hideanswer</options>
+    </input>
+    <prt>
+      <name>prt_standard</name>
+      <value>0.3000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text><![CDATA[]]></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Prüft Standardpotential einschließlich der Einheit Volt</description>
+        <answertest>Units</answertest>
+        <sans>estd</sans>
+        <tans>ta_standard</tans>
+        <testoptions>3</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>standard-richtig</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<p>Das Standardpotential einschließlich der Einheit ist richtig.</p>]]></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>standard-falsch-oder-ohne-einheit</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p>Überprüfen Sie die Differenz der beiden Standard-Reduktionspotentiale sowie die Einheit des Ergebnisses.</p>]]></text>
+        </falsefeedback>
+      </node>
+    </prt>
+    <prt>
+      <name>prt_nernst</name>
+      <value>0.4000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text><![CDATA[]]></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Prüft das Nernst-Potential einschließlich der Einheit Volt</description>
+        <answertest>Units</answertest>
+        <sans>enernst</sans>
+        <tans>ta_nernst</tans>
+        <testoptions>3</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>nichtstandardpotential-richtig</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<p>Der Reaktionsquotient und das Potential einschließlich der Einheit sind richtig.</p>]]></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>nichtstandardpotential-falsch-oder-ohne-einheit</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p>Überprüfen Sie die Konzentrationsabhängigkeit des Zellpotentials sowie die Einheit des Ergebnisses.</p>]]></text>
+        </falsefeedback>
+      </node>
+    </prt>
+    <prt>
+      <name>prt_coefficients</name>
+      <value>0.3000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Prüft den Koeffizienten des oxidierten Metalls</description>
+        <answertest>NumRelative</answertest>
+        <sans>coef_anode_metal</sans>
+        <tans>coefficient_anode</tans>
+        <testoptions>0.001</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>1</truenextnode>
+        <trueanswernote>koeffizient-anodenmetall-richtig</trueanswernote>
+        <truefeedback format="html"><text></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>koeffizient-anodenmetall-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Überprüfen Sie den Elektronenausgleich der Gesamtreaktion.</p>]]></text></falsefeedback>
+      </node>
+      <node>
+        <name>1</name>
+        <description>Prüft den Koeffizienten des reduzierten Metallions</description>
+        <answertest>NumRelative</answertest>
+        <sans>coef_cathode_ion</sans>
+        <tans>coefficient_cathode</tans>
+        <testoptions>0.001</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>2</truenextnode>
+        <trueanswernote>koeffizient-kathodenion-richtig</trueanswernote>
+        <truefeedback format="html"><text></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>koeffizient-kathodenion-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Überprüfen Sie den Elektronenausgleich der Gesamtreaktion.</p>]]></text></falsefeedback>
+      </node>
+      <node>
+        <name>2</name>
+        <description>Prüft den Koeffizienten des gebildeten Metallions</description>
+        <answertest>NumRelative</answertest>
+        <sans>coef_anode_ion</sans>
+        <tans>coefficient_anode</tans>
+        <testoptions>0.001</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>3</truenextnode>
+        <trueanswernote>koeffizient-anodenion-richtig</trueanswernote>
+        <truefeedback format="html"><text></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>koeffizient-anodenion-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Überprüfen Sie den Elektronenausgleich der Gesamtreaktion.</p>]]></text></falsefeedback>
+      </node>
+      <node>
+        <name>3</name>
+        <description>Prüft den Koeffizienten des gebildeten Metalls</description>
+        <answertest>NumRelative</answertest>
+        <sans>coef_cathode_metal</sans>
+        <tans>coefficient_cathode</tans>
+        <testoptions>0.001</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>koeffizienten-richtig</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>Die Gesamtreaktion ist korrekt ausgeglichen.</p>]]></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>koeffizient-kathodenmetall-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Überprüfen Sie den Elektronenausgleich der Gesamtreaktion.</p>]]></text></falsefeedback>
+      </node>
+    </prt>
+  </question>
+</quiz>
