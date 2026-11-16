@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 3925337  -->
+  <question type="stack">
+    <name>
+      <text>Faradaysches Gesetz: zufällige Salzlösung und Metallabscheidung (3 signifikante Stellen)</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>\(\require{mhchem}\)</p>
+<h3>Metallabscheidung durch Elektrolyse</h3>
+<p>Eine wässrige Lösung des Salzes {@salt_name@} wird elektrolysiert.</p>
+<p>Durch die Elektrolysezelle fliesst während \({@duration_min@}\;\mathrm{min}\) ein konstanter Strom von \({@current@}\;\mathrm{A}\). Verwenden Sie \(F=9{,}65\cdot10^4\;\mathrm{C\,mol^{-1}}\).</p>
+<p>Berechnen Sie die Masse des abgeschiedenen Metalls. Geben Sie Ihr Ergebnis mit <strong>genau 3 signifikanten Stellen</strong> und der Einheit Gramm an.</p>
+<p>\(m_\text{Metall}=\) [[input:mass_answer]][[validation:mass_answer]]</p>
+<p>[[feedback:prt_mass]]</p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text><![CDATA[<p><strong>Lösung:</strong> Zuerst wird die übertragene Ladung berechnet:</p>
+<p>\[Q=I\cdot t={@current@}\;\mathrm{A}\cdot({@duration_min@}\cdot60)\;\mathrm{s}={@charge@}\;\mathrm{C}.\]</p>
+<p>Aus der Salzformel folgt für das Metallion \({@metal_ion_display@}\). Die Kathoden-Halbzellengleichung lautet:</p>
+<p>\[{@half_equation@}\]</p>
+<p>Für die Reduktion eines Mols \({@metal_ion_display@}\) werden \({@n_electrons@}\) Mol Elektronen benötigt. Daher gilt nach dem Faradayschen Gesetz:</p>
+<p>\[m=\frac{M\cdot Q}{z\cdot F}=\frac{{@molar_mass@}\;\mathrm{g\,mol^{-1}}\cdot{@charge@}\;\mathrm{C}}{{@n_electrons@}\cdot9.65\cdot10^4\;\mathrm{C\,mol^{-1}}}={@mass_deposited@}\;\mathrm{g}.\]</p>
+<p>Das Ergebnis wird auf 3 signifikante Stellen gerundet.</p>]]></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion>
+      <text>2025102100</text>
+    </stackversion>
+    <questionvariables>
+      <text><![CDATA[stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/electrochemistry.mac");
+stack_unit_si_declare(true);
+
+/* Select a reduction of the form M^n+ + n e^- -> M from the electrochemistry module. */
+round_sig(x) := block([power], power: 2-floor(log(x)/log(10)), float(round(x*10^power)/10^power));
+metal_pair: rand(chem_electrochem_metal_pairs_array());
+metal_ion: first(metal_pair);
+metal: second(metal_pair);
+n_electrons: third(metal_pair);
+molar_mass: chem_data(metal, "AtomicMass");
+metal_name: chem_data(metal, "Name");
+
+/* [anion formula, anion charge, German salt-name suffix]. */
+anions: [["Cl", 1, "chlorid"], ["O", 2, "oxid"], ["S", 2, "sulfid"], ["Br", 1, "bromid"], ["F", 1, "fluorid"], ["I", 1, "iodid"]];
+anion: rand(anions);
+anion_symbol: first(anion);
+anion_charge: second(anion);
+anion_suffix: third(anion);
+
+/* Form the lowest whole-number-ratio salt formula, e.g. ZnCl2 and Zinkchlorid. */
+salt_gcd: gcd(n_electrons, anion_charge);
+metal_coefficient: anion_charge/salt_gcd;
+anion_coefficient: n_electrons/salt_gcd;
+formula_count(x) := if is(x = 1) then "" else string(x);
+salt_formula: sconcat(metal, formula_count(metal_coefficient), anion_symbol, formula_count(anion_coefficient));
+salt_name: sconcat(metal_name, anion_suffix);
+salt_display: chem_display(salt_formula);
+
+/* Decimal-valued data, each chosen to have exactly 3 significant figures. */
+current: float(rand([125, 175, 225, 275, 325, 375, 425, 475])/100);
+duration_min: float(rand([525, 575, 625, 675, 725, 775, 825, 875, 925, 975, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 1950, 2050, 2150, 2250, 2350, 2450, 2550, 2650, 2750, 2850, 2950])/100);
+duration_s: 60*duration_min;
+F: 96500;
+charge: current*duration_s;
+raw_mass: molar_mass*charge/(n_electrons*F);
+mass_deposited: round_sig(raw_mass);
+ta_mass: stackunits(mass_deposited, g);
+
+metal_ion_display: chem_display(metal_ion);
+half_equation: chem_display(sconcat(metal_ion, "(aq) + ", string(n_electrons), "e^- -> ", metal, "(s)"));]]></text>
+    </questionvariables>
+    <specificfeedback format="html">
+      <text></text>
+    </specificfeedback>
+    <questionnote format="html">
+      <text><![CDATA[<p>Faradaysches Gesetz mit zufällig gebildetem Metallsalz, Stromstärke und Elektrolysedauer. Nur das Endergebnis wird auf 3 signifikante Stellen gerundet.</p>]]></text>
+    </questionnote>
+    <questiondescription format="html">
+      <text><![CDATA[<p>Deutsche Elektrochemiefrage zur Berechnung der aus einem zufällig gebildeten Metallsalz abgeschiedenen Metallmasse.</p>]]></text>
+    </questiondescription>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html">
+      <text><![CDATA[<p><i class="fa fa-check"></i> Richtig.</p>]]></text>
+    </prtcorrect>
+    <prtpartiallycorrect format="html">
+      <text><![CDATA[<p><i class="fa fa-adjust"></i> Teilweise richtig.</p>]]></text>
+    </prtpartiallycorrect>
+    <prtincorrect format="html">
+      <text><![CDATA[<p><i class="fa fa-times"></i> Noch nicht richtig.</p>]]></text>
+    </prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>dot</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>mass_answer</name>
+      <type>units</type>
+      <tans>ta_mass</tans>
+      <boxsize>12</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords>g</allowwords>
+      <forbidfloat>1</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>1</mustverify>
+      <showvalidation>1</showvalidation>
+      <options>minsf:3,maxsf:3,negpow,hideanswer</options>
+    </input>
+    <prt>
+      <name>prt_mass</name>
+      <value>1.0000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackstyle>1</feedbackstyle>
+      <feedbackvariables>
+        <text></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <description>Vergibt die volle Punktzahl, wenn Zahlenwert und Einheit stimmen</description>
+        <answertest>Units</answertest>
+        <sans>mass_answer</sans>
+        <tans>ta_mass</tans>
+        <testoptions>3</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>1</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>masse-richtig</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>Der Zahlenwert ist mit genau 3 signifikanten Stellen und der Einheit Gramm richtig.</p>]]></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>1</falsenextnode>
+        <falseanswernote>masse-einheit-oder-wert-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Einheit oder Zahlenwert stimmen nicht vollständig. Der Zahlenwert wird zusätzlich geprüft.</p>]]></text></falsefeedback>
+      </node>
+      <node>
+        <name>1</name>
+        <description>Vergibt einen halben Punkt, wenn der Zahlenwert stimmt, auch wenn die Einheit fehlt oder falsch ist</description>
+        <answertest>NumRelative</answertest>
+        <sans>mass_answer</sans>
+        <tans>ta_mass</tans>
+        <testoptions>0.0000001</testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0.5</truescore>
+        <truepenalty>0</truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>masse-wert-richtig-einheit-falsch</trueanswernote>
+        <truefeedback format="html"><text><![CDATA[<p>Der Zahlenwert ist richtig, aber die Einheit fehlt oder ist falsch. Verwenden Sie Gramm (g).</p>]]></text></truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0</falsescore>
+        <falsepenalty>0</falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>masse-wert-falsch</falseanswernote>
+        <falsefeedback format="html"><text><![CDATA[<p>Der Zahlenwert ist falsch oder nicht auf genau 3 signifikante Stellen gerundet.</p>]]></text></falsefeedback>
+      </node>
+    </prt>
+    <qtest>
+      <testcase>1</testcase>
+      <description>Die vollständige Musterantwort erhält die volle Punktzahl.</description>
+      <testinput><name>mass_answer</name><value>ta_mass</value></testinput>
+      <expected><name>prt_mass</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>masse-richtig</expectedanswernote></expected>
+    </qtest>
+  </question>
+</quiz>

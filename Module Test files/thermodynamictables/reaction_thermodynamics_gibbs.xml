@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="stack">
+    <name>
+      <text>Reaktionsenthalpie, Reaktionsentropie und Gibbs-Energie</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>\(\require{mhchem}\)</p>
+<h3>Thermodynamische Reaktionsgrössen</h3>
+<p>Betrachten Sie die folgende ausgeglichene Reaktion:</p>
+<p>\[{@reaction_equation@}\]</p>
+<p>Die Standardbildungsenthalpien \(\Delta H_f^\circ\) und Standardmolentropien \(S^\circ\) der beteiligten Stoffe sind in der Tabelle angegeben. Berücksichtigen Sie die stöchiometrischen Koeffizienten.</p>
+<table style="border-collapse: collapse; margin: 1em 0;">
+<thead><tr>
+<th style="border: 1px solid #999; padding: 0.45em 0.7em; text-align: left;">Stoff</th>
+<th style="border: 1px solid #999; padding: 0.45em 0.7em;">\(\Delta H_f^\circ\) (kJ mol\(^{-1}\))</th>
+<th style="border: 1px solid #999; padding: 0.45em 0.7em;">\(S^\circ\) (J mol\(^{-1}\) K\(^{-1}\))</th>
+</tr></thead>
+<tbody>{@thermo_table_rows@}</tbody>
+</table>
+<h4>Teil 1: Reaktionsenthalpie und Reaktionsentropie</h4>
+<p>Berechnen Sie \(\Delta H_r^\circ\) und \(\Delta S_r^\circ\) für die Reaktion. Geben Sie beide Ergebnisse mit <strong>3 signifikanten Stellen</strong> und den jeweils passenden Einheiten ein.</p>
+<p>\(\Delta H_r^\circ=\) [[input:delta_h_answer]][[validation:delta_h_answer]]</p>
+<p>[[feedback:prt_delta_h]]</p>
+<p>\(\Delta S_r^\circ=\) [[input:delta_s_answer]][[validation:delta_s_answer]]</p>
+<p>[[feedback:prt_delta_s]]</p>
+<h4>Teil 2: Gibbs-Energie bei einer anderen Temperatur</h4>
+<p>Berechnen Sie \(\Delta G_r\) bei \(T={@temperature@}\;\mathrm{K}\). Nehmen Sie an, dass \(\Delta H_r^\circ\) und \(\Delta S_r^\circ\) temperaturunabhängig sind. Verwenden Sie \(\Delta G_r=\Delta H_r^\circ-T\Delta S_r^\circ\) und achten Sie auf die Umrechnung der Entropie in \(\mathrm{kJ\,mol^{-1}\,K^{-1}}\). Verwenden Sie für die Rechnung ungerundete Zwischenwerte und runden Sie jedes Endergebnis erst zum Schluss auf 3 signifikante Stellen.</p>
+<p>\(\Delta G_r=\) [[input:delta_g_answer]][[validation:delta_g_answer]]</p>
+<p>[[feedback:prt_delta_g]]</p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text><![CDATA[<p><strong>Lösung:</strong> Für jede Reaktionsgrösse gilt die Summe der stöchiometrisch gewichteten Produktwerte minus die entsprechende Summe der Eduktwerte:</p>
+<p>\[\Delta H_r^\circ=\sum_i\nu_i\Delta H_{f,i}^\circ(\mathrm{Produkte})-\sum_j\nu_j\Delta H_{f,j}^\circ(\mathrm{Edukte})={@delta_h_raw@}\;\mathrm{kJ\,mol^{-1}}\]</p>
+<p>\[\Delta S_r^\circ=\sum_i\nu_iS_i^\circ(\mathrm{Produkte})-\sum_j\nu_jS_j^\circ(\mathrm{Edukte})={@delta_s_raw@}\;\mathrm{J\,mol^{-1}\,K^{-1}}\]</p>
+<p>Bei \(T={@temperature@}\;\mathrm{K}\):</p>
+<p>\[\Delta G_r=\Delta H_r^\circ-T\frac{\Delta S_r^\circ}{1000}={@delta_h_raw@}-{@temperature@}\cdot\frac{{@delta_s_raw@}}{1000}={@delta_g_raw@}\;\mathrm{kJ\,mol^{-1}}.\]</p>
+<p>Die Antworten sind jeweils auf 3 signifikante Stellen gerundet.</p>]]></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.1</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <stackversion><text>2025102100</text></stackversion>
+    <questionvariables>
+      <text><![CDATA[stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include("https://raw.githubusercontent.com/STACK-for-Chemistry/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
+stack_unit_si_declare(true);
+
+/* The species-count filter selects reactions with exactly two species on each side. */
+reaction_candidates: chem_reaction_filter_by_species(2, 2);
+
+/* Keep only reactions for which every species has both required thermo values. */
+thermo_complete(name) := block([reactants, products, items, item, h_value, s_value, valid],
+  reactants: chem_reaction_reactants(name),
+  products: chem_reaction_products(name),
+  items: append(reactants, products),
+  valid: true,
+  for item in items do (
+    h_value: chem_thermo_data(first(item), "DeltaHf", second(item)),
+    s_value: chem_thermo_data(first(item), "S", second(item)),
+    if is(h_value = false) or is(h_value = null) or is(s_value = false) or is(s_value = null) then valid: false
+  ),
+  valid
+);
+/* Usually the first random candidate has complete data. Avoid filtering every
+   reaction (and repeatedly looking up every species) during question import. */
+reaction_name: false;
+attempt: 0;
+while is(reaction_name = false) and attempt < 20 do (
+  attempt: attempt + 1,
+  candidate_name: rand(reaction_candidates),
+  if thermo_complete(candidate_name) then reaction_name: candidate_name
+);
+
+/* Deterministic fallback guarantees a valid selection if random attempts miss. */
+candidate_index: 1;
+while is(reaction_name = false) and candidate_index <= length(reaction_candidates) do (
+  candidate_name: reaction_candidates[candidate_index],
+  if thermo_complete(candidate_name) then reaction_name: candidate_name,
+  candidate_index: candidate_index + 1
+);
+
+reactants: chem_reaction_reactants(reaction_name);
+products: chem_reaction_products(reaction_name);
+reaction_equation: chem_reaction_equation(reaction_name);
+
+temperature: rand([250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500]);
+
+round_sig(x) := block([power], if is(x = 0) then 0 else (power: 2-floor(log(abs(x))/log(10)), float(round(x*10^power)/10^power)));
+
+thermo_table_rows: "";
+delta_h_raw: 0;
+delta_s_raw: 0;
+for item in reactants do (
+  h_value: chem_thermo_data(first(item), "DeltaHf", second(item)),
+  s_value: chem_thermo_data(first(item), "S", second(item)),
+  delta_h_raw: delta_h_raw - third(item)*h_value,
+  delta_s_raw: delta_s_raw - third(item)*s_value,
+  species_display: sconcat("\\ce{", first(item), "(", second(item), ")}"),
+  thermo_table_rows: sconcat(thermo_table_rows,
+    "<tr><td style=\"border: 1px solid #999; padding: 0.45em 0.7em;\">\\(", string(third(item)), "\\,", species_display, "\\)</td>",
+    "<td style=\"border: 1px solid #999; padding: 0.45em 0.7em; text-align: right;\">", string(h_value), "</td>",
+    "<td style=\"border: 1px solid #999; padding: 0.45em 0.7em; text-align: right;\">", string(s_value), "</td></tr>")
+);
+for item in products do (
+  h_value: chem_thermo_data(first(item), "DeltaHf", second(item)),
+  s_value: chem_thermo_data(first(item), "S", second(item)),
+  delta_h_raw: delta_h_raw + third(item)*h_value,
+  delta_s_raw: delta_s_raw + third(item)*s_value,
+  species_display: sconcat("\\ce{", first(item), "(", second(item), ")}"),
+  thermo_table_rows: sconcat(thermo_table_rows,
+    "<tr><td style=\"border: 1px solid #999; padding: 0.45em 0.7em;\">\\(", string(third(item)), "\\,", species_display, "\\)</td>",
+    "<td style=\"border: 1px solid #999; padding: 0.45em 0.7em; text-align: right;\">", string(h_value), "</td>",
+    "<td style=\"border: 1px solid #999; padding: 0.45em 0.7em; text-align: right;\">", string(s_value), "</td></tr>")
+);
+delta_g_raw: delta_h_raw - temperature*delta_s_raw/1000;
+delta_h_answer_value: round_sig(delta_h_raw);
+delta_s_answer_value: round_sig(delta_s_raw);
+delta_g_answer_value: round_sig(delta_g_raw);
+ta_delta_h: stackunits(delta_h_answer_value, kJ*mol^(-1));
+ta_delta_s: stackunits(delta_s_answer_value, J*mol^(-1)*K^(-1));
+ta_delta_g: stackunits(delta_g_answer_value, kJ*mol^(-1));]]></text>
+    </questionvariables>
+    <specificfeedback format="html"><text></text></specificfeedback>
+    <questionnote format="html"><text><![CDATA[<p>Zufällige Reaktion aus der Reaktionsdatenbank mit exakt zwei Edukt- und zwei Produktspezies; alle tabellierten Bildungsenthalpien und Standardmolentropien müssen bekannt sein.</p>]]></text></questionnote>
+    <questiondescription format="html"><text><![CDATA[<p>Berechnung von Reaktionsenthalpie, Reaktionsentropie und Gibbs-Energie aus thermodynamischen Tabellenwerten.</p>]]></text></questiondescription>
+    <questionsimplify>1</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html"><text><![CDATA[<p><i class="fa fa-check"></i> Richtig.</p>]]></text></prtcorrect>
+    <prtpartiallycorrect format="html"><text><![CDATA[<p><i class="fa fa-adjust"></i> Teilweise richtig.</p>]]></text></prtpartiallycorrect>
+    <prtincorrect format="html"><text><![CDATA[<p><i class="fa fa-times"></i> Noch nicht richtig.</p>]]></text></prtincorrect>
+    <decimals>.</decimals>
+    <scientificnotation>*10</scientificnotation>
+    <multiplicationsign>dot</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <logicsymbol>lang</logicsymbol>
+    <matrixparens>[</matrixparens>
+    <isbroken>0</isbroken>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>delta_h_answer</name><type>units</type><tans>ta_delta_h</tans><boxsize>16</boxsize><strictsyntax>1</strictsyntax><insertstars>0</insertstars><syntaxhint></syntaxhint><syntaxattribute>0</syntaxattribute><forbidwords></forbidwords><allowwords>kJ mol</allowwords><forbidfloat>1</forbidfloat><requirelowestterms>0</requirelowestterms><checkanswertype>0</checkanswertype><mustverify>1</mustverify><showvalidation>1</showvalidation><options>minsf:3,maxsf:3,negpow,hideanswer</options>
+    </input>
+    <input>
+      <name>delta_s_answer</name><type>units</type><tans>ta_delta_s</tans><boxsize>16</boxsize><strictsyntax>1</strictsyntax><insertstars>0</insertstars><syntaxhint></syntaxhint><syntaxattribute>0</syntaxattribute><forbidwords></forbidwords><allowwords>J mol K</allowwords><forbidfloat>1</forbidfloat><requirelowestterms>0</requirelowestterms><checkanswertype>0</checkanswertype><mustverify>1</mustverify><showvalidation>1</showvalidation><options>minsf:3,maxsf:3,negpow,hideanswer</options>
+    </input>
+    <input>
+      <name>delta_g_answer</name><type>units</type><tans>ta_delta_g</tans><boxsize>16</boxsize><strictsyntax>1</strictsyntax><insertstars>0</insertstars><syntaxhint></syntaxhint><syntaxattribute>0</syntaxattribute><forbidwords></forbidwords><allowwords>kJ mol</allowwords><forbidfloat>1</forbidfloat><requirelowestterms>0</requirelowestterms><checkanswertype>0</checkanswertype><mustverify>1</mustverify><showvalidation>1</showvalidation><options>minsf:3,maxsf:3,negpow,hideanswer</options>
+    </input>
+    <prt>
+      <name>prt_delta_h</name><value>0.3000000</value><autosimplify>1</autosimplify><feedbackstyle>1</feedbackstyle><feedbackvariables><text></text></feedbackvariables>
+      <node><name>0</name><description>Prüft die Reaktionsenthalpie mit Einheit</description><answertest>Units</answertest><sans>delta_h_answer</sans><tans>ta_delta_h</tans><testoptions>3</testoptions><quiet>1</quiet><truescoremode>=</truescoremode><truescore>1</truescore><truepenalty>0</truepenalty><truenextnode>-1</truenextnode><trueanswernote>enthalpie-richtig</trueanswernote><truefeedback format="html"><text><![CDATA[<p>Die Reaktionsenthalpie ist richtig.</p>]]></text></truefeedback><falsescoremode>=</falsescoremode><falsescore>0</falsescore><falsepenalty>0</falsepenalty><falsenextnode>-1</falsenextnode><falseanswernote>enthalpie-falsch</falseanswernote><falsefeedback format="html"><text><![CDATA[<p>Prüfen Sie die gewichtete Differenz aus Produkt- und Eduktbildungsenthalpien sowie die Einheit.</p>]]></text></falsefeedback></node>
+    </prt>
+    <prt>
+      <name>prt_delta_s</name><value>0.3000000</value><autosimplify>1</autosimplify><feedbackstyle>1</feedbackstyle><feedbackvariables><text></text></feedbackvariables>
+      <node><name>0</name><description>Prüft die Reaktionsentropie mit Einheit</description><answertest>Units</answertest><sans>delta_s_answer</sans><tans>ta_delta_s</tans><testoptions>3</testoptions><quiet>1</quiet><truescoremode>=</truescoremode><truescore>1</truescore><truepenalty>0</truepenalty><truenextnode>-1</truenextnode><trueanswernote>entropie-richtig</trueanswernote><truefeedback format="html"><text><![CDATA[<p>Die Reaktionsentropie ist richtig.</p>]]></text></truefeedback><falsescoremode>=</falsescoremode><falsescore>0</falsescore><falsepenalty>0</falsepenalty><falsenextnode>-1</falsenextnode><falseanswernote>entropie-falsch</falseanswernote><falsefeedback format="html"><text><![CDATA[<p>Prüfen Sie die gewichtete Differenz aus Produkt- und Eduktentropien sowie die Einheit.</p>]]></text></falsefeedback></node>
+    </prt>
+    <prt>
+      <name>prt_delta_g</name><value>0.4000000</value><autosimplify>1</autosimplify><feedbackstyle>1</feedbackstyle><feedbackvariables><text></text></feedbackvariables>
+      <node><name>0</name><description>Prüft die Gibbs-Energie mit Einheit</description><answertest>Units</answertest><sans>delta_g_answer</sans><tans>ta_delta_g</tans><testoptions>3</testoptions><quiet>1</quiet><truescoremode>=</truescoremode><truescore>1</truescore><truepenalty>0</truepenalty><truenextnode>-1</truenextnode><trueanswernote>gibbs-richtig</trueanswernote><truefeedback format="html"><text><![CDATA[<p>Die Gibbs-Energie ist richtig.</p>]]></text></truefeedback><falsescoremode>=</falsescoremode><falsescore>0</falsescore><falsepenalty>0</falsepenalty><falsenextnode>-1</falsenextnode><falseanswernote>gibbs-falsch</falseanswernote><falsefeedback format="html"><text><![CDATA[<p>Prüfen Sie \(\Delta G=\Delta H-T\Delta S\), die Umrechnung von J in kJ und die Einheit.</p>]]></text></falsefeedback></node>
+    </prt>
+    <qtest>
+      <testcase>1</testcase>
+      <description>Alle drei Musterantworten werden mit voller Punktzahl bewertet.</description>
+      <testinput><name>delta_h_answer</name><value>ta_delta_h</value></testinput>
+      <testinput><name>delta_s_answer</name><value>ta_delta_s</value></testinput>
+      <testinput><name>delta_g_answer</name><value>ta_delta_g</value></testinput>
+      <expected><name>prt_delta_h</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>enthalpie-richtig</expectedanswernote></expected>
+      <expected><name>prt_delta_s</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>entropie-richtig</expectedanswernote></expected>
+      <expected><name>prt_delta_g</name><expectedscore>1.0000000</expectedscore><expectedpenalty>0.0000000</expectedpenalty><expectedanswernote>gibbs-richtig</expectedanswernote></expected>
+    </qtest>
+  </question>
+</quiz>
